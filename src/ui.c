@@ -194,6 +194,95 @@ static void aml_ui_write_padded(int col, int row, const char *text, int width, u
     }
 }
 
+static int aml_ui_visible_start(const char *text, int width, int start, int cursor)
+{
+    int len = (int)strlen(text);
+    int visible_start = start;
+    int visible_end;
+
+    if (visible_start < 0) {
+        visible_start = 0;
+    }
+    if (cursor < visible_start) {
+        visible_start = cursor;
+    }
+    if (cursor > visible_start + width - 1) {
+        visible_start = cursor - width + 1;
+    }
+    if (visible_start < 0) {
+        visible_start = 0;
+    }
+
+    visible_end = visible_start + width;
+    if (visible_end > len) {
+        visible_end = len;
+    }
+    if (visible_end - visible_start < width && visible_start > 0) {
+        visible_start = visible_end - width;
+        if (visible_start < 0) {
+            visible_start = 0;
+        }
+    }
+
+    return visible_start;
+}
+
+static void aml_ui_write_clipped(int col, int row, const char *text, int width,
+                                 int start, int cursor, unsigned char attr)
+{
+    int len = (int)strlen(text);
+    int i;
+    int visible_start = aml_ui_visible_start(text, width, start, cursor);
+    int visible_end;
+
+    if (width <= 0) {
+        return;
+    }
+
+    visible_end = visible_start + width;
+    if (visible_end > len) {
+        visible_end = len;
+    }
+
+    for (i = 0; i < width; ++i) {
+        int src = visible_start + i;
+        unsigned char ch = ' ';
+
+        if (src < len) {
+            ch = (unsigned char)text[src];
+        }
+        aml_ui_putc(col + i, row, ch, attr);
+    }
+
+    if (visible_start > 0 && width >= 3) {
+        aml_ui_putc(col, row, '.', attr);
+        aml_ui_putc(col + 1, row, '.', attr);
+        aml_ui_putc(col + 2, row, '.', attr);
+    }
+    if (visible_end < len && width >= 3) {
+        aml_ui_putc(col + width - 3, row, '.', attr);
+        aml_ui_putc(col + width - 2, row, '.', attr);
+        aml_ui_putc(col + width - 1, row, '.', attr);
+    }
+}
+
+static void aml_ui_write_ellipsis(int col, int row, const char *text, int width, unsigned char attr)
+{
+    int len = (int)strlen(text);
+
+    if (len <= width) {
+        aml_ui_write_padded(col, row, text, width, attr);
+        return;
+    }
+
+    aml_ui_write_padded(col, row, text, width, attr);
+    if (width >= 3) {
+        aml_ui_putc(col + width - 3, row, '.', attr);
+        aml_ui_putc(col + width - 2, row, '.', attr);
+        aml_ui_putc(col + width - 1, row, '.', attr);
+    }
+}
+
 static void aml_ui_write_centered(int row, const char *text, unsigned char attr)
 {
     int col = (AML_UI_COLS - (int)strlen(text)) / 2;
@@ -408,7 +497,7 @@ static void aml_ui_draw_entries(const AmlState *state)
         aml_ui_putc(6, y, '[', attr);
         aml_ui_putc(7, y, (unsigned char)hotkey, attr);
         aml_ui_putc(8, y, ']', attr);
-        aml_ui_write_padded(11, y, state->entries[index].name, AML_UI_SCROLL_COL - 11, attr);
+        aml_ui_write_ellipsis(11, y, state->entries[index].name, AML_UI_SCROLL_COL - 11, attr);
     }
 
     aml_ui_draw_scrollbar(state);
@@ -532,6 +621,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
     int name_cursor;
     int command_cursor;
     int path_cursor;
+    int field_width = 40;
 
     strcpy(name, is_new ? "" : entry->name);
     strcpy(command, is_new ? "" : entry->command);
@@ -550,6 +640,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         int *cursor_ptr = &name_cursor;
         char *buf = name;
         int max_len = AML_MAX_NAME;
+        int visible_start = aml_ui_visible_start(name, field_width, 0, name_cursor);
         int cursor_col = 24 + name_cursor;
         int cursor_row = 10;
 
@@ -566,17 +657,24 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         aml_ui_write_at(12, 10, "Name", AML_UI_ATTR_DIALOG_TEXT);
         aml_ui_write_at(12, 12, "Command", AML_UI_ATTR_DIALOG_TEXT);
         aml_ui_write_at(12, 14, "Path", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_padded(24, 10, name, 40, field == 0 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_padded(24, 12, command, 40, field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_padded(24, 14, path, 40, field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_clipped(24, 10, name, field_width, 0, name_cursor,
+                             field == 0 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_clipped(24, 12, command, field_width, 0, command_cursor,
+                             field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_clipped(24, 14, path, field_width, 0, path_cursor,
+                             field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
         aml_ui_write_centered(16, "Enter next/save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
         aml_ui_flush();
         if (field == 1) {
-            cursor_col = 24 + command_cursor;
+            visible_start = aml_ui_visible_start(command, field_width, 0, command_cursor);
+            cursor_col = 24 + (command_cursor - visible_start);
             cursor_row = 12;
         } else if (field == 2) {
-            cursor_col = 24 + path_cursor;
+            visible_start = aml_ui_visible_start(path, field_width, 0, path_cursor);
+            cursor_col = 24 + (path_cursor - visible_start);
             cursor_row = 14;
+        } else {
+            cursor_col = 24 + (name_cursor - visible_start);
         }
         aml_ui_set_cursor(cursor_col, cursor_row);
         aml_ui_show_cursor();
