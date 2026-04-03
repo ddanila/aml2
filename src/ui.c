@@ -14,12 +14,18 @@
 enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
+    AML_UI_LIST_ROW = 5,
+    AML_UI_LIST_ROWS = 17,
     AML_KEY_ENTER = 13,
     AML_KEY_ESC = 27,
     AML_KEY_EXTENDED = 0,
     AML_KEY_EXTENDED_2 = 224,
+    AML_KEY_HOME = 71,
     AML_KEY_UP = 72,
-    AML_KEY_DOWN = 80
+    AML_KEY_PGUP = 73,
+    AML_KEY_END = 79,
+    AML_KEY_DOWN = 80,
+    AML_KEY_PGDN = 81
 };
 
 static void aml_ui_gotoxy(int col, int row)
@@ -98,7 +104,7 @@ static void aml_ui_draw_header(void)
     aml_ui_clear_line(3);
     aml_ui_write_at(3, 2, "aml2");
     aml_ui_write_at(10, 2, "Arvutimuuseum Launcher v2");
-    aml_ui_write_at(3, 3, "Up/Down: Move   Enter: Select   Esc: Quit   0-9,a-z: Hotkeys");
+    aml_ui_write_at(3, 3, "Arrows/Home/End/PgUp/PgDn: Move   Enter: Select   Esc: Quit   0-9,a-z");
 }
 
 static void aml_ui_write_padded(const char *text, int width)
@@ -131,12 +137,60 @@ static int aml_ui_hotkey_index(int key)
     return -1;
 }
 
+static int aml_ui_first_visible(const AmlState *state)
+{
+    int top;
+
+    if (state->entry_count <= AML_UI_LIST_ROWS) {
+        return 0;
+    }
+
+    top = state->selected - (AML_UI_LIST_ROWS / 2);
+    if (top < 0) {
+        top = 0;
+    }
+    if (top > state->entry_count - AML_UI_LIST_ROWS) {
+        top = state->entry_count - AML_UI_LIST_ROWS;
+    }
+
+    return top;
+}
+
+static void aml_ui_write_uint(unsigned value)
+{
+    char digits[6];
+    int i = 0;
+
+    do {
+        digits[i++] = (char)('0' + (value % 10));
+        value /= 10;
+    } while (value != 0 && i < (int)sizeof(digits));
+
+    while (i > 0) {
+        putch(digits[--i]);
+    }
+}
+
+static void aml_ui_write_position(const AmlState *state)
+{
+    if (state->entry_count <= 0) {
+        return;
+    }
+
+    aml_ui_gotoxy(63, 23);
+    cputs("Item ");
+    aml_ui_write_uint((unsigned)(state->selected + 1));
+    putch('/');
+    aml_ui_write_uint((unsigned)state->entry_count);
+}
+
 static void aml_ui_draw_entries(const AmlState *state)
 {
     int i;
     int row;
+    int top = aml_ui_first_visible(state);
 
-    for (row = 5; row <= 21; ++row) {
+    for (row = AML_UI_LIST_ROW; row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS; ++row) {
         aml_ui_clear_line(row);
     }
 
@@ -145,9 +199,12 @@ static void aml_ui_draw_entries(const AmlState *state)
         return;
     }
 
-    for (i = 0; i < state->entry_count && i < 17; ++i) {
-        aml_ui_gotoxy(4, 5 + i);
-        putch((i == state->selected) ? '>' : ' ');
+    for (row = AML_UI_LIST_ROW, i = top;
+         row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS && i < state->entry_count;
+         ++row, ++i) {
+        aml_ui_clear_line(row);
+        aml_ui_gotoxy(4, row);
+        putch((i == state->selected) ? 16 : ' ');
         putch('[');
         if (i >= 0 && i <= 9) {
             putch('0' + i);
@@ -158,18 +215,32 @@ static void aml_ui_draw_entries(const AmlState *state)
         }
         putch(']');
         putch(' ');
-        aml_ui_write_padded(state->entries[i].name, 48);
+        aml_ui_write_padded(state->entries[i].name, 52);
     }
 }
 
 static void aml_ui_draw_footer(const AmlState *state, const char *status)
 {
+    aml_ui_clear_line(22);
     aml_ui_clear_line(23);
     aml_ui_clear_line(24);
+
+    if (state->entry_count > 0 &&
+        state->selected >= 0 &&
+        state->selected < state->entry_count) {
+        aml_ui_gotoxy(3, 22);
+        cputs("Path: ");
+        if (state->entries[state->selected].path[0] != '\0') {
+            aml_ui_write_padded(state->entries[state->selected].path, 68);
+        } else {
+            aml_ui_write_padded(".", 68);
+        }
+    }
 
     if (status != NULL && status[0] != '\0') {
         aml_ui_write_at(3, 23, status);
     }
+    aml_ui_write_position(state);
 
     if (state->entry_count > 0 &&
         state->selected >= 0 &&
@@ -181,6 +252,11 @@ static void aml_ui_draw_footer(const AmlState *state, const char *status)
 }
 
 #if AML_TEST_HOOKS
+enum {
+    AML_UI_AUTO_NONE = -1,
+    AML_UI_AUTO_REDRAW = -2
+};
+
 static void aml_ui_trim_newline(char *line)
 {
     size_t len = strlen(line);
@@ -261,7 +337,7 @@ static int aml_ui_apply_automation(AmlState *state)
     char line[AML_MAX_LINE + 1];
 
     if (!aml_ui_read_auto_line(line, sizeof(line))) {
-        return -1;
+        return AML_UI_AUTO_NONE;
     }
 
     if (strncmp(line, "launch ", 7) == 0) {
@@ -273,6 +349,56 @@ static int aml_ui_apply_automation(AmlState *state)
         }
         aml_ui_trace_event("auto_bad_launch");
         return AML_UI_QUIT;
+    }
+
+    if (strcmp(line, "up") == 0 && state->entry_count > 0) {
+        if (state->selected > 0) {
+            state->selected--;
+        } else {
+            state->selected = state->entry_count - 1;
+        }
+        aml_ui_trace_event("auto_up");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "down") == 0 && state->entry_count > 0) {
+        if (state->selected < state->entry_count - 1) {
+            state->selected++;
+        } else {
+            state->selected = 0;
+        }
+        aml_ui_trace_event("auto_down");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "home") == 0 && state->entry_count > 0) {
+        state->selected = 0;
+        aml_ui_trace_event("auto_home");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "end") == 0 && state->entry_count > 0) {
+        state->selected = state->entry_count - 1;
+        aml_ui_trace_event("auto_end");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "pgup") == 0 && state->entry_count > 0) {
+        state->selected -= AML_UI_LIST_ROWS;
+        if (state->selected < 0) {
+            state->selected = 0;
+        }
+        aml_ui_trace_event("auto_pgup");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "pgdn") == 0 && state->entry_count > 0) {
+        state->selected += AML_UI_LIST_ROWS;
+        if (state->selected >= state->entry_count) {
+            state->selected = state->entry_count - 1;
+        }
+        aml_ui_trace_event("auto_pgdn");
+        return AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "quit") == 0) {
@@ -318,6 +444,9 @@ int aml_ui_run(AmlState *state)
 #if AML_TEST_HOOKS
         sleep(1);
         auto_action = aml_ui_apply_automation(state);
+        if (auto_action == AML_UI_AUTO_REDRAW) {
+            continue;
+        }
         if (auto_action >= 0) {
             return auto_action;
         }
@@ -339,14 +468,36 @@ int aml_ui_run(AmlState *state)
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
             key = getch();
 
-            if (key == AML_KEY_UP && state->entry_count > 0) {
+            if (state->entry_count <= 0) {
+                continue;
+            }
+
+            if (key == AML_KEY_HOME) {
+                state->selected = 0;
+                status = "Select a program";
+            } else if (key == AML_KEY_END) {
+                state->selected = state->entry_count - 1;
+                status = "Select a program";
+            } else if (key == AML_KEY_PGUP) {
+                state->selected -= AML_UI_LIST_ROWS;
+                if (state->selected < 0) {
+                    state->selected = 0;
+                }
+                status = "Select a program";
+            } else if (key == AML_KEY_PGDN) {
+                state->selected += AML_UI_LIST_ROWS;
+                if (state->selected >= state->entry_count) {
+                    state->selected = state->entry_count - 1;
+                }
+                status = "Select a program";
+            } else if (key == AML_KEY_UP) {
                 if (state->selected > 0) {
                     state->selected--;
                 } else {
                     state->selected = state->entry_count - 1;
                 }
                 status = "Select a program";
-            } else if (key == AML_KEY_DOWN && state->entry_count > 0) {
+            } else if (key == AML_KEY_DOWN) {
                 if (state->selected < state->entry_count - 1) {
                     state->selected++;
                 } else {
@@ -366,7 +517,7 @@ int aml_ui_run(AmlState *state)
         if (isprint(key)) {
             status = "Unknown key";
         } else {
-            status = "Use arrows, Enter, Esc, or 0-9/a-z";
+            status = "Use arrows, PgUp/PgDn, Home/End, Enter, Esc, or 0-9/a-z";
         }
     }
 }

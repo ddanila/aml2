@@ -55,6 +55,15 @@ The launcher now accepts only meaningful entries:
 
 The future supervisor can still use `COMMAND.COM /C` internally to preserve free-form command strings.
 
+## Current TUI
+
+The launcher is now past the bare-minimum screen:
+
+- visible scrolling window for long program lists
+- stronger selected-row marker
+- `Up/Down`, `Home/End`, `PgUp/PgDn` movement
+- footer context for item number, command, and working directory
+
 ## `.COM` Reality Check
 
 We should not assume `.COM` is guaranteed.
@@ -80,6 +89,7 @@ Important findings from bring-up:
 - Transient full-screen text UIs are easier to verify with a mix of screen capture and explicit DOS-side trace points than with screen scraping alone.
 - The tested supervisor is now a real `AMLSTUB.COM`.
 - The current tested supervisor size is 787 bytes.
-- `AML2.EXE` is down to about 12 KB after reducing full-screen redraw work.
+- `AML2.EXE` is now about 13 KB with the larger TUI slice.
 - `kvikdos` is useful for fast non-TUI smoke checks, but QEMU is still the right tool for the full launcher loop.
 - The repo now also has explicit DOS failure-path checks for missing launcher and bad working directory handling.
+- The repo now also has a real-DOS navigation test for long launcher lists.

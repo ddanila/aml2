@@ -16,6 +16,14 @@ The first milestone is intentionally narrow:
 
 The first version does not include an in-app config editor, windowing system, or generic UI framework.
 
+Current TUI features:
+
+- scrolling list window for configs larger than one screen
+- stronger selected-row marker and richer footer context
+- direct hotkeys `0-9` and `a-z`
+- `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
+- footer with item position, command preview, and working directory preview
+
 Current config parsing rules:
 
 - lines starting with `#` are comments
@@ -74,7 +82,7 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 
 Current release-sized outputs from `./tools/build.sh` are approximately:
 
-- `aml2.exe`: 12 KB
+- `aml2.exe`: 13 KB
 - `amlstub.com`: 787 bytes
 
 ## Usage
@@ -94,6 +102,15 @@ Expected DOS-side layout:
 - `AML2.EXE`
 - `LAUNCHER.CFG`
 - the game executables or batch commands referenced by `LAUNCHER.CFG`
+
+Main controls in the launcher:
+
+- `Up/Down`: move by one entry
+- `PgUp/PgDn`: move by one visible page
+- `Home/End`: jump to first or last entry
+- `0-9`, `a-z`: launch the corresponding hotkey entry directly
+- `Enter`: launch current selection
+- `Esc`: exit to DOS
 
 ## E2E Test
 
@@ -135,11 +152,19 @@ bash tests/test_aml2_failure_paths.sh
 
 This verifies that the supervisor exits cleanly for a missing launcher and for an invalid working directory.
 
+Long-list TUI navigation coverage:
+
+```bash
+bash tests/test_aml2_tui_navigation.sh
+```
+
+This boots real DOS in QEMU, runs `AML2.EXE` directly, jumps to the end of a 20-entry config through DOS-side automation, and verifies that the scrolling UI shows the final item and position footer correctly before exiting to `A>`.
+
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
-1. Keep shrinking `AMLSTUB.COM` and simplify its DOS call path where possible.
-2. Tighten config parsing and validation in `cfg.c`.
-3. Reduce `AML2.EXE` size without weakening the QEMU-tested launcher loop.
-4. Add more DOS-side error coverage to the fake payload and supervisor tests.
+1. Add list-search or first-letter jump so large menus stay fast to navigate.
+2. Handle more than 36 direct-launch hotkeys cleanly in the UI.
+3. Improve error and empty-state screens so launcher problems are clearer on DOS hardware.
+4. Decide whether a second screen for per-entry details is worth the size cost.
