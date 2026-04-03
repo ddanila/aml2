@@ -663,7 +663,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
                              field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
         aml_ui_write_clipped(24, 14, path, field_width, 0, path_cursor,
                              field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_centered(16, "Enter next/save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
+        aml_ui_write_centered(16, "Enter next  F2 save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
         aml_ui_flush();
         if (field == 1) {
             visible_start = aml_ui_visible_start(command, field_width, 0, command_cursor);
@@ -691,27 +691,28 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         if (key == AML_KEY_ENTER) {
             if (field < 2) {
                 field++;
-                continue;
             }
-            if (name[0] == '\0' || command[0] == '\0') {
-                aml_ui_show_message(
-                    "Name and command required",
-                    "Both fields must be filled in.",
-                    "",
-                    "Press any key to continue."
-                );
-                getch();
-                continue;
-            }
-            strcpy(entry->name, name);
-            strcpy(entry->command, command);
-            strcpy(entry->path, path);
-            aml_ui_hide_cursor();
-            return 1;
+            continue;
         }
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
             key = getch();
-            if (key == AML_KEY_UP) {
+            if (key == AML_KEY_F2) {
+                if (name[0] == '\0' || command[0] == '\0') {
+                    aml_ui_show_message(
+                        "Name and command required",
+                        "Both fields must be filled in.",
+                        "",
+                        "Press any key to continue."
+                    );
+                    getch();
+                    continue;
+                }
+                strcpy(entry->name, name);
+                strcpy(entry->command, command);
+                strcpy(entry->path, path);
+                aml_ui_hide_cursor();
+                return 1;
+            } else if (key == AML_KEY_UP) {
                 field = (field + 2) % 3;
             } else if (key == AML_KEY_DOWN) {
                 field = (field + 1) % 3;
