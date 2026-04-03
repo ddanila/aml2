@@ -81,7 +81,8 @@ int main(void)
         if (action == AML_UI_SAVE) {
             rc = aml_save_config(&state, AML_CONFIG_FILE);
             if (rc != 0) {
-                aml_ui_show_message(
+                aml_ui_show_notice(
+                    &state,
                     "Save failed",
                     "Could not write LAUNCHER.CFG.",
                     "Check disk space and write permissions.",
@@ -90,7 +91,8 @@ int main(void)
                 getch();
             } else {
                 state.modified = 0;
-                aml_ui_show_message(
+                aml_ui_show_notice(
+                    &state,
                     "Configuration saved",
                     "LAUNCHER.CFG was updated successfully.",
                     "",
@@ -106,7 +108,8 @@ int main(void)
             state.selected < state.entry_count) {
             rc = aml_write_run_request(&state.entries[state.selected], AML_RUN_FILE);
             if (rc != 0) {
-                aml_ui_show_message(
+                aml_ui_show_notice(
+                    &state,
                     "Failed to write AML2.RUN",
                     "The launcher could not hand off the selected entry.",
                     "Check write permissions and available disk space.",

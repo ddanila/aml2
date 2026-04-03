@@ -831,13 +831,8 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     getch();
 }
 
-void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
+static void aml_ui_draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    aml_ui_hide_cursor();
-    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
-    aml_ui_draw_frame();
-    aml_ui_draw_section_line(4);
-    aml_ui_draw_header();
     aml_ui_fill_rect(12, 8, 67, 16, ' ', AML_UI_ATTR_DIALOG);
 
     aml_ui_putc(12, 8, 218, AML_UI_ATTR_FRAME);
@@ -861,7 +856,24 @@ void aml_ui_show_message(const char *title, const char *line1, const char *line2
     if (line3 != NULL && line3[0] != '\0') {
         aml_ui_write_centered(15, line3, AML_UI_ATTR_HELP);
     }
+}
 
+void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
+{
+    aml_ui_hide_cursor();
+    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    aml_ui_draw_frame();
+    aml_ui_draw_section_line(4);
+    aml_ui_draw_header();
+    aml_ui_draw_notice_box(title, line1, line2, line3);
+    aml_ui_flush();
+}
+
+void aml_ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3)
+{
+    aml_ui_hide_cursor();
+    aml_ui_render(state, "");
+    aml_ui_draw_notice_box(title, line1, line2, line3);
     aml_ui_flush();
 }
 
