@@ -3,10 +3,10 @@
 #include <dos.h>
 #include <i86.h>
 #include <stddef.h>
+#include <string.h>
 #if AML_TEST_HOOKS
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #endif
 
 #include "ui.h"
@@ -16,7 +16,10 @@ enum {
     AML_UI_COLS = 80,
     AML_UI_LIST_ROW = 5,
     AML_UI_LIST_ROWS = 17,
+    AML_SEARCH_MAX = 24,
     AML_KEY_ENTER = 13,
+    AML_KEY_BACKSPACE = 8,
+    AML_KEY_SLASH = '/',
     AML_KEY_ESC = 27,
     AML_KEY_EXTENDED = 0,
     AML_KEY_EXTENDED_2 = 224,
@@ -70,6 +73,16 @@ static void aml_ui_write_at(int col, int row, const char *text)
 {
     aml_ui_gotoxy(col, row);
     cputs(text);
+}
+
+static void aml_ui_write_centered(int row, const char *text)
+{
+    int col = (AML_UI_COLS - (int)strlen(text)) / 2;
+
+    if (col < 2) {
+        col = 2;
+    }
+    aml_ui_write_at(col, row, text);
 }
 
 static void aml_ui_draw_border(void)
@@ -134,6 +147,35 @@ static int aml_ui_hotkey_index(int key)
     if (key >= 'A' && key <= 'Z') {
         return 10 + (key - 'A');
     }
+    return -1;
+}
+
+static int aml_ui_name_starts_with(const char *name, const char *prefix)
+{
+    while (*prefix != '\0') {
+        if (tolower((unsigned char)*name) != tolower((unsigned char)*prefix)) {
+            return 0;
+        }
+        name++;
+        prefix++;
+    }
+    return 1;
+}
+
+static int aml_ui_find_prefix(const AmlState *state, const char *prefix)
+{
+    int i;
+
+    if (prefix[0] == '\0') {
+        return -1;
+    }
+
+    for (i = 0; i < state->entry_count; ++i) {
+        if (aml_ui_name_starts_with(state->entries[i].name, prefix)) {
+            return i;
+        }
+    }
+
     return -1;
 }
 
@@ -248,6 +290,86 @@ static void aml_ui_draw_footer(const AmlState *state, const char *status)
         aml_ui_gotoxy(3, 24);
         cputs("Command: ");
         aml_ui_write_padded(state->entries[state->selected].command, 68);
+    }
+}
+
+void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
+{
+    aml_ui_clrscr();
+    aml_ui_draw_border();
+    aml_ui_draw_header();
+    aml_ui_clear_line(9);
+    aml_ui_clear_line(11);
+    aml_ui_clear_line(13);
+    aml_ui_clear_line(15);
+    if (title != NULL && title[0] != '\0') {
+        aml_ui_write_centered(9, title);
+    }
+    if (line1 != NULL && line1[0] != '\0') {
+        aml_ui_write_centered(11, line1);
+    }
+    if (line2 != NULL && line2[0] != '\0') {
+        aml_ui_write_centered(13, line2);
+    }
+    if (line3 != NULL && line3[0] != '\0') {
+        aml_ui_write_centered(15, line3);
+    }
+}
+
+static int aml_ui_prompt_search(AmlState *state, const char **status)
+{
+    char query[AML_SEARCH_MAX + 1];
+    int len = 0;
+
+    query[0] = '\0';
+
+    for (;;) {
+        int key;
+        int match;
+
+        aml_ui_clear_line(23);
+        aml_ui_gotoxy(3, 23);
+        cputs("Find: ");
+        aml_ui_write_padded(query, AML_SEARCH_MAX);
+
+        key = getch();
+        if (key == AML_KEY_ESC) {
+            *status = "Search cancelled";
+            return 0;
+        }
+        if (key == AML_KEY_ENTER) {
+            match = aml_ui_find_prefix(state, query);
+            if (match >= 0) {
+                state->selected = match;
+                *status = "Search matched";
+            } else if (len == 0) {
+                *status = "Select a program";
+            } else {
+                *status = "No matching entry";
+            }
+            return 0;
+        }
+        if (key == AML_KEY_BACKSPACE) {
+            if (len > 0) {
+                query[--len] = '\0';
+            }
+        } else if (isprint(key) && len < AML_SEARCH_MAX) {
+            query[len++] = (char)key;
+            query[len] = '\0';
+        } else {
+            continue;
+        }
+
+        match = aml_ui_find_prefix(state, query);
+        if (match >= 0) {
+            state->selected = match;
+            *status = "Search matched";
+        } else if (len == 0) {
+            *status = "Search cleared";
+        } else {
+            *status = "No matching entry";
+        }
+        aml_ui_draw(state, *status);
     }
 }
 
@@ -406,6 +528,17 @@ static int aml_ui_apply_automation(AmlState *state)
         return AML_UI_QUIT;
     }
 
+    if (strncmp(line, "search ", 7) == 0) {
+        int index = aml_ui_find_prefix(state, line + 7);
+        if (index >= 0) {
+            state->selected = index;
+            aml_ui_trace_event("auto_search");
+            return AML_UI_AUTO_REDRAW;
+        }
+        aml_ui_trace_event("auto_bad_search");
+        return AML_UI_AUTO_REDRAW;
+    }
+
     aml_ui_trace_event("auto_unknown");
     return AML_UI_QUIT;
 }
@@ -463,6 +596,11 @@ int aml_ui_run(AmlState *state)
 
         if (key == AML_KEY_ESC) {
             return AML_UI_QUIT;
+        }
+
+        if (key == AML_KEY_SLASH && state->entry_count > 0) {
+            aml_ui_prompt_search(state, &status);
+            continue;
         }
 
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {

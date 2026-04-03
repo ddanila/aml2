@@ -45,7 +45,25 @@ int main(void)
 
     aml_ui_init();
     if (rc != 0) {
-        aml_ui_draw(&state, "launcher.cfg not found or invalid");
+        aml_ui_show_message(
+            "Launcher config not available",
+            "Expected file: LAUNCHER.CFG",
+            "Create a config and start AMLSTUB.COM again.",
+            "Press any key to exit."
+        );
+        getch();
+        aml_ui_shutdown();
+        return 1;
+    }
+
+    if (state.entry_count <= 0) {
+        aml_ui_show_message(
+            "No launcher entries found",
+            "LAUNCHER.CFG loaded, but there are no usable items.",
+            "Expected format: name|command|path",
+            "Press any key to exit."
+        );
+        getch();
         aml_ui_shutdown();
         return 1;
     }
@@ -58,8 +76,12 @@ int main(void)
         state.selected < state.entry_count) {
         rc = aml_write_run_request(&state.entries[state.selected], AML_RUN_FILE);
         if (rc != 0) {
-            aml_ui_init();
-            aml_ui_draw(&state, "Failed to write AML2.RUN");
+            aml_ui_show_message(
+                "Failed to write AML2.RUN",
+                "The launcher could not hand off the selected entry.",
+                "Check write permissions and available disk space.",
+                "Press any key to exit."
+            );
             getch();
             aml_ui_shutdown();
             return 1;

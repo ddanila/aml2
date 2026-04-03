@@ -22,6 +22,8 @@ Current TUI features:
 - stronger selected-row marker and richer footer context
 - direct hotkeys `0-9` and `a-z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
+- `/` prefix search against entry names
+- clearer full-screen message panels for missing or unusable config
 - footer with item position, command preview, and working directory preview
 
 Current config parsing rules:
@@ -82,7 +84,7 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 
 Current release-sized outputs from `./tools/build.sh` are approximately:
 
-- `aml2.exe`: 13 KB
+- `aml2.exe`: 14 KB
 - `amlstub.com`: 787 bytes
 
 ## Usage
@@ -108,6 +110,7 @@ Main controls in the launcher:
 - `Up/Down`: move by one entry
 - `PgUp/PgDn`: move by one visible page
 - `Home/End`: jump to first or last entry
+- `/`: search by entry-name prefix
 - `0-9`, `a-z`: launch the corresponding hotkey entry directly
 - `Enter`: launch current selection
 - `Esc`: exit to DOS
@@ -160,11 +163,19 @@ bash tests/test_aml2_tui_navigation.sh
 
 This boots real DOS in QEMU, runs `AML2.EXE` directly, jumps to the end of a 20-entry config through DOS-side automation, and verifies that the scrolling UI shows the final item and position footer correctly before exiting to `A>`.
 
+Search and message-screen coverage:
+
+```bash
+bash tests/test_aml2_search_and_messages.sh
+```
+
+This verifies name-prefix search on a long list and the full-screen empty-config message path under real DOS in QEMU.
+
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
-1. Add list-search or first-letter jump so large menus stay fast to navigate.
-2. Handle more than 36 direct-launch hotkeys cleanly in the UI.
-3. Improve error and empty-state screens so launcher problems are clearer on DOS hardware.
-4. Decide whether a second screen for per-entry details is worth the size cost.
+1. Handle more than 36 direct-launch hotkeys cleanly in the UI.
+2. Decide whether search should become full substring search instead of prefix-only.
+3. Add a slightly richer details/help panel without losing the tiny-launcher feel.
+4. Revisit `AML2.EXE` size now that the more useful TUI slice is in place.
