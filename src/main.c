@@ -28,9 +28,10 @@ static void aml_trace_event(const char *event_name)
 }
 #endif
 
+static AmlState state;
+
 int main(void)
 {
-    AmlState state;
     int rc;
     int action;
 

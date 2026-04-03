@@ -21,9 +21,10 @@ Current TUI features:
 - direct text-mode VRAM renderer with a full-screen backbuffer
 - scrolling list window for configs larger than one screen
 - stronger selected-row marker, boxed sections, and a scrollbar-style gutter
-- direct hotkeys `0-9` and `a-z`
+- direct hotkeys `0-9`, `a-z`, and `A-Z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
 - `/` prefix search against entry names
+- `?` / `F1` help dialog with current-entry details
 - clearer full-screen message panels for missing or unusable config
 - footer with item position, command preview, and working directory preview
 
@@ -85,7 +86,7 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 
 Current release-sized outputs from `./tools/build.sh` are approximately:
 
-- `aml2.exe`: 14 KB
+- `aml2.exe`: 15 KB
 - `amlstub.com`: 787 bytes
 
 ## Usage
@@ -124,7 +125,8 @@ Main controls in the launcher:
 - `PgUp/PgDn`: move by one visible page
 - `Home/End`: jump to first or last entry
 - `/`: search by entry-name prefix
-- `0-9`, `a-z`: launch the corresponding hotkey entry directly
+- `?` or `F1`: open the help dialog
+- `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly
 - `Enter`: launch current selection
 - `Esc`: exit to DOS
 
@@ -184,11 +186,19 @@ bash tests/test_aml2_search_and_messages.sh
 
 This verifies name-prefix search on a long list and the full-screen empty-config message path under real DOS in QEMU.
 
+Extended hotkey and help coverage:
+
+```bash
+bash tests/test_aml2_hotkeys_and_help.sh
+```
+
+This verifies the uppercase hotkey range for entries past `z` and the in-app help dialog under real DOS in QEMU.
+
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
-1. Handle more than 36 direct-launch hotkeys cleanly in the UI.
-2. Decide whether search should become full substring search instead of prefix-only.
-3. Add a slightly richer details/help panel without losing the tiny-launcher feel.
+1. Decide whether search should become full substring search instead of prefix-only.
+2. Add a slightly richer details/help panel without losing the tiny-launcher feel.
+3. Decide whether large configs need a second “page” of hotkeys beyond the current 62-entry scheme.
 4. Revisit `AML2.EXE` size now that the more useful renderer and TUI slice are in place.

@@ -64,6 +64,8 @@ The launcher is now past the bare-minimum screen:
 - stronger selected-row marker and scrollbar gutter
 - `Up/Down`, `Home/End`, `PgUp/PgDn` movement
 - `/` prefix search
+- direct hotkeys `0-9`, `a-z`, `A-Z`
+- `?` / `F1` help dialog with current-entry details
 - full-screen message panels for missing config and empty config
 - footer context for item number, command, and working directory
 
@@ -92,8 +94,9 @@ Important findings from bring-up:
 - Transient full-screen text UIs are easier to verify with a mix of screen capture and explicit DOS-side trace points than with screen scraping alone.
 - The tested supervisor is now a real `AMLSTUB.COM`.
 - The current tested supervisor size is 787 bytes.
-- `AML2.EXE` is now about 14 KB with search and clearer message screens.
+- `AML2.EXE` is now about 15 KB with the richer renderer, help dialog, and extended hotkeys.
 - `kvikdos` is useful for fast non-TUI smoke checks, but QEMU is still the right tool for the full launcher loop.
 - The repo now also has explicit DOS failure-path checks for missing launcher and bad working directory handling.
 - The repo now also has a real-DOS navigation test for long launcher lists.
 - The repo now also has a real-DOS test for prefix search and empty-config messaging.
+- The repo now also has a real-DOS test for uppercase hotkeys and the help dialog.
