@@ -2,9 +2,9 @@
 
 `aml2` is a fresh rewrite of the Arvutimuuseum launcher for DOS.
 
-The target is a very small binary built with Open Watcom, using plain C and a tiny custom text UI instead of Turbo Vision.
+The target is a very small binary built with Open Watcom, using plain C and a tiny custom text UI.
 
-License: MIT. See [LICENSE](/home/ddanila/fun/aml2/LICENSE).
+License: MIT. See [LICENSE](LICENSE).
 
 ## Screenshot
 
@@ -14,7 +14,7 @@ License: MIT. See [LICENSE](/home/ddanila/fun/aml2/LICENSE).
 
 The first milestone is intentionally narrow:
 
-- read `launcher.cfg`
+- read `LAUNCHER.CFG`
 - show a simple launcher list
 - support direct hotkeys, lightweight editing, and save
 - write a tiny launch request and exit
@@ -48,7 +48,7 @@ Current config parsing rules:
 
 ## Launch Model
 
-`aml2` is moving to a two-binary model:
+`aml2` uses a two-binary model:
 
 - `AML2.EXE`: launcher UI and config parsing
 - `AMLSTUB.COM`: outer supervisor loop
@@ -63,7 +63,7 @@ This gives us:
 
 Current tested supervisor build is an Open Watcom `wasm`-built `AMLSTUB.COM`.
 
-See [docs/stub-design.md](/home/ddanila/fun/aml2/docs/stub-design.md) for the protocol details.
+See [docs/stub-design.md](docs/stub-design.md) for the protocol details.
 
 ## Repository Layout
 
@@ -97,7 +97,7 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 
 Current release-sized outputs from `./tools/build.sh` are approximately:
 
-- `aml2.exe`: 15 KB
+- `aml2.exe`: 22 KB
 - `amlstub.com`: 787 bytes
 
 Packaging output from `./tools/package_dist.sh`:
@@ -222,11 +222,11 @@ bash tests/test_aml2_hotkeys_and_help.sh
 
 This verifies the uppercase hotkey range for entries past `z` and the in-app help dialog under real DOS in QEMU.
 
-See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
+See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
-1. Add deletion and entry reordering so the editor loop is complete.
+1. Add entry reordering so the editor loop is more complete.
 2. Decide whether search should become full substring search instead of prefix-only.
-3. Decide whether large configs need a second “page” of hotkeys beyond the current 62-entry scheme.
-4. Revisit `AML2.EXE` size now that the more useful renderer and editor slice are in place.
+3. Decide whether large configs need a second hotkey page beyond the current 62-entry scheme.
+4. Revisit `AML2.EXE` size now that the renderer and editor slice are in place.
