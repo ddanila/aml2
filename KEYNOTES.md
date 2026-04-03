@@ -59,8 +59,9 @@ The future supervisor can still use `COMMAND.COM /C` internally to preserve free
 
 The launcher is now past the bare-minimum screen:
 
+- backbuffered direct-VRAM text renderer
 - visible scrolling window for long program lists
-- stronger selected-row marker
+- stronger selected-row marker and scrollbar gutter
 - `Up/Down`, `Home/End`, `PgUp/PgDn` movement
 - `/` prefix search
 - full-screen message panels for missing config and empty config

@@ -18,8 +18,9 @@ The first version does not include an in-app config editor, windowing system, or
 
 Current TUI features:
 
+- direct text-mode VRAM renderer with a full-screen backbuffer
 - scrolling list window for configs larger than one screen
-- stronger selected-row marker and richer footer context
+- stronger selected-row marker, boxed sections, and a scrollbar-style gutter
 - direct hotkeys `0-9` and `a-z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
 - `/` prefix search against entry names
@@ -190,4 +191,4 @@ See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the 
 1. Handle more than 36 direct-launch hotkeys cleanly in the UI.
 2. Decide whether search should become full substring search instead of prefix-only.
 3. Add a slightly richer details/help panel without losing the tiny-launcher feel.
-4. Revisit `AML2.EXE` size now that the more useful TUI slice is in place.
+4. Revisit `AML2.EXE` size now that the more useful renderer and TUI slice are in place.

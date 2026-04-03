@@ -15,8 +15,28 @@ enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
     AML_UI_LIST_ROW = 5,
-    AML_UI_LIST_ROWS = 17,
-    AML_SEARCH_MAX = 24,
+    AML_UI_LIST_ROWS = 16,
+    AML_UI_SEARCH_MAX = 24,
+    AML_UI_FRAME_LEFT = 1,
+    AML_UI_FRAME_TOP = 1,
+    AML_UI_FRAME_RIGHT = 78,
+    AML_UI_FRAME_BOTTOM = 24,
+    AML_UI_LIST_LEFT = 3,
+    AML_UI_LIST_RIGHT = 76,
+    AML_UI_SCROLL_COL = 75,
+    AML_UI_ATTR_BG = 0x01,
+    AML_UI_ATTR_FRAME = 0x1F,
+    AML_UI_ATTR_TITLE = 0x1E,
+    AML_UI_ATTR_HELP = 0x1B,
+    AML_UI_ATTR_TEXT = 0x1F,
+    AML_UI_ATTR_MUTED = 0x19,
+    AML_UI_ATTR_STATUS = 0x1F,
+    AML_UI_ATTR_SELECTED = 0x30,
+    AML_UI_ATTR_DIALOG = 0x17,
+    AML_UI_ATTR_DIALOG_TEXT = 0x1F,
+    AML_UI_ATTR_DIALOG_DIM = 0x1E,
+    AML_UI_ATTR_SCROLL = 0x19,
+    AML_UI_ATTR_SCROLL_THUMB = 0x3F,
     AML_KEY_ENTER = 13,
     AML_KEY_BACKSPACE = 8,
     AML_KEY_SLASH = '/',
@@ -31,109 +51,156 @@ enum {
     AML_KEY_PGDN = 81
 };
 
-static void aml_ui_gotoxy(int col, int row)
-{
-    union REGS inregs;
-    union REGS outregs;
+enum {
+    AML_UI_AUTO_NONE = -1,
+    AML_UI_AUTO_REDRAW = -2
+};
 
-    inregs.h.ah = 0x02;
-    inregs.h.bh = 0x00;
-    inregs.h.dh = (unsigned char)(row - 1);
-    inregs.h.dl = (unsigned char)(col - 1);
-    int86(0x10, &inregs, &outregs);
+static unsigned short aml_ui_backbuf[AML_UI_ROWS * AML_UI_COLS];
+
+static unsigned short aml_ui_cell(unsigned char ch, unsigned char attr)
+{
+    return (unsigned short)ch | ((unsigned short)attr << 8);
 }
 
-static void aml_ui_clrscr(void)
+static void aml_ui_wait_vsync(void)
 {
-    union REGS inregs;
-    union REGS outregs;
-
-    inregs.h.ah = 0x06;
-    inregs.h.al = 0x00;
-    inregs.h.bh = 0x07;
-    inregs.h.ch = 0x00;
-    inregs.h.cl = 0x00;
-    inregs.h.dh = AML_UI_ROWS - 1;
-    inregs.h.dl = AML_UI_COLS - 1;
-    int86(0x10, &inregs, &outregs);
-    aml_ui_gotoxy(1, 1);
-}
-
-static void aml_ui_clear_line(int row)
-{
-    int i;
-
-    aml_ui_gotoxy(1, row);
-    for (i = 0; i < AML_UI_COLS; ++i) {
-        putch(' ');
+    while (inp(0x3DA) & 0x08) {
+    }
+    while ((inp(0x3DA) & 0x08) == 0) {
     }
 }
 
-static void aml_ui_write_at(int col, int row, const char *text)
+static void aml_ui_flush(void)
 {
-    aml_ui_gotoxy(col, row);
-    cputs(text);
+    unsigned short far *video = (unsigned short far *)MK_FP(0xB800, 0);
+    unsigned i;
+
+    aml_ui_wait_vsync();
+    for (i = 0; i < AML_UI_ROWS * AML_UI_COLS; ++i) {
+        video[i] = aml_ui_backbuf[i];
+    }
 }
 
-static void aml_ui_write_centered(int row, const char *text)
+static void aml_ui_fill_rect(int left, int top, int right, int bottom,
+                             unsigned char ch, unsigned char attr)
 {
-    int col = (AML_UI_COLS - (int)strlen(text)) / 2;
+    int row;
+    int col;
+    unsigned short cell = aml_ui_cell(ch, attr);
 
-    if (col < 2) {
-        col = 2;
+    if (left < 0) {
+        left = 0;
     }
-    aml_ui_write_at(col, row, text);
+    if (top < 0) {
+        top = 0;
+    }
+    if (right >= AML_UI_COLS) {
+        right = AML_UI_COLS - 1;
+    }
+    if (bottom >= AML_UI_ROWS) {
+        bottom = AML_UI_ROWS - 1;
+    }
+
+    for (row = top; row <= bottom; ++row) {
+        for (col = left; col <= right; ++col) {
+            aml_ui_backbuf[row * AML_UI_COLS + col] = cell;
+        }
+    }
 }
 
-static void aml_ui_draw_border(void)
+static void aml_ui_putc(int col, int row, unsigned char ch, unsigned char attr)
 {
-    int i;
-
-    aml_ui_gotoxy(1, 1);
-    putch('+');
-    for (i = 2; i < AML_UI_COLS; ++i) {
-        putch('-');
+    if (col < 0 || col >= AML_UI_COLS || row < 0 || row >= AML_UI_ROWS) {
+        return;
     }
-    putch('+');
-
-    for (i = 2; i < AML_UI_ROWS; ++i) {
-        aml_ui_gotoxy(1, i);
-        putch('|');
-        aml_ui_gotoxy(AML_UI_COLS, i);
-        putch('|');
-    }
-
-    aml_ui_gotoxy(1, AML_UI_ROWS);
-    putch('+');
-    for (i = 2; i < AML_UI_COLS; ++i) {
-        putch('-');
-    }
-    putch('+');
+    aml_ui_backbuf[row * AML_UI_COLS + col] = aml_ui_cell(ch, attr);
 }
 
-static void aml_ui_draw_header(void)
+static void aml_ui_write_at(int col, int row, const char *text, unsigned char attr)
 {
-    aml_ui_clear_line(2);
-    aml_ui_clear_line(3);
-    aml_ui_write_at(3, 2, "aml2");
-    aml_ui_write_at(10, 2, "Arvutimuuseum Launcher v2");
-    aml_ui_write_at(3, 3, "Arrows/Home/End/PgUp/PgDn: Move   Enter: Select   Esc: Quit   0-9,a-z");
+    while (*text != '\0' && col < AML_UI_COLS) {
+        aml_ui_putc(col, row, (unsigned char)*text, attr);
+        col++;
+        text++;
+    }
 }
 
-static void aml_ui_write_padded(const char *text, int width)
+static void aml_ui_write_padded(int col, int row, const char *text, int width, unsigned char attr)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        char ch = text[i];
-        if (ch == '\0') {
-            break;
+        unsigned char ch = ' ';
+
+        if (text[i] != '\0') {
+            ch = (unsigned char)text[i];
         }
-        putch(ch);
+        aml_ui_putc(col + i, row, ch, attr);
     }
-    for (; i < width; ++i) {
-        putch(' ');
+}
+
+static void aml_ui_write_centered(int row, const char *text, unsigned char attr)
+{
+    int col = (AML_UI_COLS - (int)strlen(text)) / 2;
+
+    if (col < 1) {
+        col = 1;
     }
+    aml_ui_write_at(col, row, text, attr);
+}
+
+static void aml_ui_write_uint_at(int col, int row, unsigned value, unsigned char attr)
+{
+    char digits[6];
+    int i = 0;
+
+    do {
+        digits[i++] = (char)('0' + (value % 10));
+        value /= 10;
+    } while (value != 0 && i < (int)sizeof(digits));
+
+    while (i > 0) {
+        aml_ui_putc(col++, row, (unsigned char)digits[--i], attr);
+    }
+}
+
+static void aml_ui_draw_frame(void)
+{
+    int i;
+
+    aml_ui_putc(AML_UI_FRAME_LEFT, AML_UI_FRAME_TOP, 218, AML_UI_ATTR_FRAME);
+    aml_ui_putc(AML_UI_FRAME_RIGHT, AML_UI_FRAME_TOP, 191, AML_UI_ATTR_FRAME);
+    aml_ui_putc(AML_UI_FRAME_LEFT, AML_UI_FRAME_BOTTOM, 192, AML_UI_ATTR_FRAME);
+    aml_ui_putc(AML_UI_FRAME_RIGHT, AML_UI_FRAME_BOTTOM, 217, AML_UI_ATTR_FRAME);
+
+    for (i = AML_UI_FRAME_LEFT + 1; i < AML_UI_FRAME_RIGHT; ++i) {
+        aml_ui_putc(i, AML_UI_FRAME_TOP, 196, AML_UI_ATTR_FRAME);
+        aml_ui_putc(i, AML_UI_FRAME_BOTTOM, 196, AML_UI_ATTR_FRAME);
+    }
+
+    for (i = AML_UI_FRAME_TOP + 1; i < AML_UI_FRAME_BOTTOM; ++i) {
+        aml_ui_putc(AML_UI_FRAME_LEFT, i, 179, AML_UI_ATTR_FRAME);
+        aml_ui_putc(AML_UI_FRAME_RIGHT, i, 179, AML_UI_ATTR_FRAME);
+    }
+}
+
+static void aml_ui_draw_section_line(int row)
+{
+    int i;
+
+    aml_ui_putc(AML_UI_FRAME_LEFT, row, 195, AML_UI_ATTR_FRAME);
+    aml_ui_putc(AML_UI_FRAME_RIGHT, row, 180, AML_UI_ATTR_FRAME);
+    for (i = AML_UI_FRAME_LEFT + 1; i < AML_UI_FRAME_RIGHT; ++i) {
+        aml_ui_putc(i, row, 196, AML_UI_ATTR_FRAME);
+    }
+}
+
+static void aml_ui_draw_header(void)
+{
+    aml_ui_write_at(4, 2, " aml2 ", AML_UI_ATTR_TITLE);
+    aml_ui_write_at(12, 2, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
+    aml_ui_write_at(4, 3, "Arrows/Home/End/PgUp/PgDn Move  / Search  Enter Launch  Esc Exit", AML_UI_ATTR_HELP);
 }
 
 static int aml_ui_hotkey_index(int key)
@@ -198,186 +265,146 @@ static int aml_ui_first_visible(const AmlState *state)
     return top;
 }
 
-static void aml_ui_write_uint(unsigned value)
-{
-    char digits[6];
-    int i = 0;
-
-    do {
-        digits[i++] = (char)('0' + (value % 10));
-        value /= 10;
-    } while (value != 0 && i < (int)sizeof(digits));
-
-    while (i > 0) {
-        putch(digits[--i]);
-    }
-}
-
-static void aml_ui_write_position(const AmlState *state)
+static void aml_ui_draw_position(const AmlState *state)
 {
     if (state->entry_count <= 0) {
         return;
     }
 
-    aml_ui_gotoxy(63, 23);
-    cputs("Item ");
-    aml_ui_write_uint((unsigned)(state->selected + 1));
-    putch('/');
-    aml_ui_write_uint((unsigned)state->entry_count);
+    aml_ui_write_at(61, 22, "Item", AML_UI_ATTR_STATUS);
+    aml_ui_write_uint_at(66, 22, (unsigned)(state->selected + 1), AML_UI_ATTR_STATUS);
+    aml_ui_putc(68, 22, '/', AML_UI_ATTR_STATUS);
+    aml_ui_write_uint_at(69, 22, (unsigned)state->entry_count, AML_UI_ATTR_STATUS);
+}
+
+static void aml_ui_draw_scrollbar(const AmlState *state)
+{
+    int row;
+    int thumb_row = AML_UI_LIST_ROW + 1;
+
+    aml_ui_putc(AML_UI_SCROLL_COL, AML_UI_LIST_ROW, 30, AML_UI_ATTR_SCROLL);
+    aml_ui_putc(AML_UI_SCROLL_COL, AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1, 31, AML_UI_ATTR_SCROLL);
+
+    for (row = AML_UI_LIST_ROW + 1; row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1; ++row) {
+        aml_ui_putc(AML_UI_SCROLL_COL, row, 176, AML_UI_ATTR_SCROLL);
+    }
+
+    if (state->entry_count > AML_UI_LIST_ROWS) {
+        int track = AML_UI_LIST_ROWS - 2;
+        thumb_row = AML_UI_LIST_ROW + 1 +
+            ((state->selected * (track - 1)) / (state->entry_count - 1));
+    }
+
+    aml_ui_putc(AML_UI_SCROLL_COL, thumb_row, 219, AML_UI_ATTR_SCROLL_THUMB);
 }
 
 static void aml_ui_draw_entries(const AmlState *state)
 {
-    int i;
     int row;
+    int index;
     int top = aml_ui_first_visible(state);
 
-    for (row = AML_UI_LIST_ROW; row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS; ++row) {
-        aml_ui_clear_line(row);
-    }
+    aml_ui_fill_rect(AML_UI_LIST_LEFT, AML_UI_LIST_ROW, AML_UI_LIST_RIGHT,
+                     AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1, ' ', AML_UI_ATTR_TEXT);
 
     if (state->entry_count <= 0) {
-        aml_ui_write_at(4, 6, "No entries found in launcher.cfg");
+        aml_ui_write_at(6, 10, "No entries available.", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(6, 12, "Check LAUNCHER.CFG or press Esc to exit.", AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_draw_scrollbar(state);
         return;
     }
 
-    for (row = AML_UI_LIST_ROW, i = top;
-         row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS && i < state->entry_count;
-         ++row, ++i) {
-        aml_ui_clear_line(row);
-        aml_ui_gotoxy(4, row);
-        putch((i == state->selected) ? 16 : ' ');
-        putch('[');
-        if (i >= 0 && i <= 9) {
-            putch('0' + i);
-        } else if (i >= 10 && i < 36) {
-            putch('a' + (i - 10));
-        } else {
-            putch(' ');
+    for (row = 0, index = top;
+         row < AML_UI_LIST_ROWS && index < state->entry_count;
+         ++row, ++index) {
+        int y = AML_UI_LIST_ROW + row;
+        unsigned char attr = (index == state->selected) ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_TEXT;
+        char hotkey = ' ';
+
+        if (index < 10) {
+            hotkey = (char)('0' + index);
+        } else if (index < 36) {
+            hotkey = (char)('a' + (index - 10));
         }
-        putch(']');
-        putch(' ');
-        aml_ui_write_padded(state->entries[i].name, 52);
+
+        aml_ui_fill_rect(AML_UI_LIST_LEFT + 1, y, AML_UI_LIST_RIGHT - 2, y, ' ', attr);
+        aml_ui_putc(4, y, (index == state->selected) ? 16 : 250, attr);
+        aml_ui_putc(6, y, '[', attr);
+        aml_ui_putc(7, y, (unsigned char)hotkey, attr);
+        aml_ui_putc(8, y, ']', attr);
+        aml_ui_write_padded(11, y, state->entries[index].name, 58, attr);
     }
+
+    aml_ui_draw_scrollbar(state);
 }
 
 static void aml_ui_draw_footer(const AmlState *state, const char *status)
 {
-    aml_ui_clear_line(22);
-    aml_ui_clear_line(23);
-    aml_ui_clear_line(24);
+    aml_ui_fill_rect(AML_UI_LIST_LEFT, 21, AML_UI_LIST_RIGHT, 23, ' ', AML_UI_ATTR_STATUS);
 
     if (state->entry_count > 0 &&
         state->selected >= 0 &&
         state->selected < state->entry_count) {
-        aml_ui_gotoxy(3, 22);
-        cputs("Path: ");
+        aml_ui_write_at(4, 21, "Path:", AML_UI_ATTR_MUTED);
         if (state->entries[state->selected].path[0] != '\0') {
-            aml_ui_write_padded(state->entries[state->selected].path, 68);
+            aml_ui_write_padded(10, 21, state->entries[state->selected].path, 49, AML_UI_ATTR_STATUS);
         } else {
-            aml_ui_write_padded(".", 68);
+            aml_ui_write_padded(10, 21, ".", 49, AML_UI_ATTR_STATUS);
         }
+
+        aml_ui_write_at(4, 23, "Command:", AML_UI_ATTR_MUTED);
+        aml_ui_write_padded(13, 23, state->entries[state->selected].command, 63, AML_UI_ATTR_STATUS);
     }
 
     if (status != NULL && status[0] != '\0') {
-        aml_ui_write_at(3, 23, status);
+        aml_ui_write_padded(4, 22, status, 55, AML_UI_ATTR_STATUS);
     }
-    aml_ui_write_position(state);
+    aml_ui_draw_position(state);
+}
 
-    if (state->entry_count > 0 &&
-        state->selected >= 0 &&
-        state->selected < state->entry_count) {
-        aml_ui_gotoxy(3, 24);
-        cputs("Command: ");
-        aml_ui_write_padded(state->entries[state->selected].command, 68);
-    }
+static void aml_ui_render(const AmlState *state, const char *status)
+{
+    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    aml_ui_draw_frame();
+    aml_ui_draw_section_line(4);
+    aml_ui_draw_section_line(20);
+    aml_ui_draw_header();
+    aml_ui_draw_entries(state);
+    aml_ui_draw_footer(state, status);
 }
 
 void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    aml_ui_clrscr();
-    aml_ui_draw_border();
+    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    aml_ui_draw_frame();
+    aml_ui_draw_section_line(4);
     aml_ui_draw_header();
-    aml_ui_clear_line(9);
-    aml_ui_clear_line(11);
-    aml_ui_clear_line(13);
-    aml_ui_clear_line(15);
+    aml_ui_fill_rect(12, 8, 67, 16, ' ', AML_UI_ATTR_DIALOG);
+
+    aml_ui_putc(12, 8, 218, AML_UI_ATTR_FRAME);
+    aml_ui_putc(67, 8, 191, AML_UI_ATTR_FRAME);
+    aml_ui_putc(12, 16, 192, AML_UI_ATTR_FRAME);
+    aml_ui_putc(67, 16, 217, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(13, 8, 66, 8, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(13, 16, 66, 16, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(12, 9, 12, 15, 179, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(67, 9, 67, 15, 179, AML_UI_ATTR_FRAME);
+
     if (title != NULL && title[0] != '\0') {
-        aml_ui_write_centered(9, title);
+        aml_ui_write_centered(10, title, AML_UI_ATTR_DIALOG_TEXT);
     }
     if (line1 != NULL && line1[0] != '\0') {
-        aml_ui_write_centered(11, line1);
+        aml_ui_write_centered(12, line1, AML_UI_ATTR_DIALOG_TEXT);
     }
     if (line2 != NULL && line2[0] != '\0') {
-        aml_ui_write_centered(13, line2);
+        aml_ui_write_centered(13, line2, AML_UI_ATTR_DIALOG_DIM);
     }
     if (line3 != NULL && line3[0] != '\0') {
-        aml_ui_write_centered(15, line3);
+        aml_ui_write_centered(15, line3, AML_UI_ATTR_HELP);
     }
+
+    aml_ui_flush();
 }
-
-static int aml_ui_prompt_search(AmlState *state, const char **status)
-{
-    char query[AML_SEARCH_MAX + 1];
-    int len = 0;
-
-    query[0] = '\0';
-
-    for (;;) {
-        int key;
-        int match;
-
-        aml_ui_clear_line(23);
-        aml_ui_gotoxy(3, 23);
-        cputs("Find: ");
-        aml_ui_write_padded(query, AML_SEARCH_MAX);
-
-        key = getch();
-        if (key == AML_KEY_ESC) {
-            *status = "Search cancelled";
-            return 0;
-        }
-        if (key == AML_KEY_ENTER) {
-            match = aml_ui_find_prefix(state, query);
-            if (match >= 0) {
-                state->selected = match;
-                *status = "Search matched";
-            } else if (len == 0) {
-                *status = "Select a program";
-            } else {
-                *status = "No matching entry";
-            }
-            return 0;
-        }
-        if (key == AML_KEY_BACKSPACE) {
-            if (len > 0) {
-                query[--len] = '\0';
-            }
-        } else if (isprint(key) && len < AML_SEARCH_MAX) {
-            query[len++] = (char)key;
-            query[len] = '\0';
-        } else {
-            continue;
-        }
-
-        match = aml_ui_find_prefix(state, query);
-        if (match >= 0) {
-            state->selected = match;
-            *status = "Search matched";
-        } else if (len == 0) {
-            *status = "Search cleared";
-        } else {
-            *status = "No matching entry";
-        }
-        aml_ui_draw(state, *status);
-    }
-}
-
-#if AML_TEST_HOOKS
-enum {
-    AML_UI_AUTO_NONE = -1,
-    AML_UI_AUTO_REDRAW = -2
-};
 
 static void aml_ui_trim_newline(char *line)
 {
@@ -389,6 +416,7 @@ static void aml_ui_trim_newline(char *line)
     }
 }
 
+#if AML_TEST_HOOKS
 static int aml_ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
@@ -523,20 +551,20 @@ static int aml_ui_apply_automation(AmlState *state)
         return AML_UI_AUTO_REDRAW;
     }
 
-    if (strcmp(line, "quit") == 0) {
-        aml_ui_trace_event("auto_quit");
-        return AML_UI_QUIT;
-    }
-
     if (strncmp(line, "search ", 7) == 0) {
         int index = aml_ui_find_prefix(state, line + 7);
         if (index >= 0) {
             state->selected = index;
             aml_ui_trace_event("auto_search");
-            return AML_UI_AUTO_REDRAW;
+        } else {
+            aml_ui_trace_event("auto_bad_search");
         }
-        aml_ui_trace_event("auto_bad_search");
         return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "quit") == 0) {
+        aml_ui_trace_event("auto_quit");
+        return AML_UI_QUIT;
     }
 
     aml_ui_trace_event("auto_unknown");
@@ -544,22 +572,79 @@ static int aml_ui_apply_automation(AmlState *state)
 }
 #endif
 
+static int aml_ui_prompt_search(AmlState *state, const char **status)
+{
+    char query[AML_UI_SEARCH_MAX + 1];
+    int len = 0;
+
+    query[0] = '\0';
+
+    for (;;) {
+        int key;
+        int match;
+
+        aml_ui_render(state, *status);
+        aml_ui_fill_rect(3, 22, 76, 22, ' ', AML_UI_ATTR_STATUS);
+        aml_ui_write_at(3, 22, "Find:", AML_UI_ATTR_MUTED);
+        aml_ui_write_padded(9, 22, query, AML_UI_SEARCH_MAX, AML_UI_ATTR_STATUS);
+        aml_ui_flush();
+
+        key = getch();
+        if (key == AML_KEY_ESC) {
+            *status = "Search cancelled";
+            return 0;
+        }
+        if (key == AML_KEY_ENTER) {
+            match = aml_ui_find_prefix(state, query);
+            if (match >= 0) {
+                state->selected = match;
+                *status = "Search matched";
+            } else if (len == 0) {
+                *status = "Select a program";
+            } else {
+                *status = "No matching entry";
+            }
+            return 0;
+        }
+        if (key == AML_KEY_BACKSPACE) {
+            if (len > 0) {
+                query[--len] = '\0';
+            }
+        } else if (isprint(key) && len < AML_UI_SEARCH_MAX) {
+            query[len++] = (char)key;
+            query[len] = '\0';
+        } else {
+            continue;
+        }
+
+        match = aml_ui_find_prefix(state, query);
+        if (match >= 0) {
+            state->selected = match;
+            *status = "Search matched";
+        } else if (len == 0) {
+            *status = "Search cleared";
+        } else {
+            *status = "No matching entry";
+        }
+    }
+}
+
 void aml_ui_init(void)
 {
-    aml_ui_clrscr();
-    aml_ui_draw_border();
-    aml_ui_draw_header();
+    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    aml_ui_flush();
 }
 
 void aml_ui_shutdown(void)
 {
-    aml_ui_clrscr();
+    aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', 0x07);
+    aml_ui_flush();
 }
 
 void aml_ui_draw(const AmlState *state, const char *status)
 {
-    aml_ui_draw_entries(state);
-    aml_ui_draw_footer(state, status);
+    aml_ui_render(state, status);
+    aml_ui_flush();
 }
 
 int aml_ui_run(AmlState *state)
@@ -567,21 +652,20 @@ int aml_ui_run(AmlState *state)
     const char *status = "Select a program";
 
     for (;;) {
-#if AML_TEST_HOOKS
-        int auto_action;
-#endif
         int key;
         int hotkey_index;
 
         aml_ui_draw(state, status);
 #if AML_TEST_HOOKS
         sleep(1);
-        auto_action = aml_ui_apply_automation(state);
-        if (auto_action == AML_UI_AUTO_REDRAW) {
-            continue;
-        }
-        if (auto_action >= 0) {
-            return auto_action;
+        {
+            int auto_action = aml_ui_apply_automation(state);
+            if (auto_action == AML_UI_AUTO_REDRAW) {
+                continue;
+            }
+            if (auto_action >= 0) {
+                return auto_action;
+            }
         }
 #endif
         key = getch();
@@ -612,37 +696,33 @@ int aml_ui_run(AmlState *state)
 
             if (key == AML_KEY_HOME) {
                 state->selected = 0;
-                status = "Select a program";
             } else if (key == AML_KEY_END) {
                 state->selected = state->entry_count - 1;
-                status = "Select a program";
             } else if (key == AML_KEY_PGUP) {
                 state->selected -= AML_UI_LIST_ROWS;
                 if (state->selected < 0) {
                     state->selected = 0;
                 }
-                status = "Select a program";
             } else if (key == AML_KEY_PGDN) {
                 state->selected += AML_UI_LIST_ROWS;
                 if (state->selected >= state->entry_count) {
                     state->selected = state->entry_count - 1;
                 }
-                status = "Select a program";
             } else if (key == AML_KEY_UP) {
                 if (state->selected > 0) {
                     state->selected--;
                 } else {
                     state->selected = state->entry_count - 1;
                 }
-                status = "Select a program";
             } else if (key == AML_KEY_DOWN) {
                 if (state->selected < state->entry_count - 1) {
                     state->selected++;
                 } else {
                     state->selected = 0;
                 }
-                status = "Select a program";
             }
+
+            status = "Select a program";
             continue;
         }
 
@@ -655,7 +735,7 @@ int aml_ui_run(AmlState *state)
         if (isprint(key)) {
             status = "Unknown key";
         } else {
-            status = "Use arrows, PgUp/PgDn, Home/End, Enter, Esc, or 0-9/a-z";
+            status = "Use arrows, PgUp/PgDn, Home/End, /, Enter, Esc, or 0-9/a-z";
         }
     }
 }
