@@ -105,6 +105,18 @@ Expected DOS-side layout:
 - `LAUNCHER.CFG`
 - the game executables or batch commands referenced by `LAUNCHER.CFG`
 
+Manual real-DOS run in QEMU:
+
+```bash
+./tools/run_qemu_manual.sh
+```
+
+To copy extra DOS files such as games or helper batch files onto the boot floppy before starting QEMU:
+
+```bash
+./tools/run_qemu_manual.sh path/to/GAME.EXE path/to/EXTRA.BAT
+```
+
 Main controls in the launcher:
 
 - `Up/Down`: move by one entry
