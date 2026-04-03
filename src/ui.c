@@ -219,6 +219,12 @@ static void aml_ui_write_uint_at(int col, int row, unsigned value, unsigned char
     }
 }
 
+static void aml_ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr)
+{
+    aml_ui_putc(col, row, (unsigned char)('0' + ((value / 10) % 10)), attr);
+    aml_ui_putc(col + 1, row, (unsigned char)('0' + (value % 10)), attr);
+}
+
 static void aml_ui_draw_frame(void)
 {
     int i;
@@ -252,8 +258,14 @@ static void aml_ui_draw_section_line(int row)
 
 static void aml_ui_draw_header(void)
 {
-    aml_ui_write_at(2, 1, " aml2 ", AML_UI_ATTR_TITLE);
-    aml_ui_write_at(10, 1, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
+    struct dostime_t now;
+
+    _dos_gettime(&now);
+
+    aml_ui_write_at(2, 1, "Arvutimuuseum Launcher v2 (c) Danila Sukharev", AML_UI_ATTR_TITLE);
+    aml_ui_write_2digit_at(72, 1, now.hour, AML_UI_ATTR_HELP);
+    aml_ui_putc(74, 1, ':', AML_UI_ATTR_HELP);
+    aml_ui_write_2digit_at(75, 1, now.minute, AML_UI_ATTR_HELP);
 }
 
 static void aml_ui_draw_modmark(const AmlState *state)
@@ -339,18 +351,6 @@ static int aml_ui_first_visible(const AmlState *state)
     return top;
 }
 
-static void aml_ui_draw_position(const AmlState *state)
-{
-    if (state->entry_count <= 0) {
-        return;
-    }
-
-    aml_ui_write_at(69, 1, "Item", AML_UI_ATTR_TITLE);
-    aml_ui_write_uint_at(74, 1, (unsigned)(state->selected + 1), AML_UI_ATTR_TITLE);
-    aml_ui_putc(76, 1, '/', AML_UI_ATTR_TITLE);
-    aml_ui_write_uint_at(77, 1, (unsigned)state->entry_count, AML_UI_ATTR_TITLE);
-}
-
 static void aml_ui_draw_scrollbar(const AmlState *state)
 {
     int row;
@@ -414,7 +414,6 @@ static void aml_ui_render(const AmlState *state, const char *status)
     aml_ui_draw_section_line(2);
     aml_ui_draw_header();
     aml_ui_draw_modmark(state);
-    aml_ui_draw_position(state);
     aml_ui_draw_entries(state);
 }
 

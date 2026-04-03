@@ -73,14 +73,14 @@ done
 SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
     "$QMP_SOCK" "$SCREEN_LOG" \
     'Arvutimuuseum Launcher v2' '' \
-    'Item 20/20' '' \
+    'Entry 19' '' \
     'A>' ''
 
 kill "$QEMU_PID" 2>/dev/null || true
 wait "$QEMU_PID" 2>/dev/null || true
 QEMU_PID=""
 
-grep -q 'Item 20/20' "$SCREEN_LOG"
+grep -q 'Danila Sukharev' "$SCREEN_LOG"
 grep -q 'Entry 19' "$SCREEN_LOG"
 grep -q '^A>$' "$SCREEN_LOG"
 
