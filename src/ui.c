@@ -606,10 +606,10 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         }
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
             key = getch();
-            if (key == AML_KEY_UP && field > 0) {
-                field--;
-            } else if (key == AML_KEY_DOWN && field < 2) {
-                field++;
+            if (key == AML_KEY_UP) {
+                field = (field + 2) % 3;
+            } else if (key == AML_KEY_DOWN) {
+                field = (field + 1) % 3;
             } else if (field == 0 || field == 1 || field == 2) {
                 if (field == 1) {
                     len_ptr = &command_len;
