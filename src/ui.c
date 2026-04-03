@@ -15,15 +15,15 @@ enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
     AML_UI_LIST_ROW = 3,
-    AML_UI_LIST_ROWS = 20,
+    AML_UI_LIST_ROWS = 21,
     AML_UI_SEARCH_MAX = 24,
     AML_UI_FRAME_LEFT = 0,
     AML_UI_FRAME_TOP = 0,
     AML_UI_FRAME_RIGHT = 79,
     AML_UI_FRAME_BOTTOM = 24,
     AML_UI_LIST_LEFT = 2,
-    AML_UI_LIST_RIGHT = 77,
-    AML_UI_SCROLL_COL = 76,
+    AML_UI_LIST_RIGHT = 78,
+    AML_UI_SCROLL_COL = 78,
     AML_UI_ATTR_BG = 0x17,
     AML_UI_ATTR_FRAME = 0x1F,
     AML_UI_ATTR_TITLE = 0x1E,
@@ -209,7 +209,6 @@ static void aml_ui_draw_header(void)
 {
     aml_ui_write_at(2, 1, " aml2 ", AML_UI_ATTR_TITLE);
     aml_ui_write_at(10, 1, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
-    aml_ui_write_at(38, 1, "F1 Help F2 Save F3 Det F4 Edit", AML_UI_ATTR_HELP);
 }
 
 static void aml_ui_draw_modmark(const AmlState *state)
@@ -351,12 +350,12 @@ static void aml_ui_draw_entries(const AmlState *state)
         unsigned char attr = (index == state->selected) ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_TEXT;
         char hotkey = aml_ui_hotkey_char(index);
 
-        aml_ui_fill_rect(AML_UI_LIST_LEFT + 1, y, AML_UI_LIST_RIGHT - 2, y, ' ', attr);
+        aml_ui_fill_rect(AML_UI_LIST_LEFT + 1, y, AML_UI_SCROLL_COL - 1, y, ' ', attr);
         aml_ui_putc(4, y, (index == state->selected) ? 16 : 250, attr);
         aml_ui_putc(6, y, '[', attr);
         aml_ui_putc(7, y, (unsigned char)hotkey, attr);
         aml_ui_putc(8, y, ']', attr);
-        aml_ui_write_padded(11, y, state->entries[index].name, 58, attr);
+        aml_ui_write_padded(11, y, state->entries[index].name, AML_UI_SCROLL_COL - 11, attr);
     }
 
     aml_ui_draw_scrollbar(state);
