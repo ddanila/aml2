@@ -805,18 +805,6 @@ static void aml_ui_edit_entry(AmlState *state)
 
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
-    char hotkey[2];
-    const AmlEntry *entry = 0;
-
-    if (state->entry_count > 0 &&
-        state->selected >= 0 &&
-        state->selected < state->entry_count) {
-        entry = &state->entries[state->selected];
-    }
-
-    hotkey[0] = aml_ui_hotkey_char(state->selected);
-    hotkey[1] = '\0';
-
     aml_ui_render(state, "Help");
     aml_ui_fill_rect(10, 6, 69, 18, ' ', AML_UI_ATTR_DIALOG);
 
@@ -837,10 +825,6 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 16, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
-
-    if (entry != 0) {
-        aml_ui_draw_detail_line(17, "Current key", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
-    }
 
     aml_ui_write_centered(19, "Press any key to return", AML_UI_ATTR_HELP);
     aml_ui_flush();

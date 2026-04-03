@@ -92,7 +92,7 @@ run_case \
     "extended hotkey range" \
     "$REPO_ROOT/tests/launcher.hotkeys.cfg" \
     "$REPO_ROOT/tests/AML2.HKA" \
-    'Item 37/40' '' \
+    'Entry 36' '' \
     'A>' ''
 grep -q 'Entry 36' "$SCREEN_LOG"
 
