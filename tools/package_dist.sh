@@ -19,7 +19,7 @@ mkdir -p "$STAGE_DIR"
 rm -rf "$STAGE_DIR"/*
 
 cp README.md "$STAGE_DIR/README.md"
-cp launcher.cfg "$STAGE_DIR/launcher.example.cfg"
+cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
 cp aml2.exe "$STAGE_DIR/AML2.EXE"
 cp amlstub.com "$STAGE_DIR/AMLSTUB.COM"
 

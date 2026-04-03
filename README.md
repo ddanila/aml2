@@ -101,7 +101,7 @@ Packaging output from `./tools/package_dist.sh`:
 The zip contains:
 
 - `README.md`
-- `launcher.example.cfg`
+- `LAUNCHER.CFG`
 - `AML2.EXE`
 - `AMLSTUB.COM`
 
