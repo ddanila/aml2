@@ -394,10 +394,14 @@ static void aml_ui_draw_section_line(int row)
 static void aml_ui_draw_header(void)
 {
     struct dostime_t now;
+    char title[80];
 
     _dos_gettime(&now);
 
-    aml_ui_write_at(2, 1, "Arvutimuuseum Launcher v2 (c) Danila Sukharev", AML_UI_ATTR_TITLE);
+    strcpy(title, "Arvutimuuseum Launcher (c) Danila Sukharev, build ");
+    strcat(title, AML_BUILD_TAG);
+
+    aml_ui_write_at(2, 1, title, AML_UI_ATTR_TITLE);
     aml_ui_write_2digit_at(72, 1, now.hour, AML_UI_ATTR_HELP);
     aml_ui_putc(74, 1, (now.second & 1) ? ':' : ' ', AML_UI_ATTR_HELP);
     aml_ui_write_2digit_at(75, 1, now.minute, AML_UI_ATTR_HELP);

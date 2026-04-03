@@ -31,6 +31,23 @@ export PATH="$WATCOM_BIN:$PATH"
 
 cd "$REPO_ROOT"
 
+if [[ -n "${AML_BUILD_TAG:-}" ]]; then
+    BUILD_TAG="$AML_BUILD_TAG"
+elif [[ -n "${CI:-}" ]]; then
+    BUILD_TAG="$(git rev-parse --short HEAD)"
+else
+    BUILD_TAG="local"
+fi
+
 echo "Building aml2 with $WATCOM_BIN"
 make clean
+mkdir -p build
+cat > build/aml_build.h <<EOF
+#ifndef AML_BUILD_H
+#define AML_BUILD_H
+
+#define AML_BUILD_TAG "$BUILD_TAG"
+
+#endif
+EOF
 make ${BUILD_TARGETS:-all} EXTRA_CFLAGS="${EXTRA_CFLAGS:-}"

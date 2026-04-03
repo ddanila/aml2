@@ -3,6 +3,8 @@
 
 #define AML_VERSION "0.1.0"
 
+#include "aml_build.h"
+
 #define AML_CONFIG_FILE "launcher.cfg"
 #define AML_RUN_FILE "AML2.RUN"
 #define AML_AUTO_FILE "AML2.AUT"

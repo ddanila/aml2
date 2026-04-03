@@ -78,6 +78,7 @@ Typical flow:
 ```bash
 ./tools/setup_openwatcom.sh
 ./tools/build.sh
+./tools/package_dist.sh
 ```
 
 The repo starts with a small GNU `make` file and a plain-C module split:
@@ -91,6 +92,18 @@ Current release-sized outputs from `./tools/build.sh` are approximately:
 
 - `aml2.exe`: 15 KB
 - `amlstub.com`: 787 bytes
+
+Packaging output from `./tools/package_dist.sh`:
+
+- `out/dist/aml2-local.zip` for local builds
+- `out/dist/aml2-<short-hash>.zip` in CI builds
+
+The zip contains:
+
+- `README.md`
+- `launcher.example.cfg`
+- `AML2.EXE`
+- `AMLSTUB.COM`
 
 ## Usage
 

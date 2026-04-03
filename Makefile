@@ -6,7 +6,7 @@ WASM = $(WATCOM_BIN)/wasm
 PYTHON = python3
 
 EXTRA_CFLAGS ?=
-CFLAGS = -i=include -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
+CFLAGS = -i=include -i=build -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
 LDFLAGS = system dos option quiet
 
 OBJS = \
@@ -24,16 +24,16 @@ test-build: build aml2.exe amlstub.com fakegame.exe
 build:
 	mkdir -p build
 
-build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/launch.h
+build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/launch.h build/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/main.obj src/main.c
 
-build/cfg.obj: src/cfg.c include/aml.h include/cfg.h
+build/cfg.obj: src/cfg.c include/aml.h include/cfg.h build/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/cfg.obj src/cfg.c
 
-build/ui.obj: src/ui.c include/aml.h include/ui.h
+build/ui.obj: src/ui.c include/aml.h include/ui.h build/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui.obj src/ui.c
 
-build/launch.obj: src/launch.c include/aml.h include/launch.h
+build/launch.obj: src/launch.c include/aml.h include/launch.h build/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c
 
 build/fakegame.obj: tests/fakegame.c
