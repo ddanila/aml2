@@ -4,6 +4,8 @@
 
 The target is a very small binary built with Open Watcom, using plain C and a tiny custom text UI instead of Turbo Vision.
 
+License: MIT. See [LICENSE](/home/ddanila/fun/aml2/LICENSE).
+
 ## Scope
 
 The first milestone is intentionally narrow:
