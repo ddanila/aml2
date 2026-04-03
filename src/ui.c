@@ -2,9 +2,12 @@
 #include <ctype.h>
 #include <dos.h>
 #include <i86.h>
+#include <stddef.h>
+#if AML_TEST_HOOKS
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#endif
 
 #include "ui.h"
 
@@ -98,6 +101,22 @@ static void aml_ui_draw_header(void)
     aml_ui_write_at(3, 3, "Up/Down: Move   Enter: Select   Esc: Quit   0-9,a-z: Hotkeys");
 }
 
+static void aml_ui_write_padded(const char *text, int width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i) {
+        char ch = text[i];
+        if (ch == '\0') {
+            break;
+        }
+        putch(ch);
+    }
+    for (; i < width; ++i) {
+        putch(' ');
+    }
+}
+
 static int aml_ui_hotkey_index(int key)
 {
     if (key >= '0' && key <= '9') {
@@ -141,15 +160,19 @@ static void aml_ui_draw_entries(const AmlState *state)
     }
 
     for (i = 0; i < state->entry_count && i < 17; ++i) {
-        char line[AML_UI_COLS + 1];
-        char keybuf[2];
-
-        aml_ui_hotkey_label(i, keybuf);
-        sprintf(line, "%c[%s] %-48s",
-            (i == state->selected) ? '>' : ' ',
-            keybuf,
-            state->entries[i].name);
-        aml_ui_write_at(4, 5 + i, line);
+        aml_ui_gotoxy(4, 5 + i);
+        putch((i == state->selected) ? '>' : ' ');
+        putch('[');
+        if (i >= 0 && i <= 9) {
+            putch('0' + i);
+        } else if (i >= 10 && i < 36) {
+            putch('a' + (i - 10));
+        } else {
+            putch(' ');
+        }
+        putch(']');
+        putch(' ');
+        aml_ui_write_padded(state->entries[i].name, 48);
     }
 }
 
@@ -165,13 +188,13 @@ static void aml_ui_draw_footer(const AmlState *state, const char *status)
     if (state->entry_count > 0 &&
         state->selected >= 0 &&
         state->selected < state->entry_count) {
-        char line[AML_UI_COLS + 1];
-
-        sprintf(line, "Command: %s", state->entries[state->selected].command);
-        aml_ui_write_at(3, 24, line);
+        aml_ui_gotoxy(3, 24);
+        cputs("Command: ");
+        aml_ui_write_padded(state->entries[state->selected].command, 68);
     }
 }
 
+#if AML_TEST_HOOKS
 static void aml_ui_trim_newline(char *line)
 {
     size_t len = strlen(line);
@@ -182,7 +205,6 @@ static void aml_ui_trim_newline(char *line)
     }
 }
 
-#if AML_TEST_HOOKS
 static int aml_ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
@@ -282,6 +304,8 @@ static int aml_ui_apply_automation(AmlState *state)
 void aml_ui_init(void)
 {
     aml_ui_clrscr();
+    aml_ui_draw_border();
+    aml_ui_draw_header();
 }
 
 void aml_ui_shutdown(void)
@@ -291,9 +315,6 @@ void aml_ui_shutdown(void)
 
 void aml_ui_draw(const AmlState *state, const char *status)
 {
-    aml_ui_clrscr();
-    aml_ui_draw_border();
-    aml_ui_draw_header();
     aml_ui_draw_entries(state);
     aml_ui_draw_footer(state, status);
 }

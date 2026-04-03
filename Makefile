@@ -15,13 +15,11 @@ OBJS = \
     build/ui.obj \
     build/launch.obj
 
-STUB_OBJS = \
-    build/stub_main.obj
-
 FAKEGAME_OBJS = \
     build/fakegame.obj
 
-all: build aml2.exe amlstub.exe amlstub.com fakegame.exe
+all: build aml2.exe amlstub.com
+test-build: build aml2.exe amlstub.com fakegame.exe
 
 build:
 	mkdir -p build
@@ -38,9 +36,6 @@ build/ui.obj: src/ui.c include/aml.h include/ui.h
 build/launch.obj: src/launch.c include/aml.h include/launch.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c
 
-build/stub_main.obj: stub/main.c include/aml.h
-	$(WCC) $(CFLAGS) -fo=build/stub_main.obj stub/main.c
-
 build/fakegame.obj: tests/fakegame.c
 	$(WCC) $(CFLAGS) -fo=build/fakegame.obj tests/fakegame.c
 
@@ -50,9 +45,6 @@ build/amlstub.obj: stub/amlstub.asm
 aml2.exe: $(OBJS)
 	$(WLINK) $(LDFLAGS) name aml2.exe file { $(OBJS) }
 
-amlstub.exe: $(STUB_OBJS)
-	$(WLINK) $(LDFLAGS) name amlstub.exe file { $(STUB_OBJS) }
-
 amlstub.com: build/amlstub.obj tools/obj2com.py
 	$(PYTHON) tools/obj2com.py build/amlstub.obj amlstub.com
 
@@ -60,4 +52,4 @@ fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
 clean:
-	rm -rf build aml2.exe aml2.com amlstub.exe amlstub.com fakegame.exe AML2.RUN out
+	rm -rf build aml2.exe aml2.com amlstub.exe amlstub.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out

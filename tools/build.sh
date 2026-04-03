@@ -33,4 +33,4 @@ cd "$REPO_ROOT"
 
 echo "Building aml2 with $WATCOM_BIN"
 make clean
-make EXTRA_CFLAGS="${EXTRA_CFLAGS:-}"
+make ${BUILD_TARGETS:-all} EXTRA_CFLAGS="${EXTRA_CFLAGS:-}"

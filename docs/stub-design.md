@@ -6,7 +6,7 @@ Use a tiny supervisor process to keep the launcher out of conventional memory wh
 
 The architecture is:
 
-- `AMLSTUB.COM` or `AMLSTUB.EXE`: outer loop and child launcher
+- `AMLSTUB.COM`: outer loop and child launcher
 - `AML2.EXE`: UI and config parser
 
 ## Runtime Flow
@@ -40,7 +40,7 @@ Rules:
 - empty or missing file means "no launch request"
 - malformed files are treated as failure and should be deleted
 
-This protocol is intentionally simple so the future assembly stub can parse it with minimal code.
+This protocol is intentionally simple so the assembly stub can parse it with minimal code.
 
 ## Why Not Direct Exec In `AML2`
 
@@ -68,14 +68,12 @@ The stub loop gives the same user-visible effect with much lower risk.
 
 ## Supervisor Status
 
-The handoff protocol was first validated with a plain-C supervisor.
-
 Current state:
 
-- protocol validated with the C prototype
 - tested runtime path now uses `AMLSTUB.COM`
 - `AMLSTUB.COM` is built with Open Watcom `wasm`
 - the OMF object is converted to `.COM` with a small repo-local converter
+- current tested size is 878 bytes
 
 ## Launch Behavior
 

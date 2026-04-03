@@ -55,10 +55,6 @@ launcher_fail:
 command_fail:
     lea dx, msg_command_fail
     call print_dollar
-    lea dx, command_buf
-    call print_asciiz
-    lea dx, crlf
-    call print_dollar
     jmp exit_err
 
 resize_fail:
@@ -119,29 +115,27 @@ read_run_request proc near
     jc read_fail
 
     mov bx, ax
-    mov ah, 3Fh
-    mov cx, RUN_BUF_SIZE - 1
-    lea dx, run_buf
-    int 21h
+    mov byte ptr [cmd_tail + 1], '/'
+    mov byte ptr [cmd_tail + 2], 'C'
+    mov byte ptr [cmd_tail + 3], ' '
+    lea di, cmd_tail + 4
+    mov cx, 123
+    call read_line
     jc read_close_fail
+    or al, al
+    jz read_close_fail
 
-    mov si, ax
-    mov byte ptr [run_buf + si], 0
+    add al, 3
+    mov [cmd_tail], al
+    mov byte ptr [di], 0Dh
+
+    lea di, path_buf
+    mov cx, 63
+    call read_line
+    jc read_close_fail
 
     mov ah, 3Eh
     int 21h
-
-    cmp si, 0
-    je read_fail
-
-    lea si, run_buf
-    lea di, command_buf
-    call parse_line
-    cmp byte ptr [command_buf], 0
-    je read_fail
-
-    lea di, path_buf
-    call parse_line
     clc
     ret
 
@@ -156,36 +150,54 @@ read_fail:
     ret
 read_run_request endp
 
-parse_line proc near
-parse_copy:
-    lodsb
-    cmp al, 0
-    je parse_done
-    cmp al, 0Dh
-    je parse_skip
-    cmp al, 0Ah
-    je parse_skip
-    stosb
-    jmp parse_copy
+read_line proc near
+    push bx
+    push cx
+    xor si, si
 
-parse_skip:
-    cmp al, 0
-    je parse_done
-parse_skip_more:
-    lodsb
-    cmp al, 0Dh
-    je parse_skip_more
-    cmp al, 0Ah
-    je parse_skip_more
-    cmp al, 0
-    je parse_done
-    dec si
+read_line_next:
+    mov ah, 3Fh
+    mov cx, 1
+    lea dx, read_char
+    int 21h
+    jc read_line_fail
+    or ax, ax
+    jz read_line_done
 
-parse_done:
-    mov al, 0
+    mov al, [read_char]
+    cmp al, 0Dh
+    je read_line_skip
+    cmp al, 0Ah
+    je read_line_skip
+    or cx, cx
+    jz read_line_next
     stosb
+    inc si
+    dec cx
+    jmp read_line_next
+
+read_line_skip:
+    mov ah, 3Fh
+    mov cx, 1
+    lea dx, read_char
+    int 21h
+    jmp read_line_done
+
+read_line_fail:
+    pop cx
+    pop bx
+    stc
     ret
-parse_line endp
+
+read_line_done:
+    xor al, al
+    stosb
+    mov ax, si
+    pop cx
+    pop bx
+    clc
+    ret
+read_line endp
 
 launch_selected proc near
     lea si, path_buf
@@ -211,7 +223,6 @@ path_setdir:
     jc launch_fail_ret
 
 path_done:
-    call build_cmd_tail
     mov word ptr [cmd_tail_off], offset cmd_tail
     lea dx, command_shell
     call exec_wait
@@ -221,38 +232,6 @@ launch_fail_ret:
     stc
     ret
 launch_selected endp
-
-build_cmd_tail proc near
-    lea di, cmd_tail + 1
-
-    mov al, '/'
-    stosb
-    mov al, 'C'
-    stosb
-    mov al, ' '
-    stosb
-
-    lea si, command_buf
-    mov cx, 123
-
-build_loop:
-    cmp cx, 0
-    je build_done
-    lodsb
-    cmp al, 0
-    je build_done
-    stosb
-    dec cx
-    jmp build_loop
-
-build_done:
-    mov bx, di
-    sub bx, offset cmd_tail + 1
-    mov [cmd_tail], bl
-    mov al, 0Dh
-    stosb
-    ret
-build_cmd_tail endp
 
 exec_wait proc near
     lea bx, exec_block
@@ -267,47 +246,21 @@ print_dollar proc near
     ret
 print_dollar endp
 
-print_asciiz proc near
-    push ax
-    push si
-    push dx
-    mov si, dx
-
-print_loop:
-    mov al, [si]
-    cmp al, 0
-    je print_done
-    mov ah, 02h
-    mov dl, al
-    int 21h
-    inc si
-    jmp print_loop
-
-print_done:
-    pop dx
-    pop si
-    pop ax
-    ret
-print_asciiz endp
-
 launcher_name    db 'AML2.EXE',0
 command_shell    db 'COMMAND.COM',0
 run_file_name    db 'AML2.RUN',0
 msg_launcher_fail db 'AMLSTUB: failed to start AML2.EXE',13,10,'$'
-msg_command_fail  db 'AMLSTUB: failed to launch selected command',13,10,'$'
+msg_command_fail  db 'AMLSTUB: launch failed',13,10,'$'
 msg_resize_fail   db 'AMLSTUB: failed to resize memory block',13,10,'$'
-crlf             db 13,10,'$'
 
 home_drive       db 0
-home_path        db 66 dup (0)
+home_path        db 64 dup (0)
 
-command_buf      db 128 dup (0)
 path_buf         db 64 dup (0)
+read_char        db 0
 
-RUN_BUF_SIZE     equ 255
-run_buf          db RUN_BUF_SIZE dup (0)
-
-empty_tail       db 0,0Dh
+empty_tail       db 0
+               db 0Dh
 cmd_tail         db 127 dup (0)
 
 exec_block label byte
@@ -319,7 +272,7 @@ fcb1_seg         dw 0
 fcb2_off         dw 6Ch
 fcb2_seg         dw 0
 
-stack_space      db 128 dup (0)
+stack_space      db 64 dup (0)
 stack_top label byte
 resident_end label byte
 

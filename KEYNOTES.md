@@ -70,4 +70,6 @@ Important findings from bring-up:
 - The launcher/stub/game loop is now proven with a DOS-side trace file.
 - Transient full-screen text UIs are easier to verify with a mix of screen capture and explicit DOS-side trace points than with screen scraping alone.
 - The tested supervisor is now a real `AMLSTUB.COM`.
+- The current tested supervisor size is 878 bytes.
+- `AML2.EXE` is down to about 12 KB after reducing full-screen redraw work.
 - `kvikdos` is useful for fast non-TUI smoke checks, but QEMU is still the right tool for the full launcher loop.

@@ -64,6 +64,11 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 - `ui.c`
 - `launch.c`
 
+Current release-sized outputs from `./tools/build.sh` are approximately:
+
+- `aml2.exe`: 12 KB
+- `amlstub.com`: 878 bytes
+
 ## E2E Test
 
 The repo has a real-DOS end-to-end test under QEMU:
@@ -88,11 +93,19 @@ The automation file exists because QEMU key injection was too flaky for a reliab
 
 For faster non-TUI smoke checks, `kvikdos` is also a useful option, but QEMU remains the authoritative path for the launcher loop because the launcher is a full-screen TUI.
 
+Fast smoke test:
+
+```bash
+bash tests/test_kvikdos_smoke.sh
+```
+
+This one runs `fakegame.exe` under `kvikdos` with a timeout and checks that the DOS payload starts, prints, and exits quickly.
+
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
-1. Tighten the DOS UI and reduce redraw overhead.
-2. Finish config parsing and validation in `cfg.c`.
-3. Reduce `AMLSTUB.COM` further and decide what should stay in asm.
-4. Trim launcher size and redraw overhead without breaking the tested loop.
+1. Keep shrinking `AMLSTUB.COM` and simplify its DOS call path where possible.
+2. Tighten config parsing and validation in `cfg.c`.
+3. Reduce `AML2.EXE` size without weakening the QEMU-tested launcher loop.
+4. Add more DOS-side error coverage to the fake payload and supervisor tests.
