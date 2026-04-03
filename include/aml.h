@@ -28,6 +28,7 @@ typedef struct AmlState {
     AmlEntry entries[AML_MAX_PROGRAMS];
     int entry_count;
     int selected;
+    int modified;
 } AmlState;
 
 #endif

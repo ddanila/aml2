@@ -48,6 +48,7 @@ int aml_load_config(AmlState *state, const char *path)
 
     state->entry_count = 0;
     state->selected = 0;
+    state->modified = 0;
 
     fp = fopen(path, "r");
     if (fp == NULL) {
@@ -102,6 +103,31 @@ int aml_load_config(AmlState *state, const char *path)
         aml_copy_field(entry->name, sizeof(entry->name), name);
         aml_copy_field(entry->command, sizeof(entry->command), command);
         aml_copy_field(entry->path, sizeof(entry->path), entry_path);
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+int aml_save_config(const AmlState *state, const char *path)
+{
+    FILE *fp;
+    int i;
+
+    fp = fopen(path, "w");
+    if (fp == NULL) {
+        return 1;
+    }
+
+    fprintf(fp, "# aml2 configuration\n");
+    fprintf(fp, "# Format: Name|Command|Working Directory\n");
+    fprintf(fp, "\n");
+
+    for (i = 0; i < state->entry_count; ++i) {
+        fprintf(fp, "%s|%s|%s\n",
+            state->entries[i].name,
+            state->entries[i].command,
+            state->entries[i].path);
     }
 
     fclose(fp);

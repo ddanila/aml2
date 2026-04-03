@@ -65,9 +65,13 @@ The launcher is now past the bare-minimum screen:
 - `Up/Down`, `Home/End`, `PgUp/PgDn` movement
 - `/` prefix search
 - direct hotkeys `0-9`, `a-z`, `A-Z`
-- `?` / `F1` help dialog with current-entry details
+- `F3` details dialog for the current entry
+- `F4` edit current entry
+- `Ins` insert a new entry after the current selection
+- `F2` save the current list back to `LAUNCHER.CFG`
+- `?` / `F1` help dialog
 - full-screen message panels for missing config and empty config
-- footer context for item number, command, and working directory
+- one shared list surface for both launching and editing
 
 ## `.COM` Reality Check
 

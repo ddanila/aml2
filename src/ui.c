@@ -14,8 +14,8 @@
 enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
-    AML_UI_LIST_ROW = 4,
-    AML_UI_LIST_ROWS = 16,
+    AML_UI_LIST_ROW = 3,
+    AML_UI_LIST_ROWS = 20,
     AML_UI_SEARCH_MAX = 24,
     AML_UI_FRAME_LEFT = 0,
     AML_UI_FRAME_TOP = 0,
@@ -44,7 +44,11 @@ enum {
     AML_KEY_ESC = 27,
     AML_KEY_EXTENDED = 0,
     AML_KEY_EXTENDED_2 = 224,
+    AML_KEY_INS = 82,
     AML_KEY_F1 = 59,
+    AML_KEY_F2 = 60,
+    AML_KEY_F3 = 61,
+    AML_KEY_F4 = 62,
     AML_KEY_HOME = 71,
     AML_KEY_UP = 72,
     AML_KEY_PGUP = 73,
@@ -205,7 +209,14 @@ static void aml_ui_draw_header(void)
 {
     aml_ui_write_at(2, 1, " aml2 ", AML_UI_ATTR_TITLE);
     aml_ui_write_at(10, 1, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
-    aml_ui_write_at(63, 1, "F1 Help", AML_UI_ATTR_HELP);
+    aml_ui_write_at(38, 1, "F1 Help F2 Save F3 Det F4 Edit", AML_UI_ATTR_HELP);
+}
+
+static void aml_ui_draw_modmark(const AmlState *state)
+{
+    if (state->modified) {
+        aml_ui_putc(36, 1, '*', AML_UI_ATTR_HELP);
+    }
 }
 
 static int aml_ui_hotkey_index(int key)
@@ -290,10 +301,10 @@ static void aml_ui_draw_position(const AmlState *state)
         return;
     }
 
-    aml_ui_write_at(61, 22, "Item", AML_UI_ATTR_STATUS);
-    aml_ui_write_uint_at(66, 22, (unsigned)(state->selected + 1), AML_UI_ATTR_STATUS);
-    aml_ui_putc(68, 22, '/', AML_UI_ATTR_STATUS);
-    aml_ui_write_uint_at(69, 22, (unsigned)state->entry_count, AML_UI_ATTR_STATUS);
+    aml_ui_write_at(69, 1, "Item", AML_UI_ATTR_TITLE);
+    aml_ui_write_uint_at(74, 1, (unsigned)(state->selected + 1), AML_UI_ATTR_TITLE);
+    aml_ui_putc(76, 1, '/', AML_UI_ATTR_TITLE);
+    aml_ui_write_uint_at(77, 1, (unsigned)state->entry_count, AML_UI_ATTR_TITLE);
 }
 
 static void aml_ui_draw_scrollbar(const AmlState *state)
@@ -351,45 +362,231 @@ static void aml_ui_draw_entries(const AmlState *state)
     aml_ui_draw_scrollbar(state);
 }
 
-static void aml_ui_draw_footer(const AmlState *state, const char *status)
-{
-    aml_ui_fill_rect(AML_UI_LIST_LEFT, 21, AML_UI_LIST_RIGHT, 23, ' ', AML_UI_ATTR_STATUS);
-
-    if (state->entry_count > 0 &&
-        state->selected >= 0 &&
-        state->selected < state->entry_count) {
-        aml_ui_write_at(4, 21, "Path:", AML_UI_ATTR_MUTED);
-        if (state->entries[state->selected].path[0] != '\0') {
-            aml_ui_write_padded(10, 21, state->entries[state->selected].path, 49, AML_UI_ATTR_STATUS);
-        } else {
-            aml_ui_write_padded(10, 21, ".", 49, AML_UI_ATTR_STATUS);
-        }
-
-        aml_ui_write_at(4, 23, "Command:", AML_UI_ATTR_MUTED);
-        aml_ui_write_padded(13, 23, state->entries[state->selected].command, 63, AML_UI_ATTR_STATUS);
-    }
-
-    if (status != NULL && status[0] != '\0') {
-        aml_ui_write_padded(4, 22, status, 55, AML_UI_ATTR_STATUS);
-    }
-    aml_ui_draw_position(state);
-}
-
 static void aml_ui_render(const AmlState *state, const char *status)
 {
+    (void)status;
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     aml_ui_draw_frame();
-    aml_ui_draw_section_line(4);
-    aml_ui_draw_section_line(20);
+    aml_ui_draw_section_line(2);
     aml_ui_draw_header();
+    aml_ui_draw_modmark(state);
+    aml_ui_draw_position(state);
     aml_ui_draw_entries(state);
-    aml_ui_draw_footer(state, status);
 }
 
 static void aml_ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr)
 {
     aml_ui_write_at(18, row, label, AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_padded(28, row, value, 34, attr);
+}
+
+static void aml_ui_show_details_overlay(const AmlState *state)
+{
+    char hotkey[2];
+    const AmlEntry *entry;
+
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        aml_ui_show_message(
+            "No current entry",
+            "There is nothing to show yet.",
+            "Use Ins to add a new record.",
+            "Press any key to return."
+        );
+        getch();
+        return;
+    }
+
+    entry = &state->entries[state->selected];
+    hotkey[0] = aml_ui_hotkey_char(state->selected);
+    hotkey[1] = '\0';
+
+    aml_ui_render(state, "Details");
+    aml_ui_fill_rect(10, 6, 69, 18, ' ', AML_UI_ATTR_DIALOG);
+    aml_ui_putc(10, 6, 218, AML_UI_ATTR_FRAME);
+    aml_ui_putc(69, 6, 191, AML_UI_ATTR_FRAME);
+    aml_ui_putc(10, 18, 192, AML_UI_ATTR_FRAME);
+    aml_ui_putc(69, 18, 217, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(11, 6, 68, 6, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(11, 18, 68, 18, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(10, 7, 10, 17, 179, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(69, 7, 69, 17, 179, AML_UI_ATTR_FRAME);
+    aml_ui_write_centered(8, "Entry Details", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_draw_detail_line(10, "Name", entry->name, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(12, "Command", entry->command, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(14, "Path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(16, "Hotkey", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_write_centered(19, "Press any key to return", AML_UI_ATTR_HELP);
+    aml_ui_flush();
+    getch();
+}
+
+static int aml_ui_edit_field(int key, char *buf, int max_len, int *len)
+{
+    if (key == AML_KEY_BACKSPACE) {
+        if (*len > 0) {
+            (*len)--;
+            buf[*len] = '\0';
+        }
+        return 1;
+    }
+    if (isprint(key) && *len < max_len - 1) {
+        buf[*len] = (char)key;
+        (*len)++;
+        buf[*len] = '\0';
+        return 1;
+    }
+    return 0;
+}
+
+static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
+{
+    char name[AML_MAX_NAME];
+    char command[AML_MAX_COMMAND];
+    char path[AML_MAX_PATH];
+    int field = 0;
+    int name_len;
+    int command_len;
+    int path_len;
+
+    strcpy(name, is_new ? "" : entry->name);
+    strcpy(command, is_new ? "" : entry->command);
+    strcpy(path, is_new ? "" : entry->path);
+    name_len = strlen(name);
+    command_len = strlen(command);
+    path_len = strlen(path);
+
+    for (;;) {
+        int key;
+        int handled = 0;
+        int *len_ptr = &name_len;
+        char *buf = name;
+        int max_len = AML_MAX_NAME;
+
+        aml_ui_fill_rect(8, 5, 71, 18, ' ', AML_UI_ATTR_DIALOG);
+        aml_ui_putc(8, 5, 218, AML_UI_ATTR_FRAME);
+        aml_ui_putc(71, 5, 191, AML_UI_ATTR_FRAME);
+        aml_ui_putc(8, 18, 192, AML_UI_ATTR_FRAME);
+        aml_ui_putc(71, 18, 217, AML_UI_ATTR_FRAME);
+        aml_ui_fill_rect(9, 5, 70, 5, 196, AML_UI_ATTR_FRAME);
+        aml_ui_fill_rect(9, 18, 70, 18, 196, AML_UI_ATTR_FRAME);
+        aml_ui_fill_rect(8, 6, 8, 17, 179, AML_UI_ATTR_FRAME);
+        aml_ui_fill_rect(71, 6, 71, 17, 179, AML_UI_ATTR_FRAME);
+        aml_ui_write_centered(7, is_new ? "Insert Entry" : "Edit Entry", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(12, 10, "Name", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(12, 12, "Command", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(12, 14, "Path", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_padded(24, 10, name, 40, field == 0 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_padded(24, 12, command, 40, field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_padded(24, 14, path, 40, field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_centered(16, "Enter next/save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
+        aml_ui_flush();
+
+        key = getch();
+        if (key == AML_KEY_ESC) {
+            return 0;
+        }
+        if (key == '\t') {
+            field = (field + 1) % 3;
+            continue;
+        }
+        if (key == AML_KEY_ENTER) {
+            if (field < 2) {
+                field++;
+                continue;
+            }
+            if (name[0] == '\0' || command[0] == '\0') {
+                aml_ui_show_message(
+                    "Name and command required",
+                    "Both fields must be filled in.",
+                    "",
+                    "Press any key to continue."
+                );
+                getch();
+                continue;
+            }
+            strcpy(entry->name, name);
+            strcpy(entry->command, command);
+            strcpy(entry->path, path);
+            return 1;
+        }
+        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+            key = getch();
+            if (key == AML_KEY_UP && field > 0) {
+                field--;
+            } else if (key == AML_KEY_DOWN && field < 2) {
+                field++;
+            }
+            continue;
+        }
+
+        if (field == 1) {
+            len_ptr = &command_len;
+            buf = command;
+            max_len = AML_MAX_COMMAND;
+        } else if (field == 2) {
+            len_ptr = &path_len;
+            buf = path;
+            max_len = AML_MAX_PATH;
+        }
+
+        handled = aml_ui_edit_field(key, buf, max_len, len_ptr);
+        if (!handled && key == AML_KEY_QUESTION) {
+            buf = buf;
+        }
+    }
+}
+
+static void aml_ui_insert_entry(AmlState *state)
+{
+    int index;
+    int i;
+    AmlEntry entry;
+
+    if (state->entry_count >= AML_MAX_PROGRAMS) {
+        aml_ui_show_message(
+            "List is full",
+            "Maximum entry count reached.",
+            "Delete something before inserting.",
+            "Press any key to continue."
+        );
+        getch();
+        return;
+    }
+
+    entry.name[0] = '\0';
+    entry.command[0] = '\0';
+    entry.path[0] = '\0';
+    if (!aml_ui_prompt_entry(&entry, 1)) {
+        return;
+    }
+
+    index = state->entry_count > 0 ? state->selected + 1 : 0;
+    if (index > state->entry_count) {
+        index = state->entry_count;
+    }
+    for (i = state->entry_count; i > index; --i) {
+        state->entries[i] = state->entries[i - 1];
+    }
+    state->entries[index] = entry;
+    state->entry_count++;
+    state->selected = index;
+    state->modified = 1;
+}
+
+static void aml_ui_edit_entry(AmlState *state)
+{
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        aml_ui_insert_entry(state);
+        return;
+    }
+
+    if (aml_ui_prompt_entry(&state->entries[state->selected], 0)) {
+        state->modified = 1;
+    }
 }
 
 static void aml_ui_show_help_overlay(const AmlState *state)
@@ -421,13 +618,14 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_centered(8, "Launcher Help", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 10, "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 11, "/      Prefix search by item name", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 12, "? F1   Show this help dialog", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 13, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 14, "Arrows/Home/End/PgUp/PgDn  Navigate list", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 12, "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 13, "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 16, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
 
     if (entry != 0) {
-        aml_ui_draw_detail_line(16, "Current key", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_draw_detail_line(17, "Current path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_draw_detail_line(17, "Current key", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
     }
 
     aml_ui_write_centered(19, "Press any key to return", AML_UI_ATTR_HELP);
@@ -722,7 +920,7 @@ void aml_ui_draw(const AmlState *state, const char *status)
 
 int aml_ui_run(AmlState *state)
 {
-    const char *status = "Select a program";
+    const char *status = "";
 
     for (;;) {
         int key;
@@ -763,17 +961,18 @@ int aml_ui_run(AmlState *state)
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
             key = getch();
 
-            if (state->entry_count <= 0) {
-                if (key == AML_KEY_F1) {
-                    aml_ui_show_help_overlay(state);
-                    status = "Select a program";
-                }
-                continue;
-            }
-
             if (key == AML_KEY_F1) {
                 aml_ui_show_help_overlay(state);
-                status = "Select a program";
+            } else if (key == AML_KEY_F2) {
+                return AML_UI_SAVE;
+            } else if (key == AML_KEY_F3) {
+                aml_ui_show_details_overlay(state);
+            } else if (key == AML_KEY_F4) {
+                aml_ui_edit_entry(state);
+            } else if (key == AML_KEY_INS) {
+                aml_ui_insert_entry(state);
+            } else if (state->entry_count <= 0) {
+                continue;
             } else if (key == AML_KEY_HOME) {
                 state->selected = 0;
             } else if (key == AML_KEY_END) {
@@ -802,13 +1001,13 @@ int aml_ui_run(AmlState *state)
                 }
             }
 
-            status = "Select a program";
+            status = "";
             continue;
         }
 
         if (key == AML_KEY_QUESTION) {
             aml_ui_show_help_overlay(state);
-            status = "Select a program";
+            status = "";
             continue;
         }
 
@@ -821,7 +1020,7 @@ int aml_ui_run(AmlState *state)
         if (isprint(key)) {
             status = "Unknown key";
         } else {
-            status = "Use arrows, PgUp/PgDn, Home/End, /, Enter, Esc, or 0-9/a-z";
+            status = "";
         }
     }
 }

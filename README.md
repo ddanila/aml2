@@ -10,11 +10,11 @@ The first milestone is intentionally narrow:
 
 - read `launcher.cfg`
 - show a simple launcher list
-- support arrow keys and direct hotkeys
+- support direct hotkeys, lightweight editing, and save
 - write a tiny launch request and exit
 - let a tiny outer stub launch the selected program and bring the launcher back later
 
-The first version does not include an in-app config editor, windowing system, or generic UI framework.
+The current version still does not try to be a windowing system or generic UI framework.
 
 Current TUI features:
 
@@ -24,9 +24,12 @@ Current TUI features:
 - direct hotkeys `0-9`, `a-z`, and `A-Z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
 - `/` prefix search against entry names
-- `?` / `F1` help dialog with current-entry details
+- `F3` details dialog for the current entry
+- `F4` edit current entry and `Ins` insert a new one
+- `F2` save the current in-memory config back to `LAUNCHER.CFG`
+- `?` / `F1` help dialog
 - clearer full-screen message panels for missing or unusable config
-- footer with item position, command preview, and working directory preview
+- same list used for both launching and editing
 
 Current config parsing rules:
 
@@ -125,7 +128,11 @@ Main controls in the launcher:
 - `PgUp/PgDn`: move by one visible page
 - `Home/End`: jump to first or last entry
 - `/`: search by entry-name prefix
-- `?` or `F1`: open the help dialog
+- `F1` or `?`: open the help dialog
+- `F2`: save all changes to `LAUNCHER.CFG`
+- `F3`: show details for the current entry
+- `F4`: edit the current entry
+- `Ins`: insert a new entry after the current one
 - `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly
 - `Enter`: launch current selection
 - `Esc`: exit to DOS
@@ -176,7 +183,7 @@ Long-list TUI navigation coverage:
 bash tests/test_aml2_tui_navigation.sh
 ```
 
-This boots real DOS in QEMU, runs `AML2.EXE` directly, jumps to the end of a 20-entry config through DOS-side automation, and verifies that the scrolling UI shows the final item and position footer correctly before exiting to `A>`.
+This boots real DOS in QEMU, runs `AML2.EXE` directly, jumps to the end of a 20-entry config through DOS-side automation, and verifies that the scrolling UI shows the final item and position indicator correctly before exiting to `A>`.
 
 Search and message-screen coverage:
 
@@ -198,7 +205,7 @@ See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the 
 
 ## Next Steps
 
-1. Decide whether search should become full substring search instead of prefix-only.
-2. Add a slightly richer details/help panel without losing the tiny-launcher feel.
+1. Add deletion and entry reordering so the editor loop is complete.
+2. Decide whether search should become full substring search instead of prefix-only.
 3. Decide whether large configs need a second “page” of hotkeys beyond the current 62-entry scheme.
-4. Revisit `AML2.EXE` size now that the more useful renderer and TUI slice are in place.
+4. Revisit `AML2.EXE` size now that the more useful renderer and editor slice are in place.
