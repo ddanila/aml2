@@ -75,7 +75,25 @@ The repo starts with a small GNU `make` file and a plain-C module split:
 Current release-sized outputs from `./tools/build.sh` are approximately:
 
 - `aml2.exe`: 12 KB
-- `amlstub.com`: 878 bytes
+- `amlstub.com`: 787 bytes
+
+## Usage
+
+In normal use, start `AMLSTUB.COM`, not `AML2.EXE`.
+
+- `AMLSTUB.COM` is the user-facing entrypoint
+- it starts `AML2.EXE`
+- `AML2.EXE` shows the menu and writes `AML2.RUN`
+- `AMLSTUB.COM` launches the selected game and returns to the launcher after the game exits
+
+Run `AML2.EXE` directly only if you want to inspect the launcher UI by itself. In that mode it can still write `AML2.RUN`, but there is no supervisor process around to consume it and bring the launcher back.
+
+Expected DOS-side layout:
+
+- `AMLSTUB.COM`
+- `AML2.EXE`
+- `LAUNCHER.CFG`
+- the game executables or batch commands referenced by `LAUNCHER.CFG`
 
 ## E2E Test
 
