@@ -1070,9 +1070,9 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
         int match;
 
         aml_ui_render(state, *status);
-        aml_ui_fill_rect(3, 22, 76, 22, ' ', AML_UI_ATTR_STATUS);
-        aml_ui_write_at(3, 22, "Find:", AML_UI_ATTR_MUTED);
-        aml_ui_write_padded(9, 22, query, AML_UI_SEARCH_MAX, AML_UI_ATTR_STATUS);
+        aml_ui_fill_rect(3, 23, 76, 23, ' ', AML_UI_ATTR_STATUS);
+        aml_ui_write_at(3, 23, "Find:", AML_UI_ATTR_MUTED);
+        aml_ui_write_padded(9, 23, query, AML_UI_SEARCH_MAX, AML_UI_ATTR_STATUS);
         aml_ui_flush();
 
         key = getch();
