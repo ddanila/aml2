@@ -6,6 +6,8 @@ OUT_DIR="$REPO_ROOT/out"
 BASE_IMG="${MSDOS_BASE_IMG:-$OUT_DIR/floppy-minimal.img}"
 BOOT_IMG="$OUT_DIR/aml2-manual.img"
 AUTOEXEC="$OUT_DIR/AUTOEXEC.BAT"
+MANUAL_CFG="$OUT_DIR/launcher.manual.cfg"
+GAMES_CSV="${AML_MANUAL_GAMES_CSV:-$HOME/fun/games_list/games_1987_1993.csv}"
 DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
 DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
 
@@ -46,6 +48,52 @@ copy_into_image() {
     mcopy -o -i "$BOOT_IMG" "$src" "::${dst}"
 }
 
+generate_manual_config() {
+    if [[ ! -f "$GAMES_CSV" ]]; then
+        echo "Games CSV not found: $GAMES_CSV" >&2
+        exit 1
+    fi
+
+    python3 - "$GAMES_CSV" "$MANUAL_CFG" <<'PY'
+import csv
+import random
+import re
+import sys
+from pathlib import Path
+
+src = Path(sys.argv[1])
+dst = Path(sys.argv[2])
+
+random.seed()
+
+def clean_field(text: str, limit: int) -> str:
+    text = text.replace("|", "/").replace("\r", " ").replace("\n", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    text = text.encode("cp437", "replace").decode("cp437")
+    return text[:limit].rstrip() or "Unknown"
+
+rows = []
+with src.open(newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+        name = clean_field(row.get("name", ""), 48)
+        year = clean_field(row.get("year", ""), 4)
+        if year and year != "Unknown":
+            label = clean_field(f"{name} ({year})", 48)
+        else:
+            label = name
+        cmd_name = clean_field(name, 110)
+        rows.append((label, f"ECHO {cmd_name}", ""))
+
+sample = random.sample(rows, min(50, len(rows)))
+
+with dst.open("w", encoding="ascii", newline="") as f:
+    f.write("# aml2 manual launcher config\n")
+    f.write("# Generated from games_1987_1993.csv\n\n")
+    for name, command, path in sample:
+        f.write(f"{name}|{command}|{path}\n")
+PY
+}
+
 need_tool python3
 need_tool mcopy
 need_tool qemu-system-i386
@@ -54,11 +102,12 @@ cd "$REPO_ROOT"
 
 ./tools/build.sh
 download_base_img
+generate_manual_config
 
 cp "$BASE_IMG" "$BOOT_IMG"
 copy_into_image "$REPO_ROOT/aml2.exe"
 copy_into_image "$REPO_ROOT/amlstub.com"
-copy_into_image "$REPO_ROOT/launcher.cfg"
+mcopy -o -i "$BOOT_IMG" "$MANUAL_CFG" ::LAUNCHER.CFG
 
 for extra in "$@"; do
     copy_into_image "$extra"
@@ -69,6 +118,7 @@ mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting $BOOT_IMG"
 echo "Entry point: AMLSTUB.COM"
+echo "Generated launcher config: $MANUAL_CFG"
 if [[ $# -gt 0 ]]; then
     echo "Extra files copied: $*"
 fi
