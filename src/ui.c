@@ -50,11 +50,14 @@ enum {
     AML_KEY_F3 = 61,
     AML_KEY_F4 = 62,
     AML_KEY_HOME = 71,
+    AML_KEY_LEFT = 75,
+    AML_KEY_RIGHT = 77,
     AML_KEY_UP = 72,
     AML_KEY_PGUP = 73,
     AML_KEY_END = 79,
     AML_KEY_DOWN = 80,
-    AML_KEY_PGDN = 81
+    AML_KEY_PGDN = 81,
+    AML_KEY_DEL = 83
 };
 
 enum {
@@ -463,19 +466,48 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     getch();
 }
 
-static int aml_ui_edit_field(int key, char *buf, int max_len, int *len)
+static int aml_ui_edit_field(int key, char *buf, int max_len, int *len, int *cursor)
 {
     if (key == AML_KEY_BACKSPACE) {
-        if (*len > 0) {
+        if (*cursor > 0 && *len > 0) {
+            memmove(&buf[*cursor - 1], &buf[*cursor], (size_t)(*len - *cursor + 1));
             (*len)--;
-            buf[*len] = '\0';
+            (*cursor)--;
         }
         return 1;
     }
+    if (key == AML_KEY_DEL) {
+        if (*cursor < *len) {
+            memmove(&buf[*cursor], &buf[*cursor + 1], (size_t)(*len - *cursor));
+            (*len)--;
+        }
+        return 1;
+    }
+    if (key == AML_KEY_LEFT) {
+        if (*cursor > 0) {
+            (*cursor)--;
+        }
+        return 1;
+    }
+    if (key == AML_KEY_RIGHT) {
+        if (*cursor < *len) {
+            (*cursor)++;
+        }
+        return 1;
+    }
+    if (key == AML_KEY_HOME) {
+        *cursor = 0;
+        return 1;
+    }
+    if (key == AML_KEY_END) {
+        *cursor = *len;
+        return 1;
+    }
     if (isprint(key) && *len < max_len - 1) {
-        buf[*len] = (char)key;
+        memmove(&buf[*cursor + 1], &buf[*cursor], (size_t)(*len - *cursor + 1));
+        buf[*cursor] = (char)key;
         (*len)++;
-        buf[*len] = '\0';
+        (*cursor)++;
         return 1;
     }
     return 0;
@@ -490,6 +522,9 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
     int name_len;
     int command_len;
     int path_len;
+    int name_cursor;
+    int command_cursor;
+    int path_cursor;
 
     strcpy(name, is_new ? "" : entry->name);
     strcpy(command, is_new ? "" : entry->command);
@@ -497,14 +532,18 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
     name_len = strlen(name);
     command_len = strlen(command);
     path_len = strlen(path);
+    name_cursor = name_len;
+    command_cursor = command_len;
+    path_cursor = path_len;
 
     for (;;) {
         int key;
         int handled = 0;
         int *len_ptr = &name_len;
+        int *cursor_ptr = &name_cursor;
         char *buf = name;
         int max_len = AML_MAX_NAME;
-        int cursor_col = 24 + name_len;
+        int cursor_col = 24 + name_cursor;
         int cursor_row = 10;
 
         aml_ui_fill_rect(8, 5, 71, 18, ' ', AML_UI_ATTR_DIALOG);
@@ -526,10 +565,10 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         aml_ui_write_centered(16, "Enter next/save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
         aml_ui_flush();
         if (field == 1) {
-            cursor_col = 24 + command_len;
+            cursor_col = 24 + command_cursor;
             cursor_row = 12;
         } else if (field == 2) {
-            cursor_col = 24 + path_len;
+            cursor_col = 24 + path_cursor;
             cursor_row = 14;
         }
         aml_ui_set_cursor(cursor_col, cursor_row);
@@ -571,21 +610,36 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
                 field--;
             } else if (key == AML_KEY_DOWN && field < 2) {
                 field++;
+            } else if (field == 0 || field == 1 || field == 2) {
+                if (field == 1) {
+                    len_ptr = &command_len;
+                    cursor_ptr = &command_cursor;
+                    buf = command;
+                    max_len = AML_MAX_COMMAND;
+                } else if (field == 2) {
+                    len_ptr = &path_len;
+                    cursor_ptr = &path_cursor;
+                    buf = path;
+                    max_len = AML_MAX_PATH;
+                }
+                aml_ui_edit_field(key, buf, max_len, len_ptr, cursor_ptr);
             }
             continue;
         }
 
         if (field == 1) {
             len_ptr = &command_len;
+            cursor_ptr = &command_cursor;
             buf = command;
             max_len = AML_MAX_COMMAND;
         } else if (field == 2) {
             len_ptr = &path_len;
+            cursor_ptr = &path_cursor;
             buf = path;
             max_len = AML_MAX_PATH;
         }
 
-        handled = aml_ui_edit_field(key, buf, max_len, len_ptr);
+        handled = aml_ui_edit_field(key, buf, max_len, len_ptr, cursor_ptr);
         if (!handled && key == AML_KEY_QUESTION) {
             buf = buf;
         }
