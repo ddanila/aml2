@@ -16,6 +16,14 @@ The first milestone is intentionally narrow:
 
 The first version does not include an in-app config editor, windowing system, or generic UI framework.
 
+Current config parsing rules:
+
+- lines starting with `#` are comments
+- blank lines are ignored
+- fields are `name|command|path`
+- surrounding whitespace is trimmed
+- entries with an empty name or command are ignored
+
 ## Launch Model
 
 `aml2` is moving to a two-binary model:
@@ -100,6 +108,14 @@ bash tests/test_kvikdos_smoke.sh
 ```
 
 This one runs `fakegame.exe` under `kvikdos` with a timeout and checks that the DOS payload starts, prints, and exits quickly.
+
+Additional DOS failure coverage:
+
+```bash
+bash tests/test_aml2_failure_paths.sh
+```
+
+This verifies that the supervisor exits cleanly for a missing launcher and for an invalid working directory.
 
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cfg.h"
 
@@ -23,6 +24,23 @@ static void aml_trim_newline(char *line)
     }
 }
 
+static char *aml_trim_field(char *text)
+{
+    char *end;
+
+    while (*text != '\0' && isspace((unsigned char)*text)) {
+        text++;
+    }
+
+    end = text + strlen(text);
+    while (end > text && isspace((unsigned char)end[-1])) {
+        end--;
+    }
+    *end = '\0';
+
+    return text;
+}
+
 int aml_load_config(AmlState *state, const char *path)
 {
     FILE *fp;
@@ -41,15 +59,20 @@ int aml_load_config(AmlState *state, const char *path)
         char *command_start;
         char *command_end;
         char *path_start;
+        char *name;
+        char *command;
+        char *entry_path;
         AmlEntry *entry;
 
         aml_trim_newline(line);
 
-        if (line[0] == '\0' || line[0] == '#') {
+        command_start = aml_trim_field(line);
+
+        if (command_start[0] == '\0' || command_start[0] == '#') {
             continue;
         }
 
-        name_end = strchr(line, '|');
+        name_end = strchr(command_start, '|');
         if (name_end == NULL) {
             continue;
         }
@@ -63,15 +86,22 @@ int aml_load_config(AmlState *state, const char *path)
 
         *command_end = '\0';
         path_start = command_end + 1;
+        name = aml_trim_field(line);
+        command = aml_trim_field(command_start);
+        entry_path = aml_trim_field(path_start);
+
+        if (name[0] == '\0' || command[0] == '\0') {
+            continue;
+        }
 
         if (state->entry_count >= AML_MAX_PROGRAMS) {
             break;
         }
 
         entry = &state->entries[state->entry_count++];
-        aml_copy_field(entry->name, sizeof(entry->name), line);
-        aml_copy_field(entry->command, sizeof(entry->command), command_start);
-        aml_copy_field(entry->path, sizeof(entry->path), path_start);
+        aml_copy_field(entry->name, sizeof(entry->name), name);
+        aml_copy_field(entry->command, sizeof(entry->command), command);
+        aml_copy_field(entry->path, sizeof(entry->path), entry_path);
     }
 
     fclose(fp);

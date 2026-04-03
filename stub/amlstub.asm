@@ -115,10 +115,11 @@ read_run_request proc near
     jc read_fail
 
     mov bx, ax
-    mov byte ptr [cmd_tail + 1], '/'
-    mov byte ptr [cmd_tail + 2], 'C'
-    mov byte ptr [cmd_tail + 3], ' '
-    lea di, cmd_tail + 4
+    lea di, cmd_tail + 1
+    mov ax, 'C/'
+    stosw
+    mov al, ' '
+    stosb
     mov cx, 123
     call read_line
     jc read_close_fail
@@ -152,7 +153,6 @@ read_run_request endp
 
 read_line proc near
     push bx
-    push cx
     xor si, si
 
 read_line_next:
@@ -184,7 +184,6 @@ read_line_skip:
     jmp read_line_done
 
 read_line_fail:
-    pop cx
     pop bx
     stc
     ret
@@ -193,7 +192,6 @@ read_line_done:
     xor al, al
     stosb
     mov ax, si
-    pop cx
     pop bx
     clc
     ret
@@ -246,12 +244,12 @@ print_dollar proc near
     ret
 print_dollar endp
 
-launcher_name    db 'AML2.EXE',0
-command_shell    db 'COMMAND.COM',0
-run_file_name    db 'AML2.RUN',0
-msg_launcher_fail db 'AMLSTUB: failed to start AML2.EXE',13,10,'$'
-msg_command_fail  db 'AMLSTUB: launch failed',13,10,'$'
-msg_resize_fail   db 'AMLSTUB: failed to resize memory block',13,10,'$'
+launcher_name     db 'AML2.EXE',0
+command_shell     db 'COMMAND.COM',0
+run_file_name     db 'AML2.RUN',0
+msg_launcher_fail db 'AML2?',13,10,'$'
+msg_command_fail  db 'RUN?',13,10,'$'
+msg_resize_fail   db 'MEM?',13,10,'$'
 
 home_drive       db 0
 home_path        db 64 dup (0)

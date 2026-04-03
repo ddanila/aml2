@@ -92,6 +92,11 @@ Files used by the test:
 - `AML2.RUN`
   - normal launcher-to-stub handoff file
 
+Additional failure-path coverage now exists in `tests/test_aml2_failure_paths.sh`:
+
+- missing `AML2.EXE`
+- invalid launch working directory
+
 ## Tradeoff
 
 The test hooks are now gated behind `AML_TEST_HOOKS` and only enabled in the test build.

@@ -131,20 +131,6 @@ static int aml_ui_hotkey_index(int key)
     return -1;
 }
 
-static void aml_ui_hotkey_label(int index, char *buf)
-{
-    if (index >= 0 && index <= 9) {
-        buf[0] = (char)('0' + index);
-        buf[1] = '\0';
-    } else if (index >= 10 && index < 36) {
-        buf[0] = (char)('a' + (index - 10));
-        buf[1] = '\0';
-    } else {
-        buf[0] = ' ';
-        buf[1] = '\0';
-    }
-}
-
 static void aml_ui_draw_entries(const AmlState *state)
 {
     int i;
@@ -209,9 +195,9 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
     char current[AML_MAX_LINE + 1];
-    char rest[AML_MAX_LINE * 8];
-    size_t rest_len = 0;
+    char next[AML_MAX_LINE + 1];
     int found = 0;
+    int have_next = 0;
 
     fp = fopen(AML_AUTO_FILE, "r");
     if (fp == NULL) {
@@ -219,7 +205,7 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
     }
 
     line[0] = '\0';
-    rest[0] = '\0';
+    next[0] = '\0';
 
     while (fgets(current, sizeof(current), fp) != NULL) {
         aml_ui_trim_newline(current);
@@ -230,13 +216,10 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
             continue;
         }
         if (found && current[0] != '\0') {
-            size_t len = strlen(current);
-            if (rest_len + len + 2 < sizeof(rest)) {
-                memcpy(rest + rest_len, current, len);
-                rest_len += len;
-                rest[rest_len++] = '\n';
-                rest[rest_len] = '\0';
-            }
+            strncpy(next, current, sizeof(next) - 1);
+            next[sizeof(next) - 1] = '\0';
+            have_next = 1;
+            break;
         }
     }
     fclose(fp);
@@ -246,12 +229,13 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
         return 0;
     }
 
-    if (rest_len == 0) {
+    if (!have_next) {
         remove(AML_AUTO_FILE);
     } else {
         fp = fopen(AML_AUTO_FILE, "w");
         if (fp != NULL) {
-            fputs(rest, fp);
+            fputs(next, fp);
+            fputc('\n', fp);
             fclose(fp);
         }
     }

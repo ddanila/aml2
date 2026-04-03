@@ -1,6 +1,5 @@
 #include <conio.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "aml.h"
 #include "cfg.h"
@@ -34,7 +33,6 @@ int main(void)
     AmlState state;
     int rc;
     int action;
-    char status[AML_MAX_LINE + 1];
 
     state.entry_count = 0;
     state.selected = 0;
@@ -60,9 +58,8 @@ int main(void)
         state.selected < state.entry_count) {
         rc = aml_write_run_request(&state.entries[state.selected], AML_RUN_FILE);
         if (rc != 0) {
-            strcpy(status, "Failed to write AML2.RUN");
             aml_ui_init();
-            aml_ui_draw(&state, status);
+            aml_ui_draw(&state, "Failed to write AML2.RUN");
             getch();
             aml_ui_shutdown();
             return 1;
