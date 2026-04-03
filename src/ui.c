@@ -35,6 +35,7 @@ enum {
     AML_UI_ATTR_DIALOG = 0x17,
     AML_UI_ATTR_DIALOG_TEXT = 0x1F,
     AML_UI_ATTR_DIALOG_DIM = 0x1E,
+    AML_UI_ATTR_SHADOW = 0x08,
     AML_UI_ATTR_SCROLL = 0x19,
     AML_UI_ATTR_SCROLL_THUMB = 0x3F,
     AML_KEY_ENTER = 13,
@@ -342,6 +343,43 @@ static void aml_ui_draw_frame(void)
     }
 }
 
+static void aml_ui_apply_shadow(int left, int top, int right, int bottom)
+{
+    int row;
+    int col;
+
+    for (row = top + 1; row <= bottom + 1 && row < AML_UI_ROWS; ++row) {
+        for (col = right + 1; col <= right + 2 && col < AML_UI_COLS; ++col) {
+            unsigned short cell = aml_ui_backbuf[row * AML_UI_COLS + col];
+            aml_ui_backbuf[row * AML_UI_COLS + col] =
+                aml_ui_cell((unsigned char)(cell & 0x00FF), AML_UI_ATTR_SHADOW);
+        }
+    }
+
+    row = bottom + 1;
+    if (row < AML_UI_ROWS) {
+        for (col = left + 2; col <= right + 2 && col < AML_UI_COLS; ++col) {
+            unsigned short cell = aml_ui_backbuf[row * AML_UI_COLS + col];
+            aml_ui_backbuf[row * AML_UI_COLS + col] =
+                aml_ui_cell((unsigned char)(cell & 0x00FF), AML_UI_ATTR_SHADOW);
+        }
+    }
+}
+
+static void aml_ui_draw_dialog_box(int left, int top, int right, int bottom)
+{
+    aml_ui_apply_shadow(left, top, right, bottom);
+    aml_ui_fill_rect(left, top, right, bottom, ' ', AML_UI_ATTR_DIALOG);
+    aml_ui_putc(left, top, 218, AML_UI_ATTR_FRAME);
+    aml_ui_putc(right, top, 191, AML_UI_ATTR_FRAME);
+    aml_ui_putc(left, bottom, 192, AML_UI_ATTR_FRAME);
+    aml_ui_putc(right, bottom, 217, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(left + 1, top, right - 1, top, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(left + 1, bottom, right - 1, bottom, 196, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(left, top + 1, left, bottom - 1, 179, AML_UI_ATTR_FRAME);
+    aml_ui_fill_rect(right, top + 1, right, bottom - 1, 179, AML_UI_ATTR_FRAME);
+}
+
 static void aml_ui_draw_section_line(int row)
 {
     int i;
@@ -543,15 +581,7 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     hotkey[1] = '\0';
 
     aml_ui_render(state, "Details");
-    aml_ui_fill_rect(10, 6, 69, 18, ' ', AML_UI_ATTR_DIALOG);
-    aml_ui_putc(10, 6, 218, AML_UI_ATTR_FRAME);
-    aml_ui_putc(69, 6, 191, AML_UI_ATTR_FRAME);
-    aml_ui_putc(10, 18, 192, AML_UI_ATTR_FRAME);
-    aml_ui_putc(69, 18, 217, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(11, 6, 68, 6, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(11, 18, 68, 18, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(10, 7, 10, 17, 179, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(69, 7, 69, 17, 179, AML_UI_ATTR_FRAME);
+    aml_ui_draw_dialog_box(10, 6, 69, 18);
     aml_ui_write_centered(8, "Entry Details", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_draw_detail_line(10, "Name", entry->name, AML_UI_ATTR_DIALOG_DIM);
     aml_ui_draw_detail_line(12, "Command", entry->command, AML_UI_ATTR_DIALOG_DIM);
@@ -643,15 +673,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         int cursor_col = 24 + name_cursor;
         int cursor_row = 10;
 
-        aml_ui_fill_rect(8, 5, 71, 18, ' ', AML_UI_ATTR_DIALOG);
-        aml_ui_putc(8, 5, 218, AML_UI_ATTR_FRAME);
-        aml_ui_putc(71, 5, 191, AML_UI_ATTR_FRAME);
-        aml_ui_putc(8, 18, 192, AML_UI_ATTR_FRAME);
-        aml_ui_putc(71, 18, 217, AML_UI_ATTR_FRAME);
-        aml_ui_fill_rect(9, 5, 70, 5, 196, AML_UI_ATTR_FRAME);
-        aml_ui_fill_rect(9, 18, 70, 18, 196, AML_UI_ATTR_FRAME);
-        aml_ui_fill_rect(8, 6, 8, 17, 179, AML_UI_ATTR_FRAME);
-        aml_ui_fill_rect(71, 6, 71, 17, 179, AML_UI_ATTR_FRAME);
+        aml_ui_draw_dialog_box(8, 5, 71, 18);
         aml_ui_write_centered(7, is_new ? "Insert Entry" : "Edit Entry", AML_UI_ATTR_DIALOG_TEXT);
         aml_ui_write_at(12, 10, "Name", AML_UI_ATTR_DIALOG_TEXT);
         aml_ui_write_at(12, 12, "Command", AML_UI_ATTR_DIALOG_TEXT);
@@ -805,16 +827,7 @@ static void aml_ui_edit_entry(AmlState *state)
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
     aml_ui_render(state, "Help");
-    aml_ui_fill_rect(10, 6, 69, 18, ' ', AML_UI_ATTR_DIALOG);
-
-    aml_ui_putc(10, 6, 218, AML_UI_ATTR_FRAME);
-    aml_ui_putc(69, 6, 191, AML_UI_ATTR_FRAME);
-    aml_ui_putc(10, 18, 192, AML_UI_ATTR_FRAME);
-    aml_ui_putc(69, 18, 217, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(11, 6, 68, 6, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(11, 18, 68, 18, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(10, 7, 10, 17, 179, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(69, 7, 69, 17, 179, AML_UI_ATTR_FRAME);
+    aml_ui_draw_dialog_box(10, 6, 69, 18);
 
     aml_ui_write_centered(8, "Launcher Help", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 10, "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
@@ -831,16 +844,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
 
 static void aml_ui_draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    aml_ui_fill_rect(12, 8, 67, 16, ' ', AML_UI_ATTR_DIALOG);
-
-    aml_ui_putc(12, 8, 218, AML_UI_ATTR_FRAME);
-    aml_ui_putc(67, 8, 191, AML_UI_ATTR_FRAME);
-    aml_ui_putc(12, 16, 192, AML_UI_ATTR_FRAME);
-    aml_ui_putc(67, 16, 217, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(13, 8, 66, 8, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(13, 16, 66, 16, 196, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(12, 9, 12, 15, 179, AML_UI_ATTR_FRAME);
-    aml_ui_fill_rect(67, 9, 67, 15, 179, AML_UI_ATTR_FRAME);
+    aml_ui_draw_dialog_box(12, 8, 67, 16);
 
     if (title != NULL && title[0] != '\0') {
         aml_ui_write_centered(10, title, AML_UI_ATTR_DIALOG_TEXT);
