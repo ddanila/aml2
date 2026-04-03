@@ -3,7 +3,8 @@ WATCOM_BIN ?= $(WATCOM_ROOT)/binl64
 WCC = $(WATCOM_BIN)/wcc
 WLINK = $(WATCOM_BIN)/wlink
 
-CFLAGS = -i=include -ms -s -zq -bt=dos
+EXTRA_CFLAGS ?=
+CFLAGS = -i=include -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
 LDFLAGS = system dos option quiet
 
 OBJS = \

@@ -59,7 +59,7 @@ mkdir -p "$OUT_DIR"
 echo "=== aml2 DOS e2e ==="
 
 echo "Building launcher, stub, and fake game ..."
-"$REPO_ROOT/tools/build.sh"
+EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 
 download_base_img
 

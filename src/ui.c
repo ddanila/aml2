@@ -182,6 +182,7 @@ static void aml_ui_trim_newline(char *line)
     }
 }
 
+#if AML_TEST_HOOKS
 static int aml_ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
@@ -276,6 +277,7 @@ static int aml_ui_apply_automation(AmlState *state)
     aml_ui_trace_event("auto_unknown");
     return AML_UI_QUIT;
 }
+#endif
 
 void aml_ui_init(void)
 {
@@ -301,16 +303,20 @@ int aml_ui_run(AmlState *state)
     const char *status = "Select a program";
 
     for (;;) {
+#if AML_TEST_HOOKS
         int auto_action;
+#endif
         int key;
         int hotkey_index;
 
         aml_ui_draw(state, status);
+#if AML_TEST_HOOKS
         sleep(1);
         auto_action = aml_ui_apply_automation(state);
         if (auto_action >= 0) {
             return auto_action;
         }
+#endif
         key = getch();
 
         if (key == AML_KEY_ENTER) {

@@ -6,6 +6,7 @@
 
 #include "aml.h"
 
+#if AML_TEST_HOOKS
 static void aml_trace_event(const char *event_name)
 {
     FILE *fp;
@@ -18,6 +19,7 @@ static void aml_trace_event(const char *event_name)
     fputc('\n', fp);
     fclose(fp);
 }
+#endif
 
 static void aml_trim_newline(char *line)
 {
@@ -116,16 +118,22 @@ int main(void)
             return 0;
         }
 
+#if AML_TEST_HOOKS
         aml_trace_event("stub_read");
+#endif
         remove(AML_RUN_FILE);
 
+#if AML_TEST_HOOKS
         aml_trace_event("stub_launch");
+#endif
         rc = aml_run_command(command, path);
         if (rc != 0) {
             puts("AMLSTUB: failed to launch selected command");
             puts(command);
             return 1;
         }
+#if AML_TEST_HOOKS
         aml_trace_event("stub_return");
+#endif
     }
 }

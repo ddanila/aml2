@@ -14,6 +14,10 @@
 #define AML_MAX_PATH 64
 #define AML_MAX_LINE 255
 
+#ifndef AML_TEST_HOOKS
+#define AML_TEST_HOOKS 0
+#endif
+
 typedef struct AmlEntry {
     char name[AML_MAX_NAME];
     char command[AML_MAX_COMMAND];

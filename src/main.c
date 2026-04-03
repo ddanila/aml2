@@ -7,6 +7,7 @@
 #include "launch.h"
 #include "ui.h"
 
+#if AML_TEST_HOOKS
 static void aml_trace_event(const char *event_name)
 {
     FILE *probe;
@@ -26,6 +27,7 @@ static void aml_trace_event(const char *event_name)
     fputc('\n', fp);
     fclose(fp);
 }
+#endif
 
 int main(void)
 {
@@ -37,7 +39,9 @@ int main(void)
     state.entry_count = 0;
     state.selected = 0;
 
+#if AML_TEST_HOOKS
     aml_trace_event("launcher");
+#endif
 
     rc = aml_load_config(&state, AML_CONFIG_FILE);
 
@@ -63,7 +67,9 @@ int main(void)
             aml_ui_shutdown();
             return 1;
         }
+#if AML_TEST_HOOKS
         aml_trace_event("run_request");
+#endif
     }
 
     return 0;
