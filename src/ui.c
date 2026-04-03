@@ -411,7 +411,7 @@ static void aml_ui_draw_header(void)
 static void aml_ui_draw_modmark(const AmlState *state)
 {
     if (state->modified) {
-        aml_ui_putc(36, 1, '*', AML_UI_ATTR_HELP);
+        aml_ui_putc(78, 1, '*', AML_UI_ATTR_HELP);
     }
 }
 
