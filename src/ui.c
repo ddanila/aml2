@@ -15,7 +15,7 @@ enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
     AML_UI_LIST_ROW = 5,
-    AML_UI_LIST_ROWS = 16,
+    AML_UI_LIST_ROWS = 15,
     AML_UI_SEARCH_MAX = 24,
     AML_UI_FRAME_LEFT = 1,
     AML_UI_FRAME_TOP = 1,
@@ -24,7 +24,7 @@ enum {
     AML_UI_LIST_LEFT = 3,
     AML_UI_LIST_RIGHT = 76,
     AML_UI_SCROLL_COL = 75,
-    AML_UI_ATTR_BG = 0x01,
+    AML_UI_ATTR_BG = 0x17,
     AML_UI_ATTR_FRAME = 0x1F,
     AML_UI_ATTR_TITLE = 0x1E,
     AML_UI_ATTR_HELP = 0x1B,
@@ -131,12 +131,15 @@ static void aml_ui_write_at(int col, int row, const char *text, unsigned char at
 static void aml_ui_write_padded(int col, int row, const char *text, int width, unsigned char attr)
 {
     int i;
+    int done = 0;
 
     for (i = 0; i < width; ++i) {
         unsigned char ch = ' ';
 
-        if (text[i] != '\0') {
+        if (!done && text[i] != '\0') {
             ch = (unsigned char)text[i];
+        } else {
+            done = 1;
         }
         aml_ui_putc(col + i, row, ch, attr);
     }
