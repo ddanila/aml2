@@ -66,18 +66,16 @@ They add complexity in:
 
 The stub loop gives the same user-visible effect with much lower risk.
 
-## Supervisor Prototype
+## Supervisor Status
 
-The first supervisor implementation should be plain C.
+The handoff protocol was first validated with a plain-C supervisor.
 
-That lets us validate:
+Current state:
 
-- handoff file semantics
-- shell execution model
-- working directory handling
-- error behavior
-
-Once that works, we can replace only the supervisor with a tiny assembly `.COM`.
+- protocol validated with the C prototype
+- tested runtime path now uses `AMLSTUB.COM`
+- `AMLSTUB.COM` is built with Open Watcom `wasm`
+- the OMF object is converted to `.COM` with a small repo-local converter
 
 ## Launch Behavior
 
@@ -92,6 +90,12 @@ The supervisor should:
 7. run `COMMAND.COM /C <command>`
 8. delete `AML2.RUN`
 9. repeat
+
+## Current COM Stub Notes
+
+The `.COM` stub must resize its DOS memory block before calling `EXEC`.
+
+Without that step, DOS cannot load `AML2.EXE` because the freshly started `.COM` stub owns essentially all available memory.
 
 ## Error Handling
 

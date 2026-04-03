@@ -6,7 +6,7 @@
 
 Validated sequence:
 
-1. `AMLSTUB.EXE` starts from `AUTOEXEC.BAT`
+1. `AMLSTUB.COM` starts from `AUTOEXEC.BAT`
 2. `AML2.EXE` renders the launcher
 3. launcher writes `AML2.RUN`
 4. stub reads the run request
@@ -34,6 +34,8 @@ Resolution:
 
 - keep QEMU for real-DOS execution
 - move automation into a DOS-side script file instead of relying on injected keys
+
+For quick non-TUI checks, `kvikdos` is still useful, but not as a replacement for the QEMU launcher test.
 
 ### 2. DOS 8.3 naming matters
 
@@ -65,6 +67,19 @@ Resolution:
 - keep screen assertions for major visible states
 - add a DOS-side trace file `AML2.TRC` for deterministic sequencing checks
 
+### 5. The COM supervisor needed explicit memory shrink
+
+The first `AMLSTUB.COM` attempt failed to start `AML2.EXE`.
+
+Cause:
+
+- DOS gave the `.COM` stub essentially all available memory
+
+Resolution:
+
+- move the stub to a small internal stack
+- resize its memory block before `EXEC`
+
 ## Current Test Mechanism
 
 Files used by the test:
@@ -78,12 +93,10 @@ Files used by the test:
 
 ## Tradeoff
 
-The test hooks currently live in the normal launcher/stub code path and activate only when `AML2.AUT` exists.
+The test hooks are now gated behind `AML_TEST_HOOKS` and only enabled in the test build.
 
 This is acceptable for now because:
 
 - the runtime path stays simple
 - the real-DOS e2e test is stable
-- the behavior is isolated by presence of the test file
-
-The next cleanup step is to move these hooks behind a clearer build-time or test-only switch.
+- the normal build no longer carries the automation path

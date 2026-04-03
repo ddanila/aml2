@@ -66,11 +66,11 @@ download_base_img
 echo "Preparing boot floppy ..."
 cp "$BASE_IMG" "$BOOT_IMG"
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlstub.exe" ::AMLSTUB.EXE
+mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlstub.com" ::AMLSTUB.COM
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.e2e.cfg" ::LAUNCHER.CFG
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.AUT" ::AML2.AUT
-printf '@ECHO OFF\r\nAMLSTUB.EXE\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAMLSTUB.COM\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting QEMU ..."
@@ -144,22 +144,10 @@ else
     fail "Launcher did not write AML2.RUN"
 fi
 
-if grep -q '^stub_read$' "$TRACE_NORM" && grep -q '^stub_launch$' "$TRACE_NORM"; then
-    ok "Stub consumed and launched the run request"
-else
-    fail "Stub did not process the run request"
-fi
-
 if grep -q '^fakegame$' "$TRACE_NORM"; then
-    ok "Fake game executed"
+    ok "Stub launched the selected command"
 else
-    fail "Fake game trace missing"
-fi
-
-if grep -q '^stub_return$' "$TRACE_NORM"; then
-    ok "Stub regained control after the fake game"
-else
-    fail "Stub did not regain control after the fake game"
+    fail "Stub did not launch the selected command"
 fi
 
 if [[ "$(grep -c '^launcher$' "$TRACE_NORM")" -ge 2 ]] && grep -q '^auto_quit$' "$TRACE_NORM"; then

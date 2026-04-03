@@ -21,7 +21,7 @@ The first version does not include an in-app config editor, windowing system, or
 `aml2` is moving to a two-binary model:
 
 - `AML2.EXE`: launcher UI and config parsing
-- `AMLSTUB`: outer supervisor loop
+- `AMLSTUB.COM`: outer supervisor loop
 
 The launcher itself does not directly run the game anymore. Instead it writes a tiny handoff file and exits. The stub then launches the requested command, waits for it to finish, and relaunches the launcher.
 
@@ -30,6 +30,8 @@ This gives us:
 - no leftover `GO.BAT`
 - no full launcher resident while a game runs
 - a cleaner path toward a tiny `.COM` supervisor
+
+Current tested supervisor build is an Open Watcom `wasm`-built `AMLSTUB.COM`.
 
 See [docs/stub-design.md](/home/ddanila/fun/aml2/docs/stub-design.md) for the protocol details.
 
@@ -70,7 +72,7 @@ The repo has a real-DOS end-to-end test under QEMU:
 bash tests/test_aml2_e2e.sh
 ```
 
-It boots a minimal DOS floppy, starts `AMLSTUB.EXE`, runs `AML2.EXE`, launches a fake DOS game, returns to the launcher, then exits back to the DOS prompt.
+It boots a minimal DOS floppy, starts `AMLSTUB.COM`, runs `AML2.EXE`, launches a fake DOS game, returns to the launcher, then exits back to the DOS prompt.
 
 This test does not use DOSBox.
 
@@ -84,11 +86,13 @@ It uses:
 
 The automation file exists because QEMU key injection was too flaky for a reliable CI-style launcher test. Runtime validation is still done under real DOS.
 
+For faster non-TUI smoke checks, `kvikdos` is also a useful option, but QEMU remains the authoritative path for the launcher loop because the launcher is a full-screen TUI.
+
 See [docs/e2e-findings.md](/home/ddanila/fun/aml2/docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps
 
 1. Tighten the DOS UI and reduce redraw overhead.
 2. Finish config parsing and validation in `cfg.c`.
-3. Add and validate the stub loop.
-4. Decide how small the supervisor needs to be before rewriting it in asm.
+3. Reduce `AMLSTUB.COM` further and decide what should stay in asm.
+4. Trim launcher size and redraw overhead without breaking the tested loop.
