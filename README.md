@@ -6,6 +6,10 @@ The target is a very small binary built with Open Watcom, using plain C and a ti
 
 License: MIT. See [LICENSE](/home/ddanila/fun/aml2/LICENSE).
 
+## Screenshot
+
+![aml2 screenshot](assets/aml2-screenshot.png)
+
 ## Scope
 
 The first milestone is intentionally narrow:
