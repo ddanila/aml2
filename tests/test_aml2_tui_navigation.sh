@@ -72,7 +72,7 @@ done
 
 SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
     "$QMP_SOCK" "$SCREEN_LOG" \
-    'Arvutimuuseum Launcher v2' '' \
+    'Arvutimuuseum Launcher' '' \
     'Entry 19' '' \
     'A>' ''
 

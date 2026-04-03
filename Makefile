@@ -6,7 +6,7 @@ WASM = $(WATCOM_BIN)/wasm
 PYTHON = python3
 
 EXTRA_CFLAGS ?=
-CFLAGS = -i=include -i=build -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
+CFLAGS = -i=include -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
 LDFLAGS = system dos option quiet
 
 OBJS = \
@@ -24,16 +24,19 @@ test-build: build aml2.exe amlstub.com fakegame.exe
 build:
 	mkdir -p build
 
-build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/launch.h build/aml_build.h
+include/aml_build.h:
+	printf '#ifndef AML_BUILD_H\n#define AML_BUILD_H\n\n#define AML_BUILD_TAG "%s"\n\n#endif\n' "$${AML_BUILD_TAG:-local}" > include/aml_build.h
+
+build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/main.obj src/main.c
 
-build/cfg.obj: src/cfg.c include/aml.h include/cfg.h build/aml_build.h
+build/cfg.obj: src/cfg.c include/aml.h include/cfg.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/cfg.obj src/cfg.c
 
-build/ui.obj: src/ui.c include/aml.h include/ui.h build/aml_build.h
+build/ui.obj: src/ui.c include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui.obj src/ui.c
 
-build/launch.obj: src/launch.c include/aml.h include/launch.h build/aml_build.h
+build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c
 
 build/fakegame.obj: tests/fakegame.c
@@ -52,4 +55,4 @@ fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
 clean:
-	rm -rf build aml2.exe aml2.com amlstub.exe amlstub.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out
+	rm -rf build aml2.exe aml2.com amlstub.exe amlstub.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h

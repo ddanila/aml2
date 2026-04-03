@@ -41,13 +41,5 @@ fi
 
 echo "Building aml2 with $WATCOM_BIN"
 make clean
-mkdir -p build
-cat > build/aml_build.h <<EOF
-#ifndef AML_BUILD_H
-#define AML_BUILD_H
-
-#define AML_BUILD_TAG "$BUILD_TAG"
-
-#endif
-EOF
+export AML_BUILD_TAG="$BUILD_TAG"
 make ${BUILD_TARGETS:-all} EXTRA_CFLAGS="${EXTRA_CFLAGS:-}"

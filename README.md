@@ -26,6 +26,7 @@ Current TUI features:
 - `/` prefix search against entry names
 - `F3` details dialog for the current entry
 - `F4` edit current entry and `Ins` insert a new one
+- `F8` delete the current entry after confirmation
 - `F2` save the current in-memory config back to `LAUNCHER.CFG`
 - `?` / `F1` help dialog
 - clearer full-screen message panels for missing or unusable config
@@ -146,6 +147,7 @@ Main controls in the launcher:
 - `F3`: show details for the current entry
 - `F4`: edit the current entry
 - `Ins`: insert a new entry after the current one
+- `F8`: delete the current entry after confirmation
 - `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly
 - `Enter`: launch current selection
 - `Esc`: exit to DOS

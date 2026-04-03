@@ -50,6 +50,7 @@ enum {
     AML_KEY_F2 = 60,
     AML_KEY_F3 = 61,
     AML_KEY_F4 = 62,
+    AML_KEY_F8 = 66,
     AML_KEY_HOME = 71,
     AML_KEY_LEFT = 75,
     AML_KEY_RIGHT = 77,
@@ -595,6 +596,40 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     getch();
 }
 
+static int aml_ui_confirm_delete(const AmlState *state)
+{
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        return 0;
+    }
+
+    aml_ui_render(state, "Delete");
+    aml_ui_draw_dialog_box(12, 8, 67, 16);
+    aml_ui_write_centered(10, "Delete Entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_centered(12, "Remove the current entry from LAUNCHER.CFG?", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_ellipsis(18, 13, state->entries[state->selected].name, 44, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_write_centered(15, "Enter delete  Esc cancel", AML_UI_ATTR_HELP);
+    aml_ui_flush();
+
+    for (;;) {
+        int key = getch();
+
+        if (key == AML_KEY_ESC) {
+            return 0;
+        }
+        if (key == AML_KEY_ENTER) {
+            return 1;
+        }
+        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+            key = getch();
+            if (key == AML_KEY_ESC) {
+                return 0;
+            }
+        }
+    }
+}
+
 static int aml_ui_edit_field(int key, char *buf, int max_len, int *len, int *cursor)
 {
     if (key == AML_KEY_BACKSPACE) {
@@ -828,6 +863,33 @@ static void aml_ui_edit_entry(AmlState *state)
     }
 }
 
+static void aml_ui_delete_entry(AmlState *state)
+{
+    int i;
+
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        return;
+    }
+
+    if (!aml_ui_confirm_delete(state)) {
+        return;
+    }
+
+    for (i = state->selected; i < state->entry_count - 1; ++i) {
+        state->entries[i] = state->entries[i + 1];
+    }
+
+    state->entry_count--;
+    if (state->entry_count <= 0) {
+        state->selected = 0;
+    } else if (state->selected >= state->entry_count) {
+        state->selected = state->entry_count - 1;
+    }
+    state->modified = 1;
+}
+
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
     aml_ui_render(state, "Help");
@@ -840,7 +902,8 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(14, 13, "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 16, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 16, "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 17, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     getch();
@@ -1203,6 +1266,8 @@ int aml_ui_run(AmlState *state)
                 aml_ui_edit_entry(state);
             } else if (key == AML_KEY_INS) {
                 aml_ui_insert_entry(state);
+            } else if (key == AML_KEY_F8) {
+                aml_ui_delete_entry(state);
             } else if (state->entry_count <= 0) {
                 continue;
             } else if (key == AML_KEY_HOME) {

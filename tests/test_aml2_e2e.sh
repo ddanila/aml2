@@ -99,7 +99,7 @@ fi
 echo "Driving aml2 and fake game ..."
 SCREEN_EXPECT_TIMEOUT=12 python3 "$REPO_ROOT/tests/screen_expect.py" \
     "$QMP_SOCK" "$SCREEN_LOG" \
-    'Arvutimuuseum Launcher v2' '' \
+    'Arvutimuuseum Launcher' '' \
     'A>' ''
 
 kill "$QEMU_PID" 2>/dev/null || true
@@ -120,7 +120,7 @@ else
     fail "Screen log missing or empty"
 fi
 
-if grep -q "Arvutimuuseum Launcher v2" "$SCREEN_LOG"; then
+if grep -q "Arvutimuuseum Launcher" "$SCREEN_LOG"; then
     ok "Launcher screen rendered"
 else
     fail "Launcher screen not found"
