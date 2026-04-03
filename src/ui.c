@@ -51,6 +51,7 @@ enum {
     AML_KEY_F3 = 61,
     AML_KEY_F4 = 62,
     AML_KEY_F8 = 66,
+    AML_KEY_F10 = 68,
     AML_KEY_HOME = 71,
     AML_KEY_LEFT = 75,
     AML_KEY_RIGHT = 77,
@@ -523,7 +524,7 @@ static void aml_ui_draw_entries(const AmlState *state)
 
     if (state->entry_count <= 0) {
         aml_ui_write_at(6, 10, "No entries available.", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_at(6, 12, "Check LAUNCHER.CFG or press Esc to exit.", AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_at(6, 12, "Check LAUNCHER.CFG or press F10 to exit.", AML_UI_ATTR_DIALOG_DIM);
         aml_ui_draw_scrollbar(state);
         return;
     }
@@ -903,7 +904,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 16, "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 17, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 17, "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     getch();
@@ -1244,10 +1245,6 @@ int aml_ui_run(AmlState *state)
             continue;
         }
 
-        if (key == AML_KEY_ESC) {
-            return AML_UI_QUIT;
-        }
-
         if (key == AML_KEY_SLASH && state->entry_count > 0) {
             aml_ui_prompt_search(state, &status);
             continue;
@@ -1268,6 +1265,8 @@ int aml_ui_run(AmlState *state)
                 aml_ui_insert_entry(state);
             } else if (key == AML_KEY_F8) {
                 aml_ui_delete_entry(state);
+            } else if (key == AML_KEY_F10) {
+                return AML_UI_QUIT;
             } else if (state->entry_count <= 0) {
                 continue;
             } else if (key == AML_KEY_HOME) {

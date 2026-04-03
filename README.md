@@ -148,9 +148,9 @@ Main controls in the launcher:
 - `F4`: edit the current entry
 - `Ins`: insert a new entry after the current one
 - `F8`: delete the current entry after confirmation
+- `F10`: exit to DOS
 - `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly
 - `Enter`: launch current selection
-- `Esc`: exit to DOS
 
 ## E2E Test
 
