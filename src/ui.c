@@ -69,6 +69,48 @@ static unsigned short aml_ui_cell(unsigned char ch, unsigned char attr)
     return (unsigned short)ch | ((unsigned short)attr << 8);
 }
 
+static void aml_ui_hide_cursor(void)
+{
+    union REGS regs;
+
+    regs.h.ah = 0x01;
+    regs.x.cx = 0x2000;
+    int86(0x10, &regs, &regs);
+}
+
+static void aml_ui_show_cursor(void)
+{
+    union REGS regs;
+
+    regs.h.ah = 0x01;
+    regs.x.cx = 0x0607;
+    int86(0x10, &regs, &regs);
+}
+
+static void aml_ui_set_cursor(int col, int row)
+{
+    union REGS regs;
+
+    if (col < 0) {
+        col = 0;
+    }
+    if (col >= AML_UI_COLS) {
+        col = AML_UI_COLS - 1;
+    }
+    if (row < 0) {
+        row = 0;
+    }
+    if (row >= AML_UI_ROWS) {
+        row = AML_UI_ROWS - 1;
+    }
+
+    regs.h.ah = 0x02;
+    regs.h.bh = 0;
+    regs.h.dh = (unsigned char)row;
+    regs.h.dl = (unsigned char)col;
+    int86(0x10, &regs, &regs);
+}
+
 static void aml_ui_wait_vsync(void)
 {
     while (inp(0x3DA) & 0x08) {
@@ -462,6 +504,8 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         int *len_ptr = &name_len;
         char *buf = name;
         int max_len = AML_MAX_NAME;
+        int cursor_col = 24 + name_len;
+        int cursor_row = 10;
 
         aml_ui_fill_rect(8, 5, 71, 18, ' ', AML_UI_ATTR_DIALOG);
         aml_ui_putc(8, 5, 218, AML_UI_ATTR_FRAME);
@@ -481,9 +525,19 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         aml_ui_write_padded(24, 14, path, 40, field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
         aml_ui_write_centered(16, "Enter next/save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
         aml_ui_flush();
+        if (field == 1) {
+            cursor_col = 24 + command_len;
+            cursor_row = 12;
+        } else if (field == 2) {
+            cursor_col = 24 + path_len;
+            cursor_row = 14;
+        }
+        aml_ui_set_cursor(cursor_col, cursor_row);
+        aml_ui_show_cursor();
 
         key = getch();
         if (key == AML_KEY_ESC) {
+            aml_ui_hide_cursor();
             return 0;
         }
         if (key == '\t') {
@@ -508,6 +562,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
             strcpy(entry->name, name);
             strcpy(entry->command, command);
             strcpy(entry->path, path);
+            aml_ui_hide_cursor();
             return 1;
         }
         if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
@@ -634,6 +689,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
 
 void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
 {
+    aml_ui_hide_cursor();
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     aml_ui_draw_frame();
     aml_ui_draw_section_line(4);
@@ -901,18 +957,22 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
 
 void aml_ui_init(void)
 {
+    aml_ui_hide_cursor();
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     aml_ui_flush();
 }
 
 void aml_ui_shutdown(void)
 {
+    aml_ui_set_cursor(0, AML_UI_ROWS - 1);
+    aml_ui_show_cursor();
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', 0x07);
     aml_ui_flush();
 }
 
 void aml_ui_draw(const AmlState *state, const char *status)
 {
+    aml_ui_hide_cursor();
     aml_ui_render(state, status);
     aml_ui_flush();
 }
