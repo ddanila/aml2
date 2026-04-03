@@ -532,7 +532,7 @@ static void aml_ui_show_details_overlay(const AmlState *state)
             "No current entry",
             "There is nothing to show yet.",
             "Use Ins to add a new record.",
-            "Press any key to return."
+            ""
         );
         getch();
         return;
@@ -557,7 +557,6 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     aml_ui_draw_detail_line(12, "Command", entry->command, AML_UI_ATTR_DIALOG_DIM);
     aml_ui_draw_detail_line(14, "Path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
     aml_ui_draw_detail_line(16, "Hotkey", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
-    aml_ui_write_centered(19, "Press any key to return", AML_UI_ATTR_HELP);
     aml_ui_flush();
     getch();
 }
@@ -702,7 +701,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
                         "Name and command required",
                         "Both fields must be filled in.",
                         "",
-                        "Press any key to continue."
+                        ""
                     );
                     getch();
                     continue;
@@ -763,7 +762,7 @@ static void aml_ui_insert_entry(AmlState *state)
             "List is full",
             "Maximum entry count reached.",
             "Delete something before inserting.",
-            "Press any key to continue."
+            ""
         );
         getch();
         return;
@@ -826,7 +825,6 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 16, "0-9 a-z A-Z  Direct hotkeys for items 1-62", AML_UI_ATTR_DIALOG_TEXT);
 
-    aml_ui_write_centered(19, "Press any key to return", AML_UI_ATTR_HELP);
     aml_ui_flush();
     getch();
 }

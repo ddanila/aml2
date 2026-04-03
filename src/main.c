@@ -58,7 +58,7 @@ int main(void)
             "No launcher.cfg yet",
             "Use Ins to add an entry.",
             "Use F2 to save the new configuration.",
-            "Press any key to continue."
+            ""
         );
         getch();
     } else if (state.entry_count <= 0) {
@@ -66,7 +66,7 @@ int main(void)
             "Launcher config is empty",
             "Use Ins to add an entry.",
             "Use F2 to save changes.",
-            "Press any key to continue."
+            ""
         );
         getch();
     }
@@ -86,7 +86,7 @@ int main(void)
                     "Save failed",
                     "Could not write LAUNCHER.CFG.",
                     "Check disk space and write permissions.",
-                    "Press any key to continue."
+                    ""
                 );
                 getch();
             } else {
@@ -96,7 +96,7 @@ int main(void)
                     "Configuration saved",
                     "LAUNCHER.CFG was updated successfully.",
                     "",
-                    "Press any key to continue."
+                    ""
                 );
                 getch();
             }
@@ -113,7 +113,7 @@ int main(void)
                     "Failed to write AML2.RUN",
                     "The launcher could not hand off the selected entry.",
                     "Check write permissions and available disk space.",
-                    "Press any key to continue."
+                    ""
                 );
                 getch();
                 continue;
