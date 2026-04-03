@@ -1,0 +1,13 @@
+*.obj
+*.o
+*.err
+*.map
+*.bak
+*.lst
+*.exe
+*.com
+*.sym
+*.zip
+build/
+out/
+vendor/openwatcom-v2/current-build-*/
