@@ -225,6 +225,14 @@ static void aml_ui_write_2digit_at(int col, int row, unsigned value, unsigned ch
     aml_ui_putc(col + 1, row, (unsigned char)('0' + (value % 10)), attr);
 }
 
+static unsigned aml_ui_current_second(void)
+{
+    struct dostime_t now;
+
+    _dos_gettime(&now);
+    return now.second;
+}
+
 static void aml_ui_draw_frame(void)
 {
     int i;
@@ -264,7 +272,7 @@ static void aml_ui_draw_header(void)
 
     aml_ui_write_at(2, 1, "Arvutimuuseum Launcher v2 (c) Danila Sukharev", AML_UI_ATTR_TITLE);
     aml_ui_write_2digit_at(72, 1, now.hour, AML_UI_ATTR_HELP);
-    aml_ui_putc(74, 1, ':', AML_UI_ATTR_HELP);
+    aml_ui_putc(74, 1, (now.second & 1) ? ':' : ' ', AML_UI_ATTR_HELP);
     aml_ui_write_2digit_at(75, 1, now.minute, AML_UI_ATTR_HELP);
 }
 
@@ -1033,12 +1041,14 @@ void aml_ui_draw(const AmlState *state, const char *status)
 int aml_ui_run(AmlState *state)
 {
     const char *status = "";
+    unsigned last_second = 60;
 
     for (;;) {
         int key;
         int hotkey_index;
 
         aml_ui_draw(state, status);
+        last_second = aml_ui_current_second();
 #if AML_TEST_HOOKS
         sleep(1);
         {
@@ -1051,6 +1061,15 @@ int aml_ui_run(AmlState *state)
             }
         }
 #endif
+        while (!kbhit()) {
+            unsigned now_second = aml_ui_current_second();
+
+            if (now_second != last_second) {
+                aml_ui_draw(state, status);
+                last_second = now_second;
+            }
+            delay(50);
+        }
         key = getch();
 
         if (key == AML_KEY_ENTER) {
