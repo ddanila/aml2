@@ -14,16 +14,16 @@
 enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
-    AML_UI_LIST_ROW = 5,
-    AML_UI_LIST_ROWS = 15,
+    AML_UI_LIST_ROW = 4,
+    AML_UI_LIST_ROWS = 16,
     AML_UI_SEARCH_MAX = 24,
-    AML_UI_FRAME_LEFT = 1,
-    AML_UI_FRAME_TOP = 1,
-    AML_UI_FRAME_RIGHT = 78,
+    AML_UI_FRAME_LEFT = 0,
+    AML_UI_FRAME_TOP = 0,
+    AML_UI_FRAME_RIGHT = 79,
     AML_UI_FRAME_BOTTOM = 24,
-    AML_UI_LIST_LEFT = 3,
-    AML_UI_LIST_RIGHT = 76,
-    AML_UI_SCROLL_COL = 75,
+    AML_UI_LIST_LEFT = 2,
+    AML_UI_LIST_RIGHT = 77,
+    AML_UI_SCROLL_COL = 76,
     AML_UI_ATTR_BG = 0x17,
     AML_UI_ATTR_FRAME = 0x1F,
     AML_UI_ATTR_TITLE = 0x1E,
@@ -203,9 +203,9 @@ static void aml_ui_draw_section_line(int row)
 
 static void aml_ui_draw_header(void)
 {
-    aml_ui_write_at(4, 2, " aml2 ", AML_UI_ATTR_TITLE);
-    aml_ui_write_at(12, 2, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
-    aml_ui_write_at(4, 3, "Arrows/Home/End/PgUp/PgDn Move  / Search  Enter Launch  Esc Exit", AML_UI_ATTR_HELP);
+    aml_ui_write_at(2, 1, " aml2 ", AML_UI_ATTR_TITLE);
+    aml_ui_write_at(10, 1, "Arvutimuuseum Launcher v2", AML_UI_ATTR_TITLE);
+    aml_ui_write_at(63, 1, "F1 Help", AML_UI_ATTR_HELP);
 }
 
 static int aml_ui_hotkey_index(int key)
