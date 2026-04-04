@@ -42,9 +42,7 @@ run_case() {
     local name="$1"
     local cfg="$2"
     local auto="$3"
-    local pattern1="$4"
-    local response1="$5"
-    local pattern2="$6"
+    shift 3
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
@@ -75,8 +73,7 @@ run_case() {
 
     SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
         "$QMP_SOCK" "$SCREEN_LOG" \
-        "$pattern1" "$response1" \
-        "$pattern2" ''
+        "$@"
 
     kill "$QEMU_PID" 2>/dev/null || true
     wait "$QEMU_PID" 2>/dev/null || true
@@ -95,18 +92,22 @@ run_case \
     "search navigation" \
     "$REPO_ROOT/tests/launcher.long.cfg" \
     "$REPO_ROOT/tests/AML2.SEH" \
-    "Item 20/20" \
+    "Entry 19" \
     "" \
-    "A>"
+    "A>" \
+    ""
 grep -q 'Entry 19' "$SCREEN_LOG"
 
 run_case \
     "empty config message" \
     "$REPO_ROOT/tests/launcher.empty.cfg" \
     "" \
-    "No launcher entries found" \
+    "Launcher config is empty" \
     "ret" \
-    "A>"
-grep -q 'Expected format: name|command|path' "$SCREEN_LOG"
+    "No entries available." \
+    "f10" \
+    "A>" \
+    ""
+grep -q 'Use Ins to add an entry.' "$SCREEN_LOG"
 
 echo "search/message tests passed"

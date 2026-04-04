@@ -50,6 +50,8 @@ enum {
     AML_KEY_F2 = 60,
     AML_KEY_F3 = 61,
     AML_KEY_F4 = 62,
+    AML_KEY_F5 = 63,
+    AML_KEY_F6 = 64,
     AML_KEY_F8 = 66,
     AML_KEY_F10 = 68,
     AML_KEY_HOME = 71,
@@ -444,28 +446,44 @@ static char aml_ui_hotkey_char(int index)
     return ' ';
 }
 
-static int aml_ui_name_starts_with(const char *name, const char *prefix)
+static int aml_ui_name_contains(const char *name, const char *needle)
 {
-    while (*prefix != '\0') {
-        if (tolower((unsigned char)*name) != tolower((unsigned char)*prefix)) {
-            return 0;
-        }
-        name++;
-        prefix++;
+    const char *scan;
+    const char *match_name;
+    const char *match_needle;
+
+    if (needle[0] == '\0') {
+        return 1;
     }
-    return 1;
+
+    for (scan = name; *scan != '\0'; ++scan) {
+        match_name = scan;
+        match_needle = needle;
+        while (*match_name != '\0' &&
+               *match_needle != '\0' &&
+               tolower((unsigned char)*match_name) ==
+               tolower((unsigned char)*match_needle)) {
+            match_name++;
+            match_needle++;
+        }
+        if (*match_needle == '\0') {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
-static int aml_ui_find_prefix(const AmlState *state, const char *prefix)
+static int aml_ui_find_match(const AmlState *state, const char *needle)
 {
     int i;
 
-    if (prefix[0] == '\0') {
+    if (needle[0] == '\0') {
         return -1;
     }
 
     for (i = 0; i < state->entry_count; ++i) {
-        if (aml_ui_name_starts_with(state->entries[i].name, prefix)) {
+        if (aml_ui_name_contains(state->entries[i].name, needle)) {
             return i;
         }
     }
@@ -891,6 +909,40 @@ static void aml_ui_delete_entry(AmlState *state)
     state->modified = 1;
 }
 
+static void aml_ui_move_entry_up(AmlState *state)
+{
+    AmlEntry temp;
+
+    if (state->entry_count <= 1 ||
+        state->selected <= 0 ||
+        state->selected >= state->entry_count) {
+        return;
+    }
+
+    temp = state->entries[state->selected - 1];
+    state->entries[state->selected - 1] = state->entries[state->selected];
+    state->entries[state->selected] = temp;
+    state->selected--;
+    state->modified = 1;
+}
+
+static void aml_ui_move_entry_down(AmlState *state)
+{
+    AmlEntry temp;
+
+    if (state->entry_count <= 1 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count - 1) {
+        return;
+    }
+
+    temp = state->entries[state->selected + 1];
+    state->entries[state->selected + 1] = state->entries[state->selected];
+    state->entries[state->selected] = temp;
+    state->selected++;
+    state->modified = 1;
+}
+
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
     aml_ui_render(state, "Help");
@@ -898,13 +950,13 @@ static void aml_ui_show_help_overlay(const AmlState *state)
 
     aml_ui_write_centered(8, "Launcher Help", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 10, "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 11, "/      Prefix search by item name", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 11, "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 12, "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 13, "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 15, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 16, "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 17, "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 15, "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 16, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, 17, "F8/F10 Delete / exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     getch();
@@ -1093,7 +1145,7 @@ static int aml_ui_apply_automation(AmlState *state)
     }
 
     if (strncmp(line, "search ", 7) == 0) {
-        int index = aml_ui_find_prefix(state, line + 7);
+        int index = aml_ui_find_match(state, line + 7);
         if (index >= 0) {
             state->selected = index;
             aml_ui_trace_event("auto_search");
@@ -1147,7 +1199,7 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
             return 0;
         }
         if (key == AML_KEY_ENTER) {
-            match = aml_ui_find_prefix(state, query);
+            match = aml_ui_find_match(state, query);
             if (match >= 0) {
                 state->selected = match;
                 *status = "Search matched";
@@ -1169,7 +1221,7 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
             continue;
         }
 
-        match = aml_ui_find_prefix(state, query);
+        match = aml_ui_find_match(state, query);
         if (match >= 0) {
             state->selected = match;
             *status = "Search matched";
@@ -1261,6 +1313,10 @@ int aml_ui_run(AmlState *state)
                 aml_ui_show_details_overlay(state);
             } else if (key == AML_KEY_F4) {
                 aml_ui_edit_entry(state);
+            } else if (key == AML_KEY_F5) {
+                aml_ui_move_entry_up(state);
+            } else if (key == AML_KEY_F6) {
+                aml_ui_move_entry_down(state);
             } else if (key == AML_KEY_INS) {
                 aml_ui_insert_entry(state);
             } else if (key == AML_KEY_F8) {

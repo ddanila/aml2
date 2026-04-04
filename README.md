@@ -37,9 +37,10 @@ Current TUI features:
 - stronger selected-row marker, boxed sections, and a scrollbar-style gutter
 - direct hotkeys `0-9`, `a-z`, and `A-Z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
-- `/` prefix search against entry names
+- `/` substring search against entry names
 - `F3` details dialog for the current entry
 - `F4` edit current entry and `Ins` insert a new one
+- `F5` / `F6` move the current entry up or down
 - `F8` delete the current entry after confirmation
 - `F2` save the current in-memory config back to `LAUNCHER.CFG`
 - `?` / `F1` help dialog
@@ -155,15 +156,17 @@ Main controls in the launcher:
 - `Up/Down`: move by one entry
 - `PgUp/PgDn`: move by one visible page
 - `Home/End`: jump to first or last entry
-- `/`: search by entry-name prefix
+- `/`: search within entry names
 - `F1` or `?`: open the help dialog
 - `F2`: save all changes to `LAUNCHER.CFG`
 - `F3`: show details for the current entry
 - `F4`: edit the current entry
+- `F5`: move the current entry up
+- `F6`: move the current entry down
 - `Ins`: insert a new entry after the current one
 - `F8`: delete the current entry after confirmation
 - `F10`: exit to DOS
-- `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly
+- `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly for the first 62 items
 - `Enter`: launch current selection
 
 ## E2E Test
@@ -220,7 +223,7 @@ Search and message-screen coverage:
 bash tests/test_aml2_search_and_messages.sh
 ```
 
-This verifies name-prefix search on a long list and the full-screen empty-config message path under real DOS in QEMU.
+This verifies in-name search on a long list and the full-screen empty-config message path under real DOS in QEMU.
 
 Extended hotkey and help coverage:
 
@@ -234,7 +237,6 @@ See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and fail
 
 ## Next Steps
 
-1. Add entry reordering so the editor loop is more complete.
-2. Decide whether search should become full substring search instead of prefix-only.
-3. Decide whether large configs need a second hotkey page beyond the current 62-entry scheme.
-4. Revisit `AML2.EXE` size now that the renderer and editor slice are in place.
+1. Decide whether very large configs need another navigation aid beyond scroll and search.
+2. Revisit `AML2.EXE` size now that the renderer and editor slice are in place.
+3. Replace the current release action with a shell-based `gh release` flow to drop the remaining Node 20 warning.

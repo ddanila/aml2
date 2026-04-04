@@ -63,10 +63,11 @@ The launcher is now past the bare-minimum screen:
 - visible scrolling window for long program lists
 - stronger selected-row marker and scrollbar gutter
 - `Up/Down`, `Home/End`, `PgUp/PgDn` movement
-- `/` prefix search
-- direct hotkeys `0-9`, `a-z`, `A-Z`
+- `/` substring search
+- direct hotkeys `0-9`, `a-z`, `A-Z` for the first 62 entries
 - `F3` details dialog for the current entry
 - `F4` edit current entry
+- `F5` / `F6` move the current entry up or down
 - `Ins` insert a new entry after the current selection
 - `F8` delete the current entry after confirmation
 - `F2` save the current list back to `LAUNCHER.CFG`
@@ -103,5 +104,5 @@ Important findings from bring-up:
 - `kvikdos` is useful for fast non-TUI smoke checks, but QEMU is still the right tool for the full launcher loop.
 - The repo now also has explicit DOS failure-path checks for missing launcher and bad working directory handling.
 - The repo now also has a real-DOS navigation test for long launcher lists.
-- The repo now also has a real-DOS test for prefix search and empty-config messaging.
+- The repo now also has a real-DOS test for in-name search and empty-config messaging.
 - The repo now also has a real-DOS test for uppercase hotkeys and the help dialog.
