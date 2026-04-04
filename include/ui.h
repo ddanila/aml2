@@ -7,7 +7,9 @@ enum AmlUiAction {
     AML_UI_QUIT = 0,
     AML_UI_LAUNCH = 1,
     AML_UI_SAVE = 2,
-    AML_UI_LAUNCH_DEBUG = 3
+    AML_UI_LAUNCH_DEBUG = 3,
+    AML_UI_LAUNCH_CHILD_DIRECT = 4,
+    AML_UI_LAUNCH_CHILD_SHELL = 5
 };
 
 void aml_ui_init(void);

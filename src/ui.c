@@ -53,6 +53,7 @@ enum {
     AML_KEY_F5 = 63,
     AML_KEY_F6 = 64,
     AML_KEY_F8 = 66,
+    AML_KEY_F9 = 67,
     AML_KEY_F10 = 68,
     AML_KEY_HOME = 71,
     AML_KEY_LEFT = 75,
@@ -330,15 +331,6 @@ static unsigned aml_ui_current_second(void)
 
     _dos_gettime(&now);
     return now.second;
-}
-
-static int aml_ui_shift_pressed(void)
-{
-    union REGS regs;
-
-    regs.h.ah = 0x02;
-    int86(0x16, &regs, &regs);
-    return (regs.h.al & 0x03) != 0;
 }
 
 static void aml_ui_draw_frame(void)
@@ -1112,10 +1104,39 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(text_col, aml_ui_dialog_row(top, 6), "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(text_col, aml_ui_dialog_row(top, 7), "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_at(text_col, aml_ui_dialog_row(top, 8), "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 9), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 9), "F9     Debug run menu", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 10), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     aml_ui_wait_for_ack();
+}
+
+static int aml_ui_show_debug_run_menu(const AmlState *state)
+{
+    aml_ui_render(state, "Debug Run");
+    aml_ui_draw_titled_dialog(12, 7, 67, 17, "Debug Run");
+    aml_ui_write_at(18, aml_ui_dialog_row(7, 2), "1  Via stub, pause on error", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(18, aml_ui_dialog_row(7, 4), "2  Run directly as child", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(18, aml_ui_dialog_row(7, 6), "3  Run via COMMAND.COM", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_centered(aml_ui_dialog_row(7, 8), "Esc cancel", AML_UI_ATTR_HELP);
+    aml_ui_flush();
+
+    for (;;) {
+        int key = getch();
+
+        if (key == AML_KEY_ESC) {
+            return -1;
+        }
+        if (key == '1') {
+            return AML_UI_LAUNCH_DEBUG;
+        }
+        if (key == '2') {
+            return AML_UI_LAUNCH_CHILD_DIRECT;
+        }
+        if (key == '3') {
+            return AML_UI_LAUNCH_CHILD_SHELL;
+        }
+    }
 }
 
 static void aml_ui_draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
@@ -1479,9 +1500,6 @@ int aml_ui_run(AmlState *state)
 
         if (key == AML_KEY_ENTER) {
             if (state->entry_count > 0) {
-                if (aml_ui_shift_pressed()) {
-                    return AML_UI_LAUNCH_DEBUG;
-                }
                 return AML_UI_LAUNCH;
             }
             status = "No launcher entries available";
@@ -1513,6 +1531,13 @@ int aml_ui_run(AmlState *state)
                 aml_ui_insert_entry(state);
             } else if (key == AML_KEY_F8) {
                 aml_ui_delete_entry_with_confirm(state);
+            } else if (key == AML_KEY_F9) {
+                if (state->entry_count > 0) {
+                    int action = aml_ui_show_debug_run_menu(state);
+                    if (action >= 0) {
+                        return action;
+                    }
+                }
             } else if (key == AML_KEY_F10) {
                 return AML_UI_QUIT;
             } else if (state->entry_count <= 0) {

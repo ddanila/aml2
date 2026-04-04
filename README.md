@@ -83,10 +83,10 @@ Rules:
 - `Home/End`: jump to first or last entry
 - `/`: search within entry names
 - `Enter`: launch current selection
-- `Shift+Enter`: launch current selection with error pause enabled
 - `0-9`, `a-z`, `A-Z`: direct launch hotkeys for the first 62 items
 - `F1` or `?`: help
 - `F3`: details
+- `F9`: debug run menu
 - `F10`: exit to DOS
 
 Editor mode only:

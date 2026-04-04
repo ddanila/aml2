@@ -119,4 +119,4 @@ Current launch split:
 - simple `.EXE` and `.COM` commands without shell metacharacters are started directly
 - `.BAT` files and shell-like command lines still go through `COMMAND.COM /C`
 - normal launches ignore child errorlevel and return to the launcher immediately
-- `Shift+Enter` launches set a debug flag so the stub pauses on child errors
+- `F9` debug launches can set a stub debug flag so the stub pauses on child errors

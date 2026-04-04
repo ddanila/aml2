@@ -165,10 +165,11 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if ((action == AML_UI_LAUNCH || action == AML_UI_LAUNCH_DEBUG) &&
+        if ((action == AML_UI_LAUNCH || action == AML_UI_LAUNCH_DEBUG ||
+             action == AML_UI_LAUNCH_CHILD_DIRECT || action == AML_UI_LAUNCH_CHILD_SHELL) &&
             state.selected >= 0 &&
             state.selected < state.entry_count) {
-            if (!state.supervised) {
+            if ((action == AML_UI_LAUNCH || action == AML_UI_LAUNCH_DEBUG) && !state.supervised) {
                 aml_ui_show_notice(
                     &state,
                     "Launch disabled",
@@ -179,7 +180,11 @@ int main(int argc, char **argv)
                 aml_ui_wait_for_ack();
                 continue;
             }
-            rc = aml_check_launch_entry(&state.entries[state.selected]);
+            if (action == AML_UI_LAUNCH_CHILD_DIRECT) {
+                rc = aml_check_direct_launch_entry(&state.entries[state.selected]);
+            } else {
+                rc = aml_check_launch_entry(&state.entries[state.selected]);
+            }
             if (rc == AML_LAUNCH_STUB_MISSING) {
                 aml_ui_show_notice(
                     &state,
@@ -211,6 +216,37 @@ int main(int argc, char **argv)
                     ""
                 );
                 aml_ui_wait_for_ack();
+                continue;
+            }
+            if (rc == AML_LAUNCH_DIRECT_UNSUPPORTED) {
+                aml_ui_show_notice(
+                    &state,
+                    "Direct run unsupported",
+                    "This mode only supports plain .EXE and .COM targets.",
+                    "Use the shell option for .BAT files or command lines.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
+
+            if (action == AML_UI_LAUNCH_CHILD_DIRECT || action == AML_UI_LAUNCH_CHILD_SHELL) {
+                aml_ui_shutdown();
+                rc = aml_run_entry_child(
+                    &state.entries[state.selected],
+                    action == AML_UI_LAUNCH_CHILD_SHELL
+                );
+                aml_ui_init();
+                if (rc == AML_LAUNCH_CHILD_FAILED) {
+                    aml_ui_show_notice(
+                        &state,
+                        "Run failed",
+                        "The selected program could not be started.",
+                        "Check the program name and DOS environment.",
+                        ""
+                    );
+                    aml_ui_wait_for_ack();
+                }
                 continue;
             }
 

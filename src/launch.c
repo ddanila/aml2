@@ -1,6 +1,9 @@
 #include <direct.h>
+#include <dos.h>
 #include <io.h>
+#include <process.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "launch.h"
@@ -128,6 +131,87 @@ int aml_check_launch_entry(const AmlEntry *entry)
     aml_join_path(target, sizeof(target), entry->path, entry->command);
     if (access(target, 0) != 0) {
         return AML_LAUNCH_TARGET_MISSING;
+    }
+
+    return AML_LAUNCH_READY;
+}
+
+int aml_check_direct_launch_entry(const AmlEntry *entry)
+{
+    char target[AML_MAX_PATH + AML_MAX_COMMAND + 2];
+
+    if (!aml_directory_exists(entry->path)) {
+        return AML_LAUNCH_BAD_PATH;
+    }
+
+    if (!aml_is_simple_launch(entry->command) ||
+        !aml_has_program_extension(entry->command) ||
+        stricmp(strrchr(entry->command, '.'), ".bat") == 0) {
+        return AML_LAUNCH_DIRECT_UNSUPPORTED;
+    }
+
+    aml_join_path(target, sizeof(target), entry->path, entry->command);
+    if (access(target, 0) != 0) {
+        return AML_LAUNCH_TARGET_MISSING;
+    }
+
+    return AML_LAUNCH_READY;
+}
+
+static void aml_restore_directory(unsigned old_drive, const char *old_dir)
+{
+    unsigned drives;
+
+    _dos_setdrive(old_drive, &drives);
+    chdir(old_dir);
+}
+
+static int aml_switch_to_entry_directory(const AmlEntry *entry, unsigned *old_drive, char *old_dir, size_t old_dir_size)
+{
+    unsigned drives;
+
+    _dos_getdrive(old_drive);
+    if (getcwd(old_dir, old_dir_size) == NULL) {
+        return AML_LAUNCH_BAD_PATH;
+    }
+
+    if (entry->path[0] == '\0') {
+        return AML_LAUNCH_READY;
+    }
+
+    if (entry->path[1] == ':') {
+        unsigned target_drive = ((unsigned char)entry->path[0] & 0xDF) - 'A' + 1;
+        _dos_setdrive(target_drive, &drives);
+    }
+
+    if (chdir(entry->path) != 0) {
+        aml_restore_directory(*old_drive, old_dir);
+        return AML_LAUNCH_BAD_PATH;
+    }
+
+    return AML_LAUNCH_READY;
+}
+
+int aml_run_entry_child(const AmlEntry *entry, int force_shell)
+{
+    unsigned old_drive;
+    char old_dir[AML_MAX_PATH];
+    int rc;
+
+    rc = aml_switch_to_entry_directory(entry, &old_drive, old_dir, sizeof(old_dir));
+    if (rc != AML_LAUNCH_READY) {
+        return rc;
+    }
+
+    if (force_shell) {
+        rc = system(entry->command);
+    } else {
+        rc = spawnlp(P_WAIT, entry->command, entry->command, NULL);
+    }
+
+    aml_restore_directory(old_drive, old_dir);
+    if (rc == -1) {
+        return AML_LAUNCH_CHILD_FAILED;
     }
 
     return AML_LAUNCH_READY;
