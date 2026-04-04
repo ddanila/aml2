@@ -454,6 +454,7 @@ static void aml_ui_draw_header_on_frame_common(int modified)
 
     strcpy(title, " Arvutimuuseum Launcher (c) Danila Sukharev, v");
     strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
+    strncat(title, " ", sizeof(title) - strlen(title) - 1);
     if ((int)strlen(title) > clock_col - 1) {
         title[clock_col - 1] = '\0';
     }
@@ -472,7 +473,7 @@ static void aml_ui_draw_header_on_frame(const AmlState *state)
 {
     aml_ui_draw_header_on_frame_common(state->modified);
     if (state->editor_mode) {
-        aml_ui_write_at(65, 0, " EDIT ", AML_UI_ATTR_HELP);
+        aml_ui_write_at(66, 0, "EDIT", AML_UI_ATTR_HELP);
     }
 }
 
