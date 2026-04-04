@@ -33,6 +33,7 @@ IGNORE_ROOTS = {
     "SOUND.BAT",
     "T.BAT",
     "TETRIS.RES",
+    "VBREAK.COM",
 }
 
 IGNORE_FILE_BASES = {
@@ -89,7 +90,6 @@ TITLE_ALIASES = {
     "TANKWARS": "Tank Wars",
     "TSTDRIVE": "The Duel: Test Drive II",
     "TYCOON": "Railroad Tycoon Deluxe",
-    "VBREAK.COM": "VBreak",
     "VIKNGS": "The Lost Vikings",
     "VOLLEY": "Arcade Volleyball",
     "WINTER": "The Games - Winter Challenge",
@@ -158,7 +158,6 @@ MANUAL_METADATA = {
     "TANKWARS": Metadata(title="Tank Wars", year="1986"),
     "TSTDRIVE": Metadata(title="The Duel: Test Drive II", year="1989"),
     "TYCOON": Metadata(title="Railroad Tycoon Deluxe", year="1993"),
-    "VBREAK.COM": Metadata(title="VBreak"),
 }
 
 
