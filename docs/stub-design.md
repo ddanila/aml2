@@ -11,14 +11,14 @@ The architecture is:
 
 ## Runtime Flow
 
-1. `AMLSTUB` starts.
-2. `AML` runs `AMLUI.EXE` and waits.
-3. `AML2` lets the user choose a program.
-4. `AML2` writes a launch request to `AML2.RUN` and exits.
-5. `AMLSTUB` reads `AML2.RUN`.
-6. `AMLSTUB` launches the requested command.
-7. When the child exits, `AML` starts `AMLUI.EXE` again.
-8. If no launch request exists, `AMLSTUB` exits to DOS.
+1. `AML.COM` starts.
+2. `AML.COM` runs `AMLUI.EXE` and waits.
+3. `AMLUI.EXE` lets the user choose a program.
+4. `AMLUI.EXE` writes a launch request to `AML2.RUN` and exits.
+5. `AML.COM` reads `AML2.RUN`.
+6. `AML.COM` launches the requested command.
+7. When the child exits, `AML.COM` starts `AMLUI.EXE` again.
+8. If no launch request exists, `AML.COM` exits to DOS.
 
 ## Handoff File
 

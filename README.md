@@ -120,6 +120,12 @@ The zip contains:
 ./tools/run_qemu_manual.sh
 ```
 
+To boot with a specific launcher config:
+
+```bash
+./tools/run_qemu_manual.sh path/to/LAUNCHER.CFG
+```
+
 To copy extra DOS files onto the floppy image before boot:
 
 ```bash
