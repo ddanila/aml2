@@ -7,6 +7,7 @@ BASE_IMG="${MSDOS_BASE_IMG:-$OUT_DIR/floppy-minimal.img}"
 BOOT_IMG="$OUT_DIR/aml2-manual.img"
 AUTOEXEC="$OUT_DIR/AUTOEXEC.BAT"
 MANUAL_CFG="$OUT_DIR/launcher.manual.cfg"
+LAUNCHER_CFG_SOURCE=""
 GAMES_CSV="${AML_MANUAL_GAMES_CSV:-$HOME/fun/games_list/games_1987_1993.csv}"
 DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
 DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
@@ -94,20 +95,41 @@ with dst.open("w", encoding="ascii", newline="") as f:
 PY
 }
 
+copy_launcher_config() {
+    local src="$1"
+
+    if [[ ! -f "$src" ]]; then
+        echo "Launcher config not found: $src" >&2
+        exit 1
+    fi
+
+    mcopy -o -i "$BOOT_IMG" "$src" ::LAUNCHER.CFG
+}
+
 need_tool python3
 need_tool mcopy
 need_tool qemu-system-i386
 
 cd "$REPO_ROOT"
 
+if [[ $# -gt 0 && "${1##*.}" == "cfg" ]]; then
+    LAUNCHER_CFG_SOURCE="$1"
+    shift
+fi
+
 ./tools/build.sh
 download_base_img
-generate_manual_config
+if [[ -n "$LAUNCHER_CFG_SOURCE" ]]; then
+    :
+else
+    generate_manual_config
+    LAUNCHER_CFG_SOURCE="$MANUAL_CFG"
+fi
 
 cp "$BASE_IMG" "$BOOT_IMG"
 copy_into_image "$REPO_ROOT/aml2.exe"
 copy_into_image "$REPO_ROOT/amlstub.com"
-mcopy -o -i "$BOOT_IMG" "$MANUAL_CFG" ::LAUNCHER.CFG
+copy_launcher_config "$LAUNCHER_CFG_SOURCE"
 
 for extra in "$@"; do
     copy_into_image "$extra"
@@ -118,7 +140,7 @@ mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting $BOOT_IMG"
 echo "Entry point: AMLSTUB.COM"
-echo "Generated launcher config: $MANUAL_CFG"
+echo "Launcher config: $LAUNCHER_CFG_SOURCE"
 if [[ $# -gt 0 ]]; then
     echo "Extra files copied: $*"
 fi
