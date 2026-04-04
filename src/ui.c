@@ -1090,7 +1090,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     int left = 10;
     int top = 6;
     int right = 69;
-    int bottom = 18;
+    int bottom = 19;
     int text_col = left + 3;
 
     aml_ui_render(state, "Help");
