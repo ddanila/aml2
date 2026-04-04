@@ -100,9 +100,9 @@ run_case \
     "help dialog" \
     "$REPO_ROOT/tests/launcher.e2e.cfg" \
     "" \
-    'Arvutimuuseum Launcher v2' 'f1' \
-    'Launcher Help' 'spc+esc' \
+    'Arvutimuuseum Launcher' 'f1' \
+    'Launcher Help' 'spc+f10' \
     'A>' ''
-grep -q 'Direct hotkeys for items 1-62' "$SCREEN_LOG"
+grep -q 'F8/F10 Delete / exit to DOS' "$SCREEN_LOG"
 
 echo "hotkey/help tests passed"

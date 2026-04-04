@@ -370,8 +370,12 @@ static void aml_ui_apply_shadow(int left, int top, int right, int bottom)
     }
 }
 
-static void aml_ui_draw_dialog_box(int left, int top, int right, int bottom)
+static void aml_ui_draw_dialog_box(int left, int top, int right, int bottom, const char *title)
 {
+    int title_len;
+    int title_col;
+    int i;
+
     aml_ui_apply_shadow(left, top, right, bottom);
     aml_ui_fill_rect(left, top, right, bottom, ' ', AML_UI_ATTR_DIALOG);
     aml_ui_putc(left, top, 218, AML_UI_ATTR_FRAME);
@@ -382,6 +386,33 @@ static void aml_ui_draw_dialog_box(int left, int top, int right, int bottom)
     aml_ui_fill_rect(left + 1, bottom, right - 1, bottom, 196, AML_UI_ATTR_FRAME);
     aml_ui_fill_rect(left, top + 1, left, bottom - 1, 179, AML_UI_ATTR_FRAME);
     aml_ui_fill_rect(right, top + 1, right, bottom - 1, 179, AML_UI_ATTR_FRAME);
+
+    if (title != NULL && title[0] != '\0') {
+        title_len = (int)strlen(title);
+        if (title_len > right - left - 4) {
+            title_len = right - left - 4;
+        }
+        title_col = left + ((right - left + 1 - title_len) / 2);
+        if (title_col < left + 2) {
+            title_col = left + 2;
+        }
+
+        aml_ui_putc(title_col - 1, top, ' ', AML_UI_ATTR_DIALOG);
+        for (i = 0; i < title_len; ++i) {
+            aml_ui_putc(title_col + i, top, (unsigned char)title[i], AML_UI_ATTR_DIALOG_TEXT);
+        }
+        aml_ui_putc(title_col + title_len, top, ' ', AML_UI_ATTR_DIALOG);
+    }
+}
+
+static int aml_ui_dialog_row(int top, int inner_row)
+{
+    return top + 1 + inner_row;
+}
+
+static void aml_ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title)
+{
+    aml_ui_draw_dialog_box(left, top, right, bottom, title);
 }
 
 static void aml_ui_draw_section_line(int row)
@@ -605,12 +636,11 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     hotkey[1] = '\0';
 
     aml_ui_render(state, "Details");
-    aml_ui_draw_dialog_box(10, 6, 69, 18);
-    aml_ui_write_centered(8, "Entry Details", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_draw_detail_line(10, "Name", entry->name, AML_UI_ATTR_DIALOG_DIM);
-    aml_ui_draw_detail_line(12, "Command", entry->command, AML_UI_ATTR_DIALOG_DIM);
-    aml_ui_draw_detail_line(14, "Path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
-    aml_ui_draw_detail_line(16, "Hotkey", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_titled_dialog(10, 6, 69, 18, "Entry Details");
+    aml_ui_draw_detail_line(aml_ui_dialog_row(6, 2), "Name", entry->name, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(aml_ui_dialog_row(6, 4), "Command", entry->command, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(aml_ui_dialog_row(6, 6), "Path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_draw_detail_line(aml_ui_dialog_row(6, 8), "Hotkey", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
     aml_ui_flush();
     getch();
 }
@@ -624,11 +654,10 @@ static int aml_ui_confirm_delete(const AmlState *state)
     }
 
     aml_ui_render(state, "Delete");
-    aml_ui_draw_dialog_box(12, 8, 67, 16);
-    aml_ui_write_centered(10, "Delete Entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_centered(12, "Remove the current entry from LAUNCHER.CFG?", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_ellipsis(18, 13, state->entries[state->selected].name, 44, AML_UI_ATTR_DIALOG_DIM);
-    aml_ui_write_centered(15, "Enter delete  Esc cancel", AML_UI_ATTR_HELP);
+    aml_ui_draw_titled_dialog(12, 8, 67, 16, "Delete Entry");
+    aml_ui_write_centered(aml_ui_dialog_row(8, 2), "Remove the current entry from LAUNCHER.CFG?", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_ellipsis(18, aml_ui_dialog_row(8, 3), state->entries[state->selected].name, 44, AML_UI_ATTR_DIALOG_DIM);
+    aml_ui_write_centered(aml_ui_dialog_row(8, 5), "Enter delete  Esc cancel", AML_UI_ATTR_HELP);
     aml_ui_flush();
 
     for (;;) {
@@ -731,29 +760,29 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         int cursor_col = 24 + name_cursor;
         int cursor_row = 10;
 
-        aml_ui_draw_dialog_box(8, 5, 71, 18);
-        aml_ui_write_centered(7, is_new ? "Insert Entry" : "Edit Entry", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_at(12, 10, "Name", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_at(12, 12, "Command", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_at(12, 14, "Path", AML_UI_ATTR_DIALOG_TEXT);
-        aml_ui_write_clipped(24, 10, name, field_width, 0, name_cursor,
+        aml_ui_draw_titled_dialog(8, 5, 71, 18, is_new ? "Insert Entry" : "Edit Entry");
+        aml_ui_write_at(12, aml_ui_dialog_row(5, 3), "Name", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(12, aml_ui_dialog_row(5, 5), "Command", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_at(12, aml_ui_dialog_row(5, 7), "Path", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_clipped(24, aml_ui_dialog_row(5, 3), name, field_width, 0, name_cursor,
                              field == 0 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_clipped(24, 12, command, field_width, 0, command_cursor,
+        aml_ui_write_clipped(24, aml_ui_dialog_row(5, 5), command, field_width, 0, command_cursor,
                              field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_clipped(24, 14, path, field_width, 0, path_cursor,
+        aml_ui_write_clipped(24, aml_ui_dialog_row(5, 7), path, field_width, 0, path_cursor,
                              field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        aml_ui_write_centered(16, "Enter next  F2 save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
+        aml_ui_write_centered(aml_ui_dialog_row(5, 9), "Enter next  F2 save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
         aml_ui_flush();
         if (field == 1) {
             visible_start = aml_ui_visible_start(command, field_width, 0, command_cursor);
             cursor_col = 24 + (command_cursor - visible_start);
-            cursor_row = 12;
+            cursor_row = aml_ui_dialog_row(5, 5);
         } else if (field == 2) {
             visible_start = aml_ui_visible_start(path, field_width, 0, path_cursor);
             cursor_col = 24 + (path_cursor - visible_start);
-            cursor_row = 14;
+            cursor_row = aml_ui_dialog_row(5, 7);
         } else {
             cursor_col = 24 + (name_cursor - visible_start);
+            cursor_row = aml_ui_dialog_row(5, 3);
         }
         aml_ui_set_cursor(cursor_col, cursor_row);
         aml_ui_show_cursor();
@@ -946,17 +975,16 @@ static void aml_ui_move_entry_down(AmlState *state)
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
     aml_ui_render(state, "Help");
-    aml_ui_draw_dialog_box(10, 6, 69, 18);
+    aml_ui_draw_titled_dialog(10, 6, 69, 18, "Launcher Help");
 
-    aml_ui_write_centered(8, "Launcher Help", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 10, "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 11, "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 12, "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 13, "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 14, "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 15, "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 16, "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, 17, "F8/F10 Delete / exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 2), "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 3), "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 4), "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 5), "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 6), "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 7), "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 8), "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(14, aml_ui_dialog_row(6, 9), "F8/F10 Delete / exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     getch();
@@ -964,19 +992,16 @@ static void aml_ui_show_help_overlay(const AmlState *state)
 
 static void aml_ui_draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    aml_ui_draw_dialog_box(12, 8, 67, 16);
+    aml_ui_draw_titled_dialog(12, 8, 67, 16, title);
 
-    if (title != NULL && title[0] != '\0') {
-        aml_ui_write_centered(10, title, AML_UI_ATTR_DIALOG_TEXT);
-    }
     if (line1 != NULL && line1[0] != '\0') {
-        aml_ui_write_centered(12, line1, AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_centered(aml_ui_dialog_row(8, 2), line1, AML_UI_ATTR_DIALOG_TEXT);
     }
     if (line2 != NULL && line2[0] != '\0') {
-        aml_ui_write_centered(13, line2, AML_UI_ATTR_DIALOG_DIM);
+        aml_ui_write_centered(aml_ui_dialog_row(8, 3), line2, AML_UI_ATTR_DIALOG_DIM);
     }
     if (line3 != NULL && line3[0] != '\0') {
-        aml_ui_write_centered(15, line3, AML_UI_ATTR_HELP);
+        aml_ui_write_centered(aml_ui_dialog_row(8, 5), line3, AML_UI_ATTR_HELP);
     }
 }
 
