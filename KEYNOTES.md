@@ -45,7 +45,7 @@ Detailed bring-up findings live in `docs/e2e-findings.md`.
 ## Release Notes
 
 - release screenshots should come from a release zip, not a local tree
-- after tagging, attach a fresh 1x screenshot to the draft release
+- after tagging, attach a fresh 1x screenshot to the draft release by default
 - keep the release screenshot and README screenshot in sync
 - keep release descriptions short and concrete
 - screenshot capture helper: `./tools/capture_release_help_screenshot.sh <tag>`
