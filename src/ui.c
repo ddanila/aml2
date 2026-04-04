@@ -648,7 +648,7 @@ static int aml_ui_require_editor_mode(AmlState *state)
         state,
         "Viewer mode",
         "Editing is disabled in the default mode.",
-        "Run AML2 /E to enable editor mode.",
+        "",
         ""
     );
     aml_ui_wait_for_ack();
