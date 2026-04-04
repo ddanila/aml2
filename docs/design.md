@@ -1,5 +1,7 @@
 # aml2 Design Notes
 
+These are early design notes from the initial rewrite plan. They are still useful for intent and constraints, but some milestone-1 cuts listed here have since been implemented.
+
 ## Goals
 
 - Replace the Turbo Vision implementation with a minimal in-house TUI.
@@ -22,7 +24,7 @@ The launcher keeps only the essential behavior from the original project:
 
 ## Explicit Non-Goals For Milestone 1
 
-- built-in config editor
+- rich config editor with advanced dialogs or multi-window UI
 - Turbo Vision compatibility
 - overlapping windows or menus
 - about/changelog dialogs

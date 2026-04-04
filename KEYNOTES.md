@@ -1,113 +1,52 @@
 # KEYNOTES
 
-## Current Direction
+Internal notes for ongoing work on `aml2`.
 
-`aml2` is intentionally not a Turbo Vision port.
-
-The current design targets:
+## Direction
 
 - plain C
 - Open Watcom
-- tiny DOS launcher
-- custom TUI with only the primitives we actually need
+- small DOS launcher
+- simple custom TUI, not a framework
+- `AMLSTUB.COM` remains the supervisor entrypoint
 
-## Why Plain C
+## Practical Constraints
 
-The launcher logic is simple and the binary-size target is strict.
+- keep runtime behavior simple before chasing more size
+- avoid dynamic allocation in the main launcher path
+- treat `.COM` pressure as a stub concern first, not a launcher concern
+- viewer mode is the default; editor mode is explicit with `/E`
 
-Plain C gives us:
+## Toolchain
 
-- less runtime baggage
-- simpler memory layout
-- easier control over static buffers
-- fewer surprises when pushing toward a `.COM`-style footprint
+- pinned Open Watcom snapshot: `Current-build` from `2026-04-03`
+- vendor root: `vendor/openwatcom-v2/current-build-2026-04-03`
+- current tested stub size: `787 bytes`
+- current launcher size is roughly `23 KB`
 
-## Why No `GO.BAT`
+## Testing Notes
 
-The original project used a batch-file handoff to save memory.
+- QEMU + real DOS is the authoritative launcher test path
+- `kvikdos` is useful only for fast non-TUI smoke checks
+- QMP key injection was too flaky; DOS-side automation files are more reliable
+- 8.3 filenames matter in the floppy test harness
+- multi-step automation scripts must preserve the full remaining tail
 
-For `aml2`, the current preferred model is a stub-managed relaunch loop:
+Current real-DOS coverage includes:
 
-- no generated batch file left on disk
-- no extra shell artifact to clean up
-- the full launcher does not stay resident while the game runs
+- launcher/stub/game end-to-end loop
+- long-list navigation
+- search and empty-config messaging
+- hotkeys and help dialog
+- viewer-mode blocking and editor-mode save persistence
+- failure cases for missing launcher and invalid working directory
 
-## Current Launch Mechanism
+## Release Notes
 
-The intended flow is:
-
-1. read the selected entry from `launcher.cfg`
-2. write `AML2.RUN`
-3. exit
-4. let the supervisor run the command
-5. let the supervisor restart the launcher after the command exits
-
-This keeps `AML2` focused on UI and config management.
-
-## Config Parsing Rules
-
-The launcher now accepts only meaningful entries:
-
-- whitespace around fields is trimmed
-- blank lines and comment lines are ignored
-- entries without a non-empty name and command are skipped
-- path remains optional
-
-The future supervisor can still use `COMMAND.COM /C` internally to preserve free-form command strings.
-
-## Current TUI
-
-The launcher is now past the bare-minimum screen:
-
-- backbuffered direct-VRAM text renderer
-- visible scrolling window for long program lists
-- stronger selected-row marker and scrollbar gutter
-- default viewer mode, with editor mode enabled by `/E`
-- `Up/Down`, `Home/End`, `PgUp/PgDn` movement
-- `/` substring search
-- direct hotkeys `0-9`, `a-z`, `A-Z` for the first 62 entries
-- `F3` details dialog for the current entry
-- `F4` edit current entry in editor mode
-- `F5` / `F6` move the current entry up or down in editor mode
-- `Ins` insert a new entry after the current selection in editor mode
-- `F8` delete the current entry after confirmation in editor mode
-- `F2` save the current list back to `LAUNCHER.CFG` in editor mode
-- `?` / `F1` help dialog
-- full-screen message panels for missing config and empty config
-- one shared list surface for both launching and editing
-
-## `.COM` Reality Check
-
-We should not assume `.COM` is guaranteed.
-
-The right sequence is:
-
-1. get the launcher working
-2. measure the actual binary size and memory use
-3. remove obvious waste
-4. decide whether `.COM` remains worth the extra constraints
-
-If a very small `.EXE` is materially better to maintain, that may still be the correct engineering choice.
-
-## QEMU E2E Notes
-
-The current e2e test is against real DOS in QEMU, not DOSBox.
-
-Important findings from bring-up:
-
-- QMP key injection was not reliable enough for deterministic launcher navigation.
-- DOS 8.3 filename constraints matter in the test harness.
-- The launcher/stub/game loop is now proven with a DOS-side trace file.
-- Transient full-screen text UIs are easier to verify with a mix of screen capture and explicit DOS-side trace points than with screen scraping alone.
-- The tested supervisor is now a real `AMLSTUB.COM`.
-- The current tested supervisor size is 787 bytes.
-- `AML2.EXE` is now about 15 KB with the richer renderer, help dialog, and extended hotkeys.
-- `kvikdos` is useful for fast non-TUI smoke checks, but QEMU is still the right tool for the full launcher loop.
-- The repo now also has explicit DOS failure-path checks for missing launcher and bad working directory handling.
-- The repo now also has a real-DOS navigation test for long launcher lists.
-- The repo now also has a real-DOS test for in-name search and empty-config messaging.
-- The repo now also has a real-DOS test for uppercase hotkeys and the help dialog.
+- release screenshots should come from a release zip, not a local tree
+- after tagging, attach a fresh 1x screenshot to the draft release
+- keep release descriptions short and concrete
 
 ## Future Ideas
 
-- Optional per-game statistics, especially launch count and accumulated play time.
+- optional per-game statistics, especially launch count and accumulated play time

@@ -59,7 +59,19 @@ Resolution:
 - keep the first non-empty line as the active command
 - rewrite the remainder back to disk
 
-### 4. Screen assertions alone were too brittle
+### 4. Multi-step automation was truncating too early
+
+After the first parser fix, longer automation scripts still broke because only one remaining line was preserved after each read.
+
+Symptom:
+
+- tests with more than two scripted actions stalled before save, delete, or quit
+
+Resolution:
+
+- rewrite the full remaining tail of the automation file, not just the next line
+
+### 5. Screen assertions alone were too brittle
 
 The fake game and second launcher run can be transient under automation.
 
@@ -68,7 +80,7 @@ Resolution:
 - keep screen assertions for major visible states
 - add a DOS-side trace file `AML2.TRC` for deterministic sequencing checks
 
-### 5. The COM supervisor needed explicit memory shrink
+### 6. The COM supervisor needed explicit memory shrink
 
 The first `AMLSTUB.COM` attempt failed to start `AML2.EXE`.
 
