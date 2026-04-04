@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 WATCOM_ROOT="${WATCOM_ROOT:-$REPO_ROOT/vendor/openwatcom-v2/current-build-2026-04-03}"
+LOCK_FILE="$REPO_ROOT/.build.lock"
 
 case "$(uname -s):$(uname -m)" in
     Linux:x86_64)
@@ -37,6 +38,12 @@ elif [[ -n "${CI:-}" ]]; then
     BUILD_TAG="$(git rev-parse --short HEAD)"
 else
     BUILD_TAG="local"
+fi
+
+exec 9>"$LOCK_FILE"
+if ! flock -w 60 9; then
+    echo "Timed out waiting for build lock: $LOCK_FILE" >&2
+    exit 1
 fi
 
 echo "Building aml2 with $WATCOM_BIN"
