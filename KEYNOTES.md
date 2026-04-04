@@ -107,3 +107,7 @@ Important findings from bring-up:
 - The repo now also has a real-DOS navigation test for long launcher lists.
 - The repo now also has a real-DOS test for in-name search and empty-config messaging.
 - The repo now also has a real-DOS test for uppercase hotkeys and the help dialog.
+
+## Future Ideas
+
+- Optional per-game statistics, especially launch count and accumulated play time.

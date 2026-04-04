@@ -264,3 +264,4 @@ See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and fail
 1. Decide whether very large configs need another navigation aid beyond scroll and search.
 2. Revisit `AML2.EXE` size now that the renderer and editor slice are in place.
 3. Capture and attach a fresh screenshot for each release tag so the draft page stays in sync with the actual build.
+4. Consider optional per-game stats such as launch count and accumulated play time.
