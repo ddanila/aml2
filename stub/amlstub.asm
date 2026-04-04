@@ -305,8 +305,8 @@ launcher_tail_ptr dw offset view_tail
 path_buf         db 64 dup (0)
 read_char        db 0
 
-view_tail        db 3,' /V',0Dh
-edit_tail        db 3,' /E',0Dh
+view_tail        db 6,' /V /S',0Dh
+edit_tail        db 6,' /E /S',0Dh
 empty_tail       db 0
                db 0Dh
 cmd_tail         db 127 dup (0)

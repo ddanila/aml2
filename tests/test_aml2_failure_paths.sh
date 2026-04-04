@@ -42,11 +42,12 @@ PY
 
 run_case() {
     local name="$1"
-    local cfg="$2"
-    local include_launcher="$3"
-    local pattern="$4"
-    local auto="$5"
-    local final_pattern="$6"
+    local launch_cmd="$2"
+    local cfg="$3"
+    local include_launcher="$4"
+    local pattern="$5"
+    local auto="$6"
+    local final_pattern="$7"
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
@@ -57,7 +58,7 @@ run_case() {
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
     mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
+    printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$TRACE_LOG" "$TRACE_NORM"
@@ -108,7 +109,8 @@ BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/bui
 mkdir -p "$OUT_DIR"
 download_base_img
 
-run_case "missing launcher" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
-run_case "bad path" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""
+run_case "missing launcher" "AML.COM" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
+run_case "bad path" "AML.COM" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""
+run_case "direct amlui launch" "AMLUI.EXE /V" "$REPO_ROOT/tests/launcher.e2e.cfg" "yes" "Start with AML.COM to launch games." "$REPO_ROOT/tests/AML2.LAUNCH" ""
 
 echo "failure path checks passed"

@@ -58,7 +58,7 @@ Expected DOS-side files:
 - `/E` to enable editor mode
 - `/?` to print usage and exit
 
-Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only available in editor mode.
+Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only available in editor mode, and game launches are only enabled when `AMLUI.EXE` was started through `AML.COM`.
 
 ## Config Format
 

@@ -61,6 +61,7 @@ int main(int argc, char **argv)
     state.view_top = 0;
     state.modified = 0;
     state.editor_mode = 0;
+    state.supervised = 0;
 
     for (i = 1; i < argc; ++i) {
         if (aml_arg_is(argv[i], "/v") || aml_arg_is(argv[i], "/V")) {
@@ -70,6 +71,9 @@ int main(int argc, char **argv)
         if (aml_arg_is(argv[i], "/e") || aml_arg_is(argv[i], "/E")) {
             state.editor_mode = 1;
             mode_set = 1;
+        } else
+        if (aml_arg_is(argv[i], "/s") || aml_arg_is(argv[i], "/S")) {
+            state.supervised = 1;
         } else if (aml_arg_is(argv[i], "/?")) {
             aml_print_usage();
             return 0;
@@ -164,6 +168,17 @@ int main(int argc, char **argv)
         if (action == AML_UI_LAUNCH &&
             state.selected >= 0 &&
             state.selected < state.entry_count) {
+            if (!state.supervised) {
+                aml_ui_show_notice(
+                    &state,
+                    "Launch disabled",
+                    "AMLUI.EXE was started directly.",
+                    "Start with AML.COM to launch games.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
             rc = aml_check_launch_entry(&state.entries[state.selected]);
             if (rc == AML_LAUNCH_STUB_MISSING) {
                 aml_ui_show_notice(

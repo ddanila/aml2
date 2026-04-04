@@ -32,6 +32,7 @@ typedef struct AmlState {
     int view_top;
     int modified;
     int editor_mode;
+    int supervised;
 } AmlState;
 
 #endif
