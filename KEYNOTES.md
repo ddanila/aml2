@@ -46,6 +46,7 @@ Current real-DOS coverage includes:
 - release screenshots should come from a release zip, not a local tree
 - after tagging, attach a fresh 1x screenshot to the draft release
 - keep release descriptions short and concrete
+- screenshot capture helper: `./tools/capture_release_help_screenshot.sh <tag>`
 
 ## Future Ideas
 

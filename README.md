@@ -8,12 +8,6 @@ It uses a tiny custom text UI, a supervisor stub (`AMLSTUB.COM`), and a simple `
 
 ![aml2 screenshot](assets/aml2-screenshot.png)
 
-To regenerate a release screenshot:
-
-```bash
-./tools/capture_release_help_screenshot.sh <tag>
-```
-
 ## What It Does
 
 - shows entries from `LAUNCHER.CFG`
