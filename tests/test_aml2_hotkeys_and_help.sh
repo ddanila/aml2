@@ -103,6 +103,7 @@ run_case \
     'Arvutimuuseum Launcher' 'f1' \
     'Launcher Help' 'spc+f10' \
     'A>' ''
-grep -q 'F8/F10 Delete / exit to DOS' "$SCREEN_LOG"
+grep -q 'F8     Delete current entry' "$SCREEN_LOG"
+grep -q 'F10    Exit to DOS' "$SCREEN_LOG"
 
 echo "hotkey/help tests passed"

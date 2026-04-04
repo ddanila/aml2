@@ -974,17 +974,24 @@ static void aml_ui_move_entry_down(AmlState *state)
 
 static void aml_ui_show_help_overlay(const AmlState *state)
 {
-    aml_ui_render(state, "Help");
-    aml_ui_draw_titled_dialog(10, 6, 69, 18, "Launcher Help");
+    int left = 10;
+    int top = 6;
+    int right = 69;
+    int bottom = 18;
+    int text_col = left + 3;
 
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 2), "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 3), "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 4), "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 5), "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 6), "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 7), "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 8), "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(14, aml_ui_dialog_row(6, 9), "F8/F10 Delete / exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_render(state, "Help");
+    aml_ui_draw_titled_dialog(left, top, right, bottom, "Launcher Help");
+
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 1), "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 2), "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 3), "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 4), "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 5), "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 6), "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 7), "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 8), "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
+    aml_ui_write_at(text_col, aml_ui_dialog_row(top, 9), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
     getch();
