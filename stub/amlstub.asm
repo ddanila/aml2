@@ -55,6 +55,7 @@ launcher_requested_run:
     call delete_run_file
     call launch_selected
     jc command_fail
+    call pause_on_child_error
     jmp main_loop
 
 launcher_fail:
@@ -295,6 +296,23 @@ exec_wait proc near
     ret
 exec_wait endp
 
+pause_on_child_error proc near
+    mov ah, 4Dh
+    int 21h
+    or ah, ah
+    jne child_error_pause
+    or al, al
+    jne child_error_pause
+    ret
+
+child_error_pause:
+    lea dx, msg_child_error
+    call print_dollar
+    mov ah, 08h
+    int 21h
+    ret
+pause_on_child_error endp
+
 is_direct_command proc near
     lea si, cmd_buf
     xor bx, bx
@@ -413,6 +431,7 @@ run_file_name     db 'AML2.RUN',0
 msg_launcher_fail db 'NO AMLUI.EXE',13,10,'$'
 msg_command_fail  db 'RUN FAILED',13,10,'$'
 msg_resize_fail   db 'NO MEMORY',13,10,'$'
+msg_child_error   db 13,10,'PROGRAM ERROR - PRESS A KEY',13,10,'$'
 msg_usage         db 'AML usage: AML [/E]',13,10,'$'
 
 home_drive       db 0
