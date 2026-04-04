@@ -10,6 +10,14 @@ License: MIT. See [LICENSE](LICENSE).
 
 ![aml2 screenshot](assets/aml2-screenshot.png)
 
+The screenshot can be regenerated from a release zip with:
+
+```bash
+./tools/capture_release_help_screenshot.sh v0.1.1
+```
+
+There is also a manual GitHub Actions workflow, `Capture Release Screenshot`, for generating the same artifacts in CI.
+
 ## Scope
 
 The first milestone is intentionally narrow:
