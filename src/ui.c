@@ -452,7 +452,7 @@ static void aml_ui_draw_header_on_frame_common(int modified)
 
     _dos_gettime(&now);
 
-    strcpy(title, " Arvutimuuseum Launcher (c) Danila Sukharev, v");
+    strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
     strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
     strncat(title, " ", sizeof(title) - strlen(title) - 1);
     if ((int)strlen(title) > clock_col - 1) {
