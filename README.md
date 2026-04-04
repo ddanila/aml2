@@ -18,8 +18,8 @@ It uses a tiny custom text UI, a supervisor stub (`AML.COM`), and a simple `LAUN
 
 Current output sizes from `./tools/build.sh` are approximately:
 
-- `amlui.exe`: 23 KB
-- `aml.com`: 926 bytes
+- `amlui.exe`: 32 KB
+- `aml.com`: 1337 bytes
 
 ## Quick Start
 
@@ -86,7 +86,7 @@ Rules:
 - `0-9`, `a-z`, `A-Z`: direct launch hotkeys for the first 62 items
 - `F1` or `?`: help
 - `F3`: details
-- `F9`: debug run menu
+- `F9`: debug run menu with stub, direct-child, and shell launch options
 - `F10`: exit to DOS
 
 Editor mode only:

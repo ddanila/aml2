@@ -46,6 +46,7 @@ The control signal is not the file alone:
 
 - `AMLUI.EXE` exits with `0` on normal exit
 - `AMLUI.EXE` exits with `2` only when a launch request was written
+- `AMLUI.EXE` exits with `3` only for a debug launch request
 - `AML.COM` reads `AML2.RUN` only after that explicit launch exit code
 
 This avoids replaying a stale handoff file as a fresh launch request.
@@ -81,7 +82,7 @@ Current state:
 - tested runtime path now uses `AML.COM`
 - `AML.COM` is built with Open Watcom `wasm`
 - the OMF object is converted to `.COM` with a small repo-local converter
-- current tested size is 926 bytes
+- current tested size is 1337 bytes
 
 ## Launch Behavior
 
