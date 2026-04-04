@@ -332,6 +332,15 @@ static unsigned aml_ui_current_second(void)
     return now.second;
 }
 
+static int aml_ui_shift_pressed(void)
+{
+    union REGS regs;
+
+    regs.h.ah = 0x02;
+    int86(0x16, &regs, &regs);
+    return (regs.h.al & 0x03) != 0;
+}
+
 static void aml_ui_draw_frame(void)
 {
     int i;
@@ -1470,6 +1479,9 @@ int aml_ui_run(AmlState *state)
 
         if (key == AML_KEY_ENTER) {
             if (state->entry_count > 0) {
+                if (aml_ui_shift_pressed()) {
+                    return AML_UI_LAUNCH_DEBUG;
+                }
                 return AML_UI_LAUNCH;
             }
             status = "No launcher entries available";

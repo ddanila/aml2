@@ -37,6 +37,7 @@ main_loop:
 
     mov ax, [launcher_tail_ptr]
     mov word ptr [cmd_tail_off], ax
+    mov byte ptr [debug_pause], 0
     lea dx, launcher_name
     call exec_wait
     jc launcher_fail
@@ -44,6 +45,12 @@ main_loop:
     int 21h
     cmp al, 2
     je launcher_requested_run
+    cmp al, 3
+    jne launcher_check_exit
+    mov byte ptr [debug_pause], 1
+    jmp launcher_requested_run
+
+launcher_check_exit:
     or al, al
     jne launcher_fail
     jmp exit_ok
@@ -297,12 +304,15 @@ exec_wait proc near
 exec_wait endp
 
 pause_on_child_error proc near
+    cmp byte ptr [debug_pause], 0
+    je child_error_done
     mov ah, 4Dh
     int 21h
     or ah, ah
     jne child_error_pause
     or al, al
     jne child_error_pause
+child_error_done:
     ret
 
 child_error_pause:
@@ -435,6 +445,7 @@ msg_child_error   db 13,10,'PROGRAM ERROR - PRESS A KEY',13,10,'$'
 msg_usage         db 'AML usage: AML [/E]',13,10,'$'
 
 home_drive       db 0
+debug_pause      db 0
 home_path        db 64 dup (0)
 launcher_tail_ptr dw offset view_tail
 

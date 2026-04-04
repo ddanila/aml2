@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 {
     int rc;
     int action;
-    int launched = 0;
+    int launched = AML_EXIT_OK;
     int i;
     int mode_set = 0;
 
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if (action == AML_UI_LAUNCH &&
+        if ((action == AML_UI_LAUNCH || action == AML_UI_LAUNCH_DEBUG) &&
             state.selected >= 0 &&
             state.selected < state.entry_count) {
             if (!state.supervised) {
@@ -229,11 +229,11 @@ int main(int argc, char **argv)
 #if AML_TEST_HOOKS
             aml_trace_event("run_request");
 #endif
-            launched = 1;
+            launched = (action == AML_UI_LAUNCH_DEBUG) ? AML_EXIT_LAUNCH_DEBUG : AML_EXIT_LAUNCH;
             break;
         }
     }
 
     aml_ui_shutdown();
-    return launched ? AML_EXIT_LAUNCH : AML_EXIT_OK;
+    return launched;
 }
