@@ -42,6 +42,14 @@ Rules:
 
 This protocol is intentionally simple so the assembly stub can parse it with minimal code.
 
+The control signal is not the file alone:
+
+- `AMLUI.EXE` exits with `0` on normal exit
+- `AMLUI.EXE` exits with `2` only when a launch request was written
+- `AML.COM` reads `AML2.RUN` only after that explicit launch exit code
+
+This avoids replaying a stale handoff file as a fresh launch request.
+
 ## Why Not Direct Exec In `AML2`
 
 Direct exec from the launcher is still workable, but it forces the launcher binary to own process handoff behavior.

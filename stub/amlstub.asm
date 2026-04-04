@@ -40,7 +40,15 @@ main_loop:
     lea dx, launcher_name
     call exec_wait
     jc launcher_fail
+    mov ah, 4Dh
+    int 21h
+    cmp al, 2
+    je launcher_requested_run
+    or al, al
+    jne launcher_fail
+    jmp exit_ok
 
+launcher_requested_run:
     call read_run_request
     jc exit_ok
 

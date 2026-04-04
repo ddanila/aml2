@@ -76,10 +76,10 @@ int main(int argc, char **argv)
             state.supervised = 1;
         } else if (aml_arg_is(argv[i], "/?")) {
             aml_print_usage();
-            return 0;
+            return AML_EXIT_OK;
         } else {
             aml_print_usage();
-            return 1;
+            return AML_EXIT_ERROR;
         }
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
         aml_print_usage();
         printf("\r\n");
         printf("Run AML.COM instead.\r\n");
-        return 1;
+        return AML_EXIT_ERROR;
     }
 
 #if AML_TEST_HOOKS
@@ -235,5 +235,5 @@ int main(int argc, char **argv)
     }
 
     aml_ui_shutdown();
-    return launched ? 0 : 0;
+    return launched ? AML_EXIT_LAUNCH : AML_EXIT_OK;
 }
