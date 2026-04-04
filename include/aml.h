@@ -1,8 +1,6 @@
 #ifndef AML_H
 #define AML_H
 
-#define AML_VERSION "0.1.0"
-
 #include "aml_build.h"
 
 #define AML_CONFIG_FILE "launcher.cfg"

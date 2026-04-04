@@ -32,12 +32,13 @@ export PATH="$WATCOM_BIN:$PATH"
 
 cd "$REPO_ROOT"
 
-if [[ -n "${AML_BUILD_TAG:-}" ]]; then
-    BUILD_TAG="$AML_BUILD_TAG"
-elif [[ -n "${CI:-}" ]]; then
-    BUILD_TAG="$(git rev-parse --short HEAD)"
+if [[ -n "${AML_BUILD_VERSION:-}" ]]; then
+    BUILD_VERSION="$AML_BUILD_VERSION"
 else
-    BUILD_TAG="local"
+    BUILD_VERSION="$(git tag --list 'v*' --sort=-version:refname | head -n 1 | sed 's/^v//')"
+    if [[ -z "$BUILD_VERSION" ]]; then
+        BUILD_VERSION="local"
+    fi
 fi
 
 exec 9>"$LOCK_FILE"
@@ -48,5 +49,5 @@ fi
 
 echo "Building aml2 with $WATCOM_BIN"
 make clean
-export AML_BUILD_TAG="$BUILD_TAG"
+export AML_BUILD_VERSION="$BUILD_VERSION"
 make ${BUILD_TARGETS:-all} EXTRA_CFLAGS="${EXTRA_CFLAGS:-}"

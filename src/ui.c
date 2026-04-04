@@ -14,8 +14,8 @@
 enum {
     AML_UI_ROWS = 25,
     AML_UI_COLS = 80,
-    AML_UI_LIST_ROW = 3,
-    AML_UI_LIST_ROWS = 21,
+    AML_UI_LIST_ROW = 1,
+    AML_UI_LIST_ROWS = 23,
     AML_UI_SEARCH_MAX = 24,
     AML_UI_FRAME_LEFT = 0,
     AML_UI_FRAME_TOP = 0,
@@ -415,38 +415,33 @@ static void aml_ui_draw_titled_dialog(int left, int top, int right, int bottom, 
     aml_ui_draw_dialog_box(left, top, right, bottom, title);
 }
 
-static void aml_ui_draw_section_line(int row)
-{
-    int i;
-
-    aml_ui_putc(AML_UI_FRAME_LEFT, row, 195, AML_UI_ATTR_FRAME);
-    aml_ui_putc(AML_UI_FRAME_RIGHT, row, 180, AML_UI_ATTR_FRAME);
-    for (i = AML_UI_FRAME_LEFT + 1; i < AML_UI_FRAME_RIGHT; ++i) {
-        aml_ui_putc(i, row, 196, AML_UI_ATTR_FRAME);
-    }
-}
-
-static void aml_ui_draw_header(void)
+static void aml_ui_draw_header_on_frame_common(int modified)
 {
     struct dostime_t now;
     char title[80];
+    int clock_col = 72;
 
     _dos_gettime(&now);
 
-    strcpy(title, "Arvutimuuseum Launcher (c) Danila Sukharev, build ");
-    strcat(title, AML_BUILD_TAG);
+    strcpy(title, " Arvutimuuseum Launcher (c) Danila Sukharev ");
+    strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
+    if ((int)strlen(title) > clock_col - 1) {
+        title[clock_col - 1] = '\0';
+    }
 
-    aml_ui_write_at(2, 1, title, AML_UI_ATTR_TITLE);
-    aml_ui_write_2digit_at(72, 1, now.hour, AML_UI_ATTR_HELP);
-    aml_ui_putc(74, 1, (now.second & 1) ? ':' : ' ', AML_UI_ATTR_HELP);
-    aml_ui_write_2digit_at(75, 1, now.minute, AML_UI_ATTR_HELP);
+    aml_ui_fill_rect(1, 0, AML_UI_FRAME_RIGHT - 1, 0, 196, AML_UI_ATTR_FRAME);
+    aml_ui_write_at(1, 0, title, AML_UI_ATTR_TITLE);
+    aml_ui_write_2digit_at(clock_col, 0, now.hour, AML_UI_ATTR_HELP);
+    aml_ui_putc(clock_col + 2, 0, (now.second & 1) ? ':' : ' ', AML_UI_ATTR_HELP);
+    aml_ui_write_2digit_at(clock_col + 3, 0, now.minute, AML_UI_ATTR_HELP);
+    if (modified) {
+        aml_ui_putc(78, 0, '*', AML_UI_ATTR_HELP);
+    }
 }
 
-static void aml_ui_draw_modmark(const AmlState *state)
+static void aml_ui_draw_header_on_frame(const AmlState *state)
 {
-    if (state->modified) {
-        aml_ui_putc(78, 1, '*', AML_UI_ATTR_HELP);
-    }
+    aml_ui_draw_header_on_frame_common(state->modified);
 }
 
 static int aml_ui_hotkey_index(int key)
@@ -601,9 +596,7 @@ static void aml_ui_render(const AmlState *state, const char *status)
     (void)status;
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     aml_ui_draw_frame();
-    aml_ui_draw_section_line(2);
-    aml_ui_draw_header();
-    aml_ui_draw_modmark(state);
+    aml_ui_draw_header_on_frame(state);
     aml_ui_draw_entries(state);
 }
 
@@ -1017,8 +1010,7 @@ void aml_ui_show_message(const char *title, const char *line1, const char *line2
     aml_ui_hide_cursor();
     aml_ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     aml_ui_draw_frame();
-    aml_ui_draw_section_line(4);
-    aml_ui_draw_header();
+    aml_ui_draw_header_on_frame_common(0);
     aml_ui_draw_notice_box(title, line1, line2, line3);
     aml_ui_flush();
 }

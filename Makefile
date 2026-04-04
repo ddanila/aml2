@@ -25,7 +25,7 @@ build:
 	mkdir -p build
 
 include/aml_build.h:
-	printf '#ifndef AML_BUILD_H\n#define AML_BUILD_H\n\n#define AML_BUILD_TAG "%s"\n\n#endif\n' "$${AML_BUILD_TAG:-local}" > include/aml_build.h
+	printf '#ifndef AML_BUILD_H\n#define AML_BUILD_H\n\n#define AML_BUILD_VERSION "%s"\n\n#endif\n' "$${AML_BUILD_VERSION:-local}" > include/aml_build.h
 
 build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/main.obj src/main.c
