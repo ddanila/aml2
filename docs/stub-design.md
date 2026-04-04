@@ -73,7 +73,7 @@ Current state:
 - tested runtime path now uses `AML.COM`
 - `AML.COM` is built with Open Watcom `wasm`
 - the OMF object is converted to `.COM` with a small repo-local converter
-- current tested size is 787 bytes
+- current tested size is 926 bytes
 
 ## Launch Behavior
 

@@ -15,13 +15,13 @@ Internal notes for ongoing work on `aml2`.
 - keep runtime behavior simple before chasing more size
 - avoid dynamic allocation in the main launcher path
 - treat `.COM` pressure as a stub concern first, not a launcher concern
-- viewer mode is the default; editor mode is explicit with `/E`
+- `AML.COM` owns the default viewer-mode entrypoint; direct `AMLEDIT.EXE` runs require explicit `/V` or `/E`
 
 ## Toolchain
 
 - pinned Open Watcom snapshot: `Current-build` from `2026-04-03`
 - vendor root: `vendor/openwatcom-v2/current-build-2026-04-03`
-- current tested stub size: `818 bytes`
+- current tested stub size: `926 bytes`
 - current launcher size is roughly `23 KB`
 
 ## Testing Notes

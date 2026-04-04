@@ -92,7 +92,7 @@ download_base_img
 run_case \
     "extended hotkey range" \
     "$REPO_ROOT/tests/launcher.hotkeys.cfg" \
-    "AMLEDIT.EXE" \
+    "AMLEDIT.EXE /V" \
     "$REPO_ROOT/tests/AML2.HKA" \
     'Entry 36' '' \
     'A>' ''

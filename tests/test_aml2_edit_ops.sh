@@ -90,7 +90,7 @@ echo "Building aml2 for edit-operation tests ..."
 BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 download_base_img
 
-run_case "viewer mode blocks save" "AMLEDIT.EXE" "$REPO_ROOT/tests/AML2.VWR"
+run_case "viewer mode blocks save" "AMLEDIT.EXE /V" "$REPO_ROOT/tests/AML2.VWR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"

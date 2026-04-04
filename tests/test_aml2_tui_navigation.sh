@@ -50,7 +50,7 @@ cp "$BASE_IMG" "$BOOT_IMG"
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.long.cfg" ::LAUNCHER.CFG
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.END" ::AML2.AUT
-printf '@ECHO OFF\r\nAMLEDIT.EXE\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAMLEDIT.EXE /V\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"

@@ -12,14 +12,14 @@ It uses a tiny custom text UI, a supervisor stub (`AML.COM`), and a simple `LAUN
 
 - shows entries from `LAUNCHER.CFG`
 - launches the selected item through `AML.COM`
-- supports viewer mode by default
-- supports editor mode with `AMLEDIT.EXE /E`
+- supports viewer mode through `AML.COM`
+- supports editor mode with `AML.COM /E`
 - writes `AML2.RUN` as the handoff file between launcher and stub
 
 Current output sizes from `./tools/build.sh` are approximately:
 
 - `amledit.exe`: 23 KB
-- `aml.com`: 818 bytes
+- `aml.com`: 926 bytes
 
 ## Quick Start
 
@@ -36,7 +36,7 @@ Normal DOS-side entrypoint:
 AML.COM
 ```
 
-Do not start with `AMLEDIT.EXE` in normal use. The stub is what relaunches the launcher after a game exits.
+Do not start with `AMLEDIT.EXE` in normal use. `AML.COM` is the public entrypoint and relaunches the launcher after a game exits.
 
 Expected DOS-side files:
 
@@ -47,12 +47,18 @@ Expected DOS-side files:
 
 ## Command Line
 
+`AML.COM` supports:
+
+- no args to start in viewer mode
+- `/E` to start in editor mode
+
 `AMLEDIT.EXE` supports:
 
+- `/V` to enter viewer mode explicitly
 - `/E` to enable editor mode
 - `/?` to print usage and exit
 
-Viewer mode is the default. Mutation actions are only available in editor mode.
+Direct `AMLEDIT.EXE` runs require an explicit mode. Mutation actions are only available in editor mode.
 
 ## Config Format
 

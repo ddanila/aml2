@@ -29,12 +29,14 @@ start:
     mov [fcb2_seg], cs
 
     call init_home
+    call init_mode
 
 main_loop:
     call restore_home
     call delete_run_file
 
-    mov word ptr [cmd_tail_off], offset empty_tail
+    mov ax, [launcher_tail_ptr]
+    mov word ptr [cmd_tail_off], ax
     lea dx, launcher_name
     call exec_wait
     jc launcher_fail
@@ -91,6 +93,48 @@ init_home proc near
 init_home_done:
     ret
 init_home endp
+
+init_mode proc near
+    mov word ptr [launcher_tail_ptr], offset view_tail
+
+    mov cl, [80h]
+    jcxz init_mode_done
+    mov si, 81h
+
+init_mode_skip_spaces:
+    cmp cl, 0
+    je init_mode_done
+    lodsb
+    dec cl
+    cmp al, ' '
+    je init_mode_skip_spaces
+    cmp al, 9
+    je init_mode_skip_spaces
+    cmp al, '/'
+    je init_mode_switch
+    cmp al, '-'
+    jne init_mode_done
+
+init_mode_switch:
+    cmp cl, 0
+    je init_mode_done
+    lodsb
+    and al, 5Fh
+    cmp al, '?'
+    je init_mode_help
+    cmp al, 'E'
+    jne init_mode_done
+    mov word ptr [launcher_tail_ptr], offset edit_tail
+    jmp init_mode_done
+
+init_mode_help:
+    lea dx, msg_usage
+    call print_dollar
+    jmp exit_ok
+
+init_mode_done:
+    ret
+init_mode endp
 
 restore_home proc near
     mov dl, [home_drive]
@@ -252,13 +296,17 @@ run_file_name     db 'AML2.RUN',0
 msg_launcher_fail db 'NO AMLEDIT.EXE',13,10,'$'
 msg_command_fail  db 'RUN FAILED',13,10,'$'
 msg_resize_fail   db 'NO MEMORY',13,10,'$'
+msg_usage         db 'AML usage: AML [/E]',13,10,'$'
 
 home_drive       db 0
 home_path        db 64 dup (0)
+launcher_tail_ptr dw offset view_tail
 
 path_buf         db 64 dup (0)
 read_char        db 0
 
+view_tail        db 3,' /V',0Dh
+edit_tail        db 3,' /E',0Dh
 empty_tail       db 0
                db 0Dh
 cmd_tail         db 127 dup (0)

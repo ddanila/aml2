@@ -51,7 +51,7 @@ run_case() {
     if [[ -n "$auto" ]]; then
         mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
     fi
-    printf '@ECHO OFF\r\nAMLEDIT.EXE\r\n' > "$AUTOEXEC"
+    printf '@ECHO OFF\r\nAMLEDIT.EXE /V\r\n' > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"

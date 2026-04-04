@@ -39,8 +39,9 @@ static int aml_arg_is(const char *arg, const char *value)
 static void aml_print_usage(void)
 {
     printf("AMLEDIT usage:\r\n");
-    printf("  AMLEDIT [/E] [/?]\r\n");
+    printf("  AMLEDIT /V | /E | /?\r\n");
     printf("\r\n");
+    printf("  /V   View mode.\r\n");
     printf("  /E   Enable editor mode.\r\n");
     printf("  /?   Show this help.\r\n");
     printf("\r\n");
@@ -53,6 +54,7 @@ int main(int argc, char **argv)
     int action;
     int launched = 0;
     int i;
+    int mode_set = 0;
 
     state.entry_count = 0;
     state.selected = 0;
@@ -61,8 +63,13 @@ int main(int argc, char **argv)
     state.editor_mode = 0;
 
     for (i = 1; i < argc; ++i) {
+        if (aml_arg_is(argv[i], "/v") || aml_arg_is(argv[i], "/V")) {
+            state.editor_mode = 0;
+            mode_set = 1;
+        } else
         if (aml_arg_is(argv[i], "/e") || aml_arg_is(argv[i], "/E")) {
             state.editor_mode = 1;
+            mode_set = 1;
         } else if (aml_arg_is(argv[i], "/?")) {
             aml_print_usage();
             return 0;
@@ -70,6 +77,13 @@ int main(int argc, char **argv)
             aml_print_usage();
             return 1;
         }
+    }
+
+    if (!mode_set) {
+        aml_print_usage();
+        printf("\r\n");
+        printf("Run AML.COM instead.\r\n");
+        return 1;
     }
 
 #if AML_TEST_HOOKS
