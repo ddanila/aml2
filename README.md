@@ -1,10 +1,8 @@
 # aml2
 
-`aml2` is a small DOS launcher built in plain C for Open Watcom.
+`aml2` is a small DOS launcher.
 
 It uses a tiny custom text UI, a supervisor stub (`AMLSTUB.COM`), and a simple `LAUNCHER.CFG` format.
-
-License: MIT. See [LICENSE](LICENSE).
 
 ## Screenshot
 
@@ -145,3 +143,7 @@ bash tests/test_kvikdos_smoke.sh
 QEMU is the authoritative path for the launcher UI and stub loop. `kvikdos` is only used for fast non-TUI smoke checks.
 
 See [docs/stub-design.md](docs/stub-design.md), [docs/e2e-findings.md](docs/e2e-findings.md), [docs/design.md](docs/design.md), and [docs/toolchain.md](docs/toolchain.md) for implementation details.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
