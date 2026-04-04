@@ -1,10 +1,16 @@
 # aml2 Design Notes
 
-These are early design notes from the initial rewrite plan. They are still useful for intent and constraints, but some milestone-1 cuts listed here have since been implemented.
+These are early planning notes from the first implementation pass.
+
+They are kept as historical design context:
+
+- useful for the original constraints and intent
+- not authoritative for the current shipped feature set
+- some milestone-1 cuts listed here were later relaxed
 
 ## Goals
 
-- Replace the Turbo Vision implementation with a minimal in-house TUI.
+- Build a minimal in-house TUI.
 - Build with Open Watcom.
 - Favor plain C over C++ to keep the runtime and binary size small.
 - Aim for a tiny DOS launcher, ideally small enough that a `.COM` target remains realistic.

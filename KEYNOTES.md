@@ -28,9 +28,8 @@ Internal notes for ongoing work on `aml2`.
 
 - QEMU + real DOS is the authoritative launcher test path
 - `kvikdos` is useful only for fast non-TUI smoke checks
-- QMP key injection was too flaky; DOS-side automation files are more reliable
-- 8.3 filenames matter in the floppy test harness
-- multi-step automation scripts must preserve the full remaining tail
+- DOS-side automation files are more reliable than QMP key injection
+- keep 8.3 naming in mind in the floppy harness
 
 Current real-DOS coverage includes:
 
@@ -41,10 +40,13 @@ Current real-DOS coverage includes:
 - viewer-mode blocking and editor-mode save persistence
 - failure cases for missing launcher and invalid working directory
 
+Detailed bring-up findings live in `docs/e2e-findings.md`.
+
 ## Release Notes
 
 - release screenshots should come from a release zip, not a local tree
 - after tagging, attach a fresh 1x screenshot to the draft release
+- keep the release screenshot and README screenshot in sync
 - keep release descriptions short and concrete
 - screenshot capture helper: `./tools/capture_release_help_screenshot.sh <tag>`
 
