@@ -56,6 +56,7 @@ int main(int argc, char **argv)
 
     state.entry_count = 0;
     state.selected = 0;
+    state.view_top = 0;
     state.modified = 0;
     state.editor_mode = 0;
 
@@ -79,6 +80,7 @@ int main(int argc, char **argv)
     if (rc != 0) {
         state.entry_count = 0;
         state.selected = 0;
+        state.view_top = 0;
         state.modified = 0;
     }
 

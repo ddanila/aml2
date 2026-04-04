@@ -550,23 +550,51 @@ static int aml_ui_find_match(const AmlState *state, const char *needle)
     return -1;
 }
 
-static int aml_ui_first_visible(const AmlState *state)
+static void aml_ui_clamp_view_top(AmlState *state)
 {
-    int top;
-
     if (state->entry_count <= AML_UI_LIST_ROWS) {
-        return 0;
+        state->view_top = 0;
+        return;
     }
 
-    top = state->selected - (AML_UI_LIST_ROWS / 2);
-    if (top < 0) {
-        top = 0;
+    if (state->view_top < 0) {
+        state->view_top = 0;
     }
-    if (top > state->entry_count - AML_UI_LIST_ROWS) {
-        top = state->entry_count - AML_UI_LIST_ROWS;
+    if (state->view_top > state->entry_count - AML_UI_LIST_ROWS) {
+        state->view_top = state->entry_count - AML_UI_LIST_ROWS;
+    }
+}
+
+static void aml_ui_sync_view_top(AmlState *state)
+{
+    int margin;
+    int top_band;
+    int bottom_band;
+
+    if (state->entry_count <= 0) {
+        state->view_top = 0;
+        return;
     }
 
-    return top;
+    if (state->selected < 0) {
+        state->selected = 0;
+    }
+    if (state->selected >= state->entry_count) {
+        state->selected = state->entry_count - 1;
+    }
+
+    aml_ui_clamp_view_top(state);
+    margin = AML_UI_LIST_ROWS / 4;
+    top_band = state->view_top + margin;
+    bottom_band = state->view_top + AML_UI_LIST_ROWS - margin - 1;
+
+    if (state->selected < top_band) {
+        state->view_top = state->selected - margin;
+    } else if (state->selected > bottom_band) {
+        state->view_top = state->selected - (AML_UI_LIST_ROWS - margin - 1);
+    }
+
+    aml_ui_clamp_view_top(state);
 }
 
 static void aml_ui_draw_scrollbar(const AmlState *state)
@@ -594,7 +622,7 @@ static void aml_ui_draw_entries(const AmlState *state)
 {
     int row;
     int index;
-    int top = aml_ui_first_visible(state);
+    int top = state->view_top;
 
     aml_ui_fill_rect(AML_UI_LIST_LEFT, AML_UI_LIST_ROW, AML_UI_LIST_RIGHT,
                      AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1, ' ', AML_UI_ATTR_TEXT);
@@ -1402,6 +1430,8 @@ int aml_ui_run(AmlState *state)
     const char *status = "";
     unsigned last_second = 60;
 
+    aml_ui_sync_view_top(state);
+
     for (;;) {
         int key;
         int hotkey_index;
@@ -1413,6 +1443,7 @@ int aml_ui_run(AmlState *state)
         {
             int auto_action = aml_ui_apply_automation(state);
             if (auto_action == AML_UI_AUTO_REDRAW) {
+                aml_ui_sync_view_top(state);
                 continue;
             }
             if (auto_action >= 0) {
@@ -1441,6 +1472,7 @@ int aml_ui_run(AmlState *state)
 
         if (key == AML_KEY_SLASH && state->entry_count > 0) {
             aml_ui_prompt_search(state, &status);
+            aml_ui_sync_view_top(state);
             continue;
         }
 
@@ -1495,6 +1527,7 @@ int aml_ui_run(AmlState *state)
                 }
             }
 
+            aml_ui_sync_view_top(state);
             status = "";
             continue;
         }
@@ -1508,6 +1541,7 @@ int aml_ui_run(AmlState *state)
         hotkey_index = aml_ui_hotkey_index(key);
         if (hotkey_index >= 0 && hotkey_index < state->entry_count) {
             state->selected = hotkey_index;
+            aml_ui_sync_view_top(state);
             return AML_UI_LAUNCH;
         }
 

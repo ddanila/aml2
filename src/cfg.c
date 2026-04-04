@@ -48,6 +48,7 @@ int aml_load_config(AmlState *state, const char *path)
 
     state->entry_count = 0;
     state->selected = 0;
+    state->view_top = 0;
     state->modified = 0;
 
     fp = fopen(path, "r");
