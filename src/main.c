@@ -60,7 +60,7 @@ int main(void)
             "Use F2 to save the new configuration.",
             ""
         );
-        getch();
+        aml_ui_wait_for_ack();
     } else if (state.entry_count <= 0) {
         aml_ui_show_message(
             "Launcher config is empty",
@@ -68,7 +68,7 @@ int main(void)
             "Use F2 to save changes.",
             ""
         );
-        getch();
+        aml_ui_wait_for_ack();
     }
 
     for (;;) {
@@ -88,7 +88,7 @@ int main(void)
                     "Check disk space and write permissions.",
                     ""
                 );
-                getch();
+                aml_ui_wait_for_ack();
             } else {
                 state.modified = 0;
                 aml_ui_show_notice(
@@ -98,7 +98,7 @@ int main(void)
                     "",
                     ""
                 );
-                getch();
+                aml_ui_wait_for_ack();
             }
             continue;
         }
@@ -115,7 +115,7 @@ int main(void)
                     "Check write permissions and available disk space.",
                     ""
                 );
-                getch();
+                aml_ui_wait_for_ack();
                 continue;
             }
 #if AML_TEST_HOOKS

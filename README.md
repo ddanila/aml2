@@ -241,6 +241,14 @@ bash tests/test_aml2_hotkeys_and_help.sh
 
 This verifies the uppercase hotkey range for entries past `z` and the in-app help dialog under real DOS in QEMU.
 
+Edit-operation coverage:
+
+```bash
+bash tests/test_aml2_edit_ops.sh
+```
+
+This verifies reorder, delete, and save persistence under real DOS in QEMU by reading back the updated `LAUNCHER.CFG` from the floppy image.
+
 See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
 ## Next Steps

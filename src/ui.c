@@ -72,6 +72,11 @@ enum {
 
 static unsigned short aml_ui_backbuf[AML_UI_ROWS * AML_UI_COLS];
 
+#if AML_TEST_HOOKS
+static int aml_ui_read_auto_line(char *line, unsigned line_size);
+static void aml_ui_trace_event(const char *event_name);
+#endif
+
 static unsigned short aml_ui_cell(unsigned char ch, unsigned char attr)
 {
     return (unsigned short)ch | ((unsigned short)attr << 8);
@@ -415,6 +420,30 @@ static void aml_ui_draw_titled_dialog(int left, int top, int right, int bottom, 
     aml_ui_draw_dialog_box(left, top, right, bottom, title);
 }
 
+void aml_ui_wait_for_ack(void)
+{
+#if AML_TEST_HOOKS
+    for (;;) {
+        char line[AML_MAX_LINE + 1];
+
+        if (aml_ui_read_auto_line(line, sizeof(line))) {
+            if (strcmp(line, "ack") == 0) {
+                aml_ui_trace_event("auto_ack");
+                return;
+            }
+        }
+
+        if (kbhit()) {
+            getch();
+            return;
+        }
+        delay(50);
+    }
+#else
+    getch();
+#endif
+}
+
 static void aml_ui_draw_header_on_frame_common(int modified)
 {
     struct dostime_t now;
@@ -620,7 +649,7 @@ static void aml_ui_show_details_overlay(const AmlState *state)
             "Use Ins to add a new record.",
             ""
         );
-        getch();
+        aml_ui_wait_for_ack();
         return;
     }
 
@@ -635,7 +664,7 @@ static void aml_ui_show_details_overlay(const AmlState *state)
     aml_ui_draw_detail_line(aml_ui_dialog_row(6, 6), "Path", entry->path[0] != '\0' ? entry->path : ".", AML_UI_ATTR_DIALOG_DIM);
     aml_ui_draw_detail_line(aml_ui_dialog_row(6, 8), "Hotkey", hotkey[0] != ' ' ? hotkey : "-", AML_UI_ATTR_DIALOG_DIM);
     aml_ui_flush();
-    getch();
+    aml_ui_wait_for_ack();
 }
 
 static int aml_ui_confirm_delete(const AmlState *state)
@@ -805,7 +834,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
                         "",
                         ""
                     );
-                    getch();
+                    aml_ui_wait_for_ack();
                     continue;
                 }
                 strcpy(entry->name, name);
@@ -866,7 +895,7 @@ static void aml_ui_insert_entry(AmlState *state)
             "Delete something before inserting.",
             ""
         );
-        getch();
+        aml_ui_wait_for_ack();
         return;
     }
 
@@ -914,10 +943,6 @@ static void aml_ui_delete_entry(AmlState *state)
         return;
     }
 
-    if (!aml_ui_confirm_delete(state)) {
-        return;
-    }
-
     for (i = state->selected; i < state->entry_count - 1; ++i) {
         state->entries[i] = state->entries[i + 1];
     }
@@ -931,9 +956,30 @@ static void aml_ui_delete_entry(AmlState *state)
     state->modified = 1;
 }
 
+static void aml_ui_delete_entry_with_confirm(AmlState *state)
+{
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        return;
+    }
+
+    if (!aml_ui_confirm_delete(state)) {
+        return;
+    }
+
+    aml_ui_delete_entry(state);
+}
+
 static void aml_ui_move_entry_up(AmlState *state)
 {
     AmlEntry temp;
+
+    if (state->entry_count <= 0 ||
+        state->selected < 0 ||
+        state->selected >= state->entry_count) {
+        return;
+    }
 
     if (state->entry_count <= 1 ||
         state->selected <= 0 ||
@@ -987,7 +1033,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_write_at(text_col, aml_ui_dialog_row(top, 9), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     aml_ui_flush();
-    getch();
+    aml_ui_wait_for_ack();
 }
 
 static void aml_ui_draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
@@ -1038,9 +1084,9 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
     char current[AML_MAX_LINE + 1];
-    char next[AML_MAX_LINE + 1];
+    char rest[2048];
     int found = 0;
-    int have_next = 0;
+    int rest_len = 0;
 
     fp = fopen(AML_AUTO_FILE, "r");
     if (fp == NULL) {
@@ -1048,7 +1094,7 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
     }
 
     line[0] = '\0';
-    next[0] = '\0';
+    rest[0] = '\0';
 
     while (fgets(current, sizeof(current), fp) != NULL) {
         aml_ui_trim_newline(current);
@@ -1059,10 +1105,15 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
             continue;
         }
         if (found && current[0] != '\0') {
-            strncpy(next, current, sizeof(next) - 1);
-            next[sizeof(next) - 1] = '\0';
-            have_next = 1;
-            break;
+            size_t current_len = strlen(current);
+
+            if (rest_len + (int)current_len + 1 >= (int)sizeof(rest)) {
+                break;
+            }
+            memcpy(rest + rest_len, current, current_len);
+            rest_len += (int)current_len;
+            rest[rest_len++] = '\n';
+            rest[rest_len] = '\0';
         }
     }
     fclose(fp);
@@ -1072,13 +1123,12 @@ static int aml_ui_read_auto_line(char *line, unsigned line_size)
         return 0;
     }
 
-    if (!have_next) {
+    if (rest_len == 0) {
         remove(AML_AUTO_FILE);
     } else {
         fp = fopen(AML_AUTO_FILE, "w");
         if (fp != NULL) {
-            fputs(next, fp);
-            fputc('\n', fp);
+            fputs(rest, fp);
             fclose(fp);
         }
     }
@@ -1188,6 +1238,29 @@ static int aml_ui_apply_automation(AmlState *state)
             aml_ui_trace_event("auto_bad_hotkey");
         }
         return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "move_up") == 0) {
+        aml_ui_move_entry_up(state);
+        aml_ui_trace_event("auto_move_up");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "move_down") == 0) {
+        aml_ui_move_entry_down(state);
+        aml_ui_trace_event("auto_move_down");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "delete") == 0) {
+        aml_ui_delete_entry(state);
+        aml_ui_trace_event("auto_delete");
+        return AML_UI_AUTO_REDRAW;
+    }
+
+    if (strcmp(line, "save") == 0) {
+        aml_ui_trace_event("auto_save");
+        return AML_UI_SAVE;
     }
 
     if (strcmp(line, "quit") == 0) {
@@ -1344,7 +1417,7 @@ int aml_ui_run(AmlState *state)
             } else if (key == AML_KEY_INS) {
                 aml_ui_insert_entry(state);
             } else if (key == AML_KEY_F8) {
-                aml_ui_delete_entry(state);
+                aml_ui_delete_entry_with_confirm(state);
             } else if (key == AML_KEY_F10) {
                 return AML_UI_QUIT;
             } else if (state->entry_count <= 0) {
