@@ -13,10 +13,18 @@ License: MIT. See [LICENSE](LICENSE).
 The screenshot can be regenerated from a release zip with:
 
 ```bash
-./tools/capture_release_help_screenshot.sh v0.1.1
+./tools/capture_release_help_screenshot.sh v0.1.3
 ```
 
 There is also a manual GitHub Actions workflow, `Capture Release Screenshot`, for generating the same artifacts in CI.
+
+Release checklist:
+
+1. Push the release tag.
+2. Wait for the draft release zip to be published by CI.
+3. Run `./tools/capture_release_help_screenshot.sh <tag>` or the manual screenshot workflow.
+4. Upload the 1x PNG to the draft release.
+5. Embed that PNG in the draft release description.
 
 ## Scope
 
@@ -239,4 +247,4 @@ See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and fail
 
 1. Decide whether very large configs need another navigation aid beyond scroll and search.
 2. Revisit `AML2.EXE` size now that the renderer and editor slice are in place.
-3. Replace the current release action with a shell-based `gh release` flow to drop the remaining Node 20 warning.
+3. Capture and attach a fresh screenshot for each release tag so the draft page stays in sync with the actual build.
