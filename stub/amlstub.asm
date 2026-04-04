@@ -169,20 +169,12 @@ read_run_request proc near
     jc read_fail
 
     mov bx, ax
-    lea di, cmd_tail + 1
-    mov ax, 'C/'
-    stosw
-    mov al, ' '
-    stosb
+    lea di, cmd_buf
     mov cx, 123
     call read_line
     jc read_close_fail
     or al, al
     jz read_close_fail
-
-    add al, 3
-    mov [cmd_tail], al
-    mov byte ptr [di], 0Dh
 
     lea di, path_buf
     mov cx, 63
@@ -275,6 +267,17 @@ path_setdir:
     jc launch_fail_ret
 
 path_done:
+    call is_direct_command
+    or al, al
+    jz launch_via_shell
+
+    mov word ptr [cmd_tail_off], offset empty_tail
+    lea dx, cmd_buf
+    call exec_wait
+    ret
+
+launch_via_shell:
+    call build_shell_tail
     mov word ptr [cmd_tail_off], offset cmd_tail
     lea dx, command_shell
     call exec_wait
@@ -291,6 +294,112 @@ exec_wait proc near
     int 21h
     ret
 exec_wait endp
+
+is_direct_command proc near
+    lea si, cmd_buf
+    xor bx, bx
+
+is_direct_scan:
+    mov al, [si]
+    or al, al
+    jz is_direct_check_ext
+    cmp al, ' '
+    je is_direct_no
+    cmp al, 9
+    je is_direct_no
+    cmp al, '"'
+    je is_direct_no
+    cmp al, '%'
+    je is_direct_no
+    cmp al, '&'
+    je is_direct_no
+    cmp al, '|'
+    je is_direct_no
+    cmp al, '<'
+    je is_direct_no
+    cmp al, '>'
+    je is_direct_no
+    cmp al, '.'
+    jne is_direct_next
+    mov bx, si
+
+is_direct_next:
+    inc si
+    jmp is_direct_scan
+
+is_direct_check_ext:
+    or bx, bx
+    jz is_direct_no
+    mov si, bx
+    inc si
+
+    mov al, [si]
+    and al, 5Fh
+    cmp al, 'E'
+    jne is_direct_check_com
+    mov al, [si + 1]
+    and al, 5Fh
+    cmp al, 'X'
+    jne is_direct_no
+    mov al, [si + 2]
+    and al, 5Fh
+    cmp al, 'E'
+    jne is_direct_no
+    cmp byte ptr [si + 3], 0
+    jne is_direct_no
+    mov al, 1
+    ret
+
+is_direct_check_com:
+    mov al, [si]
+    and al, 5Fh
+    cmp al, 'C'
+    jne is_direct_no
+    mov al, [si + 1]
+    and al, 5Fh
+    cmp al, 'O'
+    jne is_direct_no
+    mov al, [si + 2]
+    and al, 5Fh
+    cmp al, 'M'
+    jne is_direct_no
+    cmp byte ptr [si + 3], 0
+    jne is_direct_no
+    mov al, 1
+    ret
+
+is_direct_no:
+    xor al, al
+    ret
+is_direct_command endp
+
+build_shell_tail proc near
+    lea si, cmd_buf
+    lea di, cmd_tail + 1
+    mov ax, 'C/'
+    stosw
+    mov al, ' '
+    stosb
+    mov bl, 3
+    mov cx, 123
+
+build_shell_tail_copy:
+    mov al, [si]
+    or al, al
+    jz build_shell_tail_done
+    or cx, cx
+    jz build_shell_tail_done
+    stosb
+    inc si
+    inc bl
+    dec cx
+    jmp build_shell_tail_copy
+
+build_shell_tail_done:
+    mov [cmd_tail], bl
+    mov byte ptr [di], 0Dh
+    ret
+build_shell_tail endp
 
 print_dollar proc near
     mov ah, 09h
@@ -317,6 +426,7 @@ view_tail        db 6,' /V /S',0Dh
 edit_tail        db 6,' /E /S',0Dh
 empty_tail       db 0
                db 0Dh
+cmd_buf          db 124 dup (0)
 cmd_tail         db 127 dup (0)
 
 exec_block label byte

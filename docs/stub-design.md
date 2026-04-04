@@ -93,9 +93,10 @@ The supervisor should:
 4. if present, read command and path
 5. switch drive if needed
 6. `chdir` if path is present
-7. run `COMMAND.COM /C <command>`
-8. delete `AML2.RUN`
-9. repeat
+7. run simple `.EXE` and `.COM` targets directly
+8. otherwise fall back to `COMMAND.COM /C <command>`
+9. delete `AML2.RUN`
+10. repeat
 
 ## Current COM Stub Notes
 
@@ -112,3 +113,8 @@ For the first version:
 - if the target command fails to start, print an error and return to the launcher loop
 
 Keep failure modes visible and simple before attempting size optimization.
+
+Current launch split:
+
+- simple `.EXE` and `.COM` commands without shell metacharacters are started directly
+- `.BAT` files and shell-like command lines still go through `COMMAND.COM /C`
