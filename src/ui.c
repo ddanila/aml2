@@ -1113,28 +1113,55 @@ static void aml_ui_show_help_overlay(const AmlState *state)
 
 static int aml_ui_show_debug_run_menu(const AmlState *state)
 {
-    aml_ui_render(state, "Debug Run");
-    aml_ui_draw_titled_dialog(12, 7, 67, 17, "Debug Run");
-    aml_ui_write_at(18, aml_ui_dialog_row(7, 2), "1  Via stub, pause on error", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(18, aml_ui_dialog_row(7, 4), "2  Run directly as child", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_at(18, aml_ui_dialog_row(7, 6), "3  Run via COMMAND.COM", AML_UI_ATTR_DIALOG_TEXT);
-    aml_ui_write_centered(aml_ui_dialog_row(7, 8), "Esc cancel", AML_UI_ATTR_HELP);
-    aml_ui_flush();
+    static const char *items[] = {
+        "Via stub, pause on error",
+        "Run directly as child",
+        "Run via COMMAND.COM"
+    };
+    static const int actions[] = {
+        AML_UI_LAUNCH_DEBUG,
+        AML_UI_LAUNCH_CHILD_DIRECT,
+        AML_UI_LAUNCH_CHILD_SHELL
+    };
+    int selected = 0;
 
     for (;;) {
-        int key = getch();
+        int key;
+        int i;
+
+        aml_ui_render(state, "Debug Run");
+        aml_ui_draw_titled_dialog(10, 6, 69, 18, "Debug Run");
+        aml_ui_write_at(14, aml_ui_dialog_row(6, 2), "Command", AML_UI_ATTR_DIALOG_TEXT);
+        aml_ui_write_clipped(
+            24, aml_ui_dialog_row(6, 2),
+            state->entries[state->selected].command,
+            39, 0, 0, AML_UI_ATTR_DIALOG_DIM
+        );
+
+        for (i = 0; i < 3; ++i) {
+            unsigned char attr = (i == selected) ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_TEXT;
+            aml_ui_fill_rect(14, aml_ui_dialog_row(6, 4 + i), 64, aml_ui_dialog_row(6, 4 + i), ' ', attr);
+            aml_ui_putc(16, aml_ui_dialog_row(6, 4 + i), (i == selected) ? 16 : 250, attr);
+            aml_ui_write_at(20, aml_ui_dialog_row(6, 4 + i), items[i], attr);
+        }
+
+        aml_ui_write_centered(aml_ui_dialog_row(6, 8), "Enter select  Esc cancel", AML_UI_ATTR_HELP);
+        aml_ui_flush();
+        key = getch();
 
         if (key == AML_KEY_ESC) {
             return -1;
         }
-        if (key == '1') {
-            return AML_UI_LAUNCH_DEBUG;
+        if (key == AML_KEY_ENTER) {
+            return actions[selected];
         }
-        if (key == '2') {
-            return AML_UI_LAUNCH_CHILD_DIRECT;
-        }
-        if (key == '3') {
-            return AML_UI_LAUNCH_CHILD_SHELL;
+        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+            key = getch();
+            if (key == AML_KEY_UP) {
+                selected = (selected + 2) % 3;
+            } else if (key == AML_KEY_DOWN) {
+                selected = (selected + 1) % 3;
+            }
         }
     }
 }
