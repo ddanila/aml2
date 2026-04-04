@@ -339,7 +339,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--out",
-        default="out/museum-configs",
+        default="generated/museum-configs",
         help="Output directory for generated cfg files.",
     )
     args = parser.parse_args()
