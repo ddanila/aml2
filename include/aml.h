@@ -29,6 +29,7 @@ typedef struct AmlState {
     int entry_count;
     int selected;
     int modified;
+    int editor_mode;
 } AmlState;
 
 #endif

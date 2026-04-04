@@ -62,15 +62,16 @@ The launcher is now past the bare-minimum screen:
 - backbuffered direct-VRAM text renderer
 - visible scrolling window for long program lists
 - stronger selected-row marker and scrollbar gutter
+- default viewer mode, with editor mode enabled by `/E`
 - `Up/Down`, `Home/End`, `PgUp/PgDn` movement
 - `/` substring search
 - direct hotkeys `0-9`, `a-z`, `A-Z` for the first 62 entries
 - `F3` details dialog for the current entry
-- `F4` edit current entry
-- `F5` / `F6` move the current entry up or down
-- `Ins` insert a new entry after the current selection
-- `F8` delete the current entry after confirmation
-- `F2` save the current list back to `LAUNCHER.CFG`
+- `F4` edit current entry in editor mode
+- `F5` / `F6` move the current entry up or down in editor mode
+- `Ins` insert a new entry after the current selection in editor mode
+- `F8` delete the current entry after confirmation in editor mode
+- `F2` save the current list back to `LAUNCHER.CFG` in editor mode
 - `?` / `F1` help dialog
 - full-screen message panels for missing config and empty config
 - one shared list surface for both launching and editing

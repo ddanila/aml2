@@ -108,6 +108,6 @@ run_case \
     "f10" \
     "A>" \
     ""
-grep -q 'Use Ins to add an entry.' "$SCREEN_LOG"
+grep -q 'Run AML2 /E to add entries.' "$SCREEN_LOG"
 
 echo "search/message tests passed"

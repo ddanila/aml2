@@ -7,6 +7,7 @@ KVIKDOS_BIN="$KVIKDOS_DIR/kvikdos"
 OUT_DIR="$REPO_ROOT/out"
 TRACE_LOG="$OUT_DIR/kvikdos-trace.log"
 STDOUT_LOG="$OUT_DIR/kvikdos-stdout.log"
+USAGE_LOG="$OUT_DIR/kvikdos-usage.log"
 
 mkdir -p "$OUT_DIR"
 
@@ -37,6 +38,14 @@ tr -d '\r' < "$STDOUT_LOG" > "$TRACE_LOG"
 
 grep -q "FAKE GAME" "$STDOUT_LOG"
 grep -q "Press any key to return" "$TRACE_LOG"
+
+(
+    cd "$REPO_ROOT"
+    timeout 10 "$KVIKDOS_BIN" aml2.exe /? > "$USAGE_LOG" 2>&1
+)
+
+grep -q "AML2 usage:" "$USAGE_LOG"
+grep -q "AML2 \\[/E\\] \\[/?\\]" "$USAGE_LOG"
 
 rm -f "$REPO_ROOT/AML2.AUT" "$REPO_ROOT/AML2.TRC"
 

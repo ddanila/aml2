@@ -41,8 +41,9 @@ PY
 run_case() {
     local name="$1"
     local cfg="$2"
-    local auto="$3"
-    shift 3
+    local launch_cmd="$3"
+    local auto="$4"
+    shift 4
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
@@ -51,7 +52,7 @@ run_case() {
     if [[ -n "$auto" ]]; then
         mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
     fi
-    printf '@ECHO OFF\r\nAML2.EXE\r\n' > "$AUTOEXEC"
+    printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"
@@ -91,6 +92,7 @@ download_base_img
 run_case \
     "extended hotkey range" \
     "$REPO_ROOT/tests/launcher.hotkeys.cfg" \
+    "AML2.EXE" \
     "$REPO_ROOT/tests/AML2.HKA" \
     'Entry 36' '' \
     'A>' ''
@@ -99,8 +101,9 @@ grep -q 'Entry 36' "$SCREEN_LOG"
 run_case \
     "help dialog" \
     "$REPO_ROOT/tests/launcher.e2e.cfg" \
+    "AML2.EXE /E" \
     "" \
-    'Arvutimuuseum Launcher' 'f1' \
+    ' EDIT ' 'f1' \
     'Launcher Help' 'spc+f10' \
     'A>' ''
 grep -q 'F8     Delete current entry' "$SCREEN_LOG"

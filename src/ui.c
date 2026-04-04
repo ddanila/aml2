@@ -471,6 +471,9 @@ static void aml_ui_draw_header_on_frame_common(int modified)
 static void aml_ui_draw_header_on_frame(const AmlState *state)
 {
     aml_ui_draw_header_on_frame_common(state->modified);
+    if (state->editor_mode) {
+        aml_ui_write_at(65, 0, " EDIT ", AML_UI_ATTR_HELP);
+    }
 }
 
 static int aml_ui_hotkey_index(int key)
@@ -633,6 +636,23 @@ static void aml_ui_draw_detail_line(int row, const char *label, const char *valu
 {
     aml_ui_write_at(18, row, label, AML_UI_ATTR_DIALOG_TEXT);
     aml_ui_write_padded(28, row, value, 34, attr);
+}
+
+static int aml_ui_require_editor_mode(AmlState *state)
+{
+    if (state->editor_mode) {
+        return 1;
+    }
+
+    aml_ui_show_notice(
+        state,
+        "Viewer mode",
+        "Editing is disabled in the default mode.",
+        "Run AML2 /E to enable editor mode.",
+        ""
+    );
+    aml_ui_wait_for_ack();
+    return 0;
 }
 
 static void aml_ui_show_details_overlay(const AmlState *state)
@@ -888,6 +908,10 @@ static void aml_ui_insert_entry(AmlState *state)
     int i;
     AmlEntry entry;
 
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
+
     if (state->entry_count >= AML_MAX_PROGRAMS) {
         aml_ui_show_message(
             "List is full",
@@ -921,6 +945,10 @@ static void aml_ui_insert_entry(AmlState *state)
 
 static void aml_ui_edit_entry(AmlState *state)
 {
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
+
     if (state->entry_count <= 0 ||
         state->selected < 0 ||
         state->selected >= state->entry_count) {
@@ -936,6 +964,10 @@ static void aml_ui_edit_entry(AmlState *state)
 static void aml_ui_delete_entry(AmlState *state)
 {
     int i;
+
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
 
     if (state->entry_count <= 0 ||
         state->selected < 0 ||
@@ -958,6 +990,10 @@ static void aml_ui_delete_entry(AmlState *state)
 
 static void aml_ui_delete_entry_with_confirm(AmlState *state)
 {
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
+
     if (state->entry_count <= 0 ||
         state->selected < 0 ||
         state->selected >= state->entry_count) {
@@ -974,6 +1010,10 @@ static void aml_ui_delete_entry_with_confirm(AmlState *state)
 static void aml_ui_move_entry_up(AmlState *state)
 {
     AmlEntry temp;
+
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
 
     if (state->entry_count <= 0 ||
         state->selected < 0 ||
@@ -997,6 +1037,10 @@ static void aml_ui_move_entry_up(AmlState *state)
 static void aml_ui_move_entry_down(AmlState *state)
 {
     AmlEntry temp;
+
+    if (!aml_ui_require_editor_mode(state)) {
+        return;
+    }
 
     if (state->entry_count <= 1 ||
         state->selected < 0 ||

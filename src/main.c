@@ -1,5 +1,6 @@
 #include <conio.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "aml.h"
 #include "cfg.h"
@@ -30,15 +31,45 @@ static void aml_trace_event(const char *event_name)
 
 static AmlState state;
 
-int main(void)
+static int aml_arg_is(const char *arg, const char *value)
+{
+    return strcmp(arg, value) == 0;
+}
+
+static void aml_print_usage(void)
+{
+    printf("AML2 usage:\r\n");
+    printf("  AML2 [/E] [/?]\r\n");
+    printf("\r\n");
+    printf("  /E   Enable editor mode.\r\n");
+    printf("  /?   Show this help.\r\n");
+    printf("\r\n");
+    printf("Start AMLSTUB.COM for the normal launcher loop.\r\n");
+}
+
+int main(int argc, char **argv)
 {
     int rc;
     int action;
     int launched = 0;
+    int i;
 
     state.entry_count = 0;
     state.selected = 0;
     state.modified = 0;
+    state.editor_mode = 0;
+
+    for (i = 1; i < argc; ++i) {
+        if (aml_arg_is(argv[i], "/e") || aml_arg_is(argv[i], "/E")) {
+            state.editor_mode = 1;
+        } else if (aml_arg_is(argv[i], "/?")) {
+            aml_print_usage();
+            return 0;
+        } else {
+            aml_print_usage();
+            return 1;
+        }
+    }
 
 #if AML_TEST_HOOKS
     aml_trace_event("launcher");
@@ -56,16 +87,16 @@ int main(void)
     if (rc != 0) {
         aml_ui_show_message(
             "No launcher.cfg yet",
-            "Use Ins to add an entry.",
-            "Use F2 to save the new configuration.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AML2 /E to create entries.",
+            state.editor_mode ? "Use F2 to save the new configuration." : "",
             ""
         );
         aml_ui_wait_for_ack();
     } else if (state.entry_count <= 0) {
         aml_ui_show_message(
             "Launcher config is empty",
-            "Use Ins to add an entry.",
-            "Use F2 to save changes.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AML2 /E to add entries.",
+            state.editor_mode ? "Use F2 to save changes." : "",
             ""
         );
         aml_ui_wait_for_ack();
@@ -79,6 +110,17 @@ int main(void)
         }
 
         if (action == AML_UI_SAVE) {
+            if (!state.editor_mode) {
+                aml_ui_show_notice(
+                    &state,
+                    "Viewer mode",
+                    "Editing is disabled in the default mode.",
+                    "Run AML2 /E to save changes.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
             rc = aml_save_config(&state, AML_CONFIG_FILE);
             if (rc != 0) {
                 aml_ui_show_notice(

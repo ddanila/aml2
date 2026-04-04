@@ -41,14 +41,15 @@ PY
 
 run_case() {
     local name="$1"
-    local auto="$2"
+    local launch_cmd="$2"
+    local auto="$3"
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.edit.cfg" ::LAUNCHER.CFG
     mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    printf '@ECHO OFF\r\nAML2.EXE\r\n' > "$AUTOEXEC"
+    printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$CFG_LOG"
@@ -89,7 +90,28 @@ echo "Building aml2 for edit-operation tests ..."
 BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 download_base_img
 
-run_case "reorder then save" "$REPO_ROOT/tests/AML2.EDR"
+run_case "viewer mode blocks save" "AML2.EXE" "$REPO_ROOT/tests/AML2.VWR"
+grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
+grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
+grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
+python3 - "$CFG_LOG" <<'PY'
+import sys
+
+lines = [
+    line.strip()
+    for line in open(sys.argv[1], encoding="ascii")
+    if "|" in line and not line.lstrip().startswith("#")
+]
+expected = [
+    "Alpha|ALPHA.EXE|",
+    "Beta|BETA.EXE|",
+    "Gamma|GAMMA.EXE|",
+]
+if lines != expected:
+    raise SystemExit(f"unexpected viewer-mode result: {lines!r}")
+PY
+
+run_case "reorder then save" "AML2.EXE /E" "$REPO_ROOT/tests/AML2.EDR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
@@ -110,7 +132,7 @@ if lines != expected:
     raise SystemExit(f"unexpected reorder result: {lines!r}")
 PY
 
-run_case "delete then save" "$REPO_ROOT/tests/AML2.EDD"
+run_case "delete then save" "AML2.EXE /E" "$REPO_ROOT/tests/AML2.EDD"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 if grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"; then

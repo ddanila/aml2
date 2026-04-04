@@ -43,14 +43,15 @@ Current TUI features:
 - direct text-mode VRAM renderer with a full-screen backbuffer
 - scrolling list window for configs larger than one screen
 - stronger selected-row marker, boxed sections, and a scrollbar-style gutter
+- default viewer mode, with editor mode enabled by `/E`
 - direct hotkeys `0-9`, `a-z`, and `A-Z`
 - `Up/Down`, `Home/End`, and `PgUp/PgDn` navigation
 - `/` substring search against entry names
 - `F3` details dialog for the current entry
-- `F4` edit current entry and `Ins` insert a new one
-- `F5` / `F6` move the current entry up or down
-- `F8` delete the current entry after confirmation
-- `F2` save the current in-memory config back to `LAUNCHER.CFG`
+- `F4` edit current entry and `Ins` insert a new one in editor mode
+- `F5` / `F6` move the current entry up or down in editor mode
+- `F8` delete the current entry after confirmation in editor mode
+- `F2` save the current in-memory config back to `LAUNCHER.CFG` in editor mode
 - `?` / `F1` help dialog
 - clearer full-screen message panels for missing or unusable config
 - same list used for both launching and editing
@@ -138,6 +139,13 @@ In normal use, start `AMLSTUB.COM`, not `AML2.EXE`.
 - `AML2.EXE` shows the menu and writes `AML2.RUN`
 - `AMLSTUB.COM` launches the selected game and returns to the launcher after the game exits
 
+`AML2.EXE` command-line options:
+
+- `/E`: enable editor mode
+- `/?`: print usage information and exit
+
+Viewer mode is the default. Editing actions are only enabled when `AML2.EXE` is started with `/E`.
+
 Run `AML2.EXE` directly only if you want to inspect the launcher UI by itself. In that mode it can still write `AML2.RUN`, but there is no supervisor process around to consume it and bring the launcher back.
 
 Expected DOS-side layout:
@@ -166,13 +174,13 @@ Main controls in the launcher:
 - `Home/End`: jump to first or last entry
 - `/`: search within entry names
 - `F1` or `?`: open the help dialog
-- `F2`: save all changes to `LAUNCHER.CFG`
+- `F2`: save all changes to `LAUNCHER.CFG` in editor mode
 - `F3`: show details for the current entry
-- `F4`: edit the current entry
-- `F5`: move the current entry up
-- `F6`: move the current entry down
-- `Ins`: insert a new entry after the current one
-- `F8`: delete the current entry after confirmation
+- `F4`: edit the current entry in editor mode
+- `F5`: move the current entry up in editor mode
+- `F6`: move the current entry down in editor mode
+- `Ins`: insert a new entry after the current one in editor mode
+- `F8`: delete the current entry after confirmation in editor mode
 - `F10`: exit to DOS
 - `0-9`, `a-z`, `A-Z`: launch the corresponding hotkey entry directly for the first 62 items
 - `Enter`: launch current selection
@@ -247,7 +255,7 @@ Edit-operation coverage:
 bash tests/test_aml2_edit_ops.sh
 ```
 
-This verifies reorder, delete, and save persistence under real DOS in QEMU by reading back the updated `LAUNCHER.CFG` from the floppy image.
+This verifies that viewer mode blocks mutations by default, and that editor mode enables reorder, delete, and save persistence under real DOS in QEMU by reading back the updated `LAUNCHER.CFG` from the floppy image.
 
 See [docs/e2e-findings.md](docs/e2e-findings.md) for the bring-up notes and failure modes that were discovered.
 
