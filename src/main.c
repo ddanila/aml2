@@ -38,13 +38,13 @@ static int aml_arg_is(const char *arg, const char *value)
 
 static void aml_print_usage(void)
 {
-    printf("AML2 usage:\r\n");
-    printf("  AML2 [/E] [/?]\r\n");
+    printf("AMLEDIT usage:\r\n");
+    printf("  AMLEDIT [/E] [/?]\r\n");
     printf("\r\n");
     printf("  /E   Enable editor mode.\r\n");
     printf("  /?   Show this help.\r\n");
     printf("\r\n");
-    printf("Start AMLSTUB.COM for the normal launcher loop.\r\n");
+    printf("Start AML.COM for the normal launcher loop.\r\n");
 }
 
 int main(int argc, char **argv)
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     if (rc != 0) {
         aml_ui_show_message(
             "No launcher.cfg yet",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AML2 /E to create entries.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AMLEDIT /E to create entries.",
             state.editor_mode ? "Use F2 to save the new configuration." : "",
             ""
         );
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     } else if (state.entry_count <= 0) {
         aml_ui_show_message(
             "Launcher config is empty",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AML2 /E to add entries.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AMLEDIT /E to add entries.",
             state.editor_mode ? "Use F2 to save changes." : "",
             ""
         );
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
                     &state,
                     "Viewer mode",
                     "Editing is disabled in the default mode.",
-                    "Run AML2 /E to save changes.",
+                    "Run AMLEDIT /E to save changes.",
                     ""
                 );
                 aml_ui_wait_for_ack();
@@ -150,6 +150,41 @@ int main(int argc, char **argv)
         if (action == AML_UI_LAUNCH &&
             state.selected >= 0 &&
             state.selected < state.entry_count) {
+            rc = aml_check_launch_entry(&state.entries[state.selected]);
+            if (rc == AML_LAUNCH_STUB_MISSING) {
+                aml_ui_show_notice(
+                    &state,
+                    "Missing AML.COM",
+                    "Launcher handoff needs AML.COM in this folder.",
+                    "Start AML.COM from the launcher directory.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
+            if (rc == AML_LAUNCH_BAD_PATH) {
+                aml_ui_show_notice(
+                    &state,
+                    "Game folder not found",
+                    "The configured working directory does not exist.",
+                    "Edit the entry and fix the path.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
+            if (rc == AML_LAUNCH_TARGET_MISSING) {
+                aml_ui_show_notice(
+                    &state,
+                    "Game file not found",
+                    "The configured command does not exist in that folder.",
+                    "Edit the entry and check the program name.",
+                    ""
+                );
+                aml_ui_wait_for_ack();
+                continue;
+            }
+
             rc = aml_write_run_request(&state.entries[state.selected], AML_RUN_FILE);
             if (rc != 0) {
                 aml_ui_show_notice(

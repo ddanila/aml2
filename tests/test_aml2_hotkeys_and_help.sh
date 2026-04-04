@@ -47,7 +47,7 @@ run_case() {
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
+    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
     if [[ -n "$auto" ]]; then
         mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
@@ -92,7 +92,7 @@ download_base_img
 run_case \
     "extended hotkey range" \
     "$REPO_ROOT/tests/launcher.hotkeys.cfg" \
-    "AML2.EXE" \
+    "AMLEDIT.EXE" \
     "$REPO_ROOT/tests/AML2.HKA" \
     'Entry 36' '' \
     'A>' ''
@@ -101,11 +101,9 @@ grep -q 'Entry 36' "$SCREEN_LOG"
 run_case \
     "help dialog" \
     "$REPO_ROOT/tests/launcher.e2e.cfg" \
-    "AML2.EXE /E" \
-    "" \
-    ' EDIT ' 'f1' \
-    'Launcher Help' 'spc+f10' \
-    'A>' ''
+    "AMLEDIT.EXE /E" \
+    "$REPO_ROOT/tests/AML2.HLP" \
+    'EDIT' 'Launcher Help'
 grep -q 'F8     Delete current entry' "$SCREEN_LOG"
 grep -q 'F10    Exit to DOS' "$SCREEN_LOG"
 

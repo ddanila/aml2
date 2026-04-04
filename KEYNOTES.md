@@ -8,7 +8,7 @@ Internal notes for ongoing work on `aml2`.
 - Open Watcom
 - small DOS launcher
 - simple custom TUI, not a framework
-- `AMLSTUB.COM` remains the supervisor entrypoint
+- `AML.COM` remains the supervisor entrypoint
 
 ## Practical Constraints
 
@@ -21,7 +21,7 @@ Internal notes for ongoing work on `aml2`.
 
 - pinned Open Watcom snapshot: `Current-build` from `2026-04-03`
 - vendor root: `vendor/openwatcom-v2/current-build-2026-04-03`
-- current tested stub size: `787 bytes`
+- current tested stub size: `818 bytes`
 - current launcher size is roughly `23 KB`
 
 ## Testing Notes

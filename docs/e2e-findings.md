@@ -6,8 +6,8 @@
 
 Validated sequence:
 
-1. `AMLSTUB.COM` starts from `AUTOEXEC.BAT`
-2. `AML2.EXE` renders the launcher
+1. `AML.COM` starts from `AUTOEXEC.BAT`
+2. `AMLEDIT.EXE` renders the launcher
 3. launcher writes `AML2.RUN`
 4. stub reads the run request
 5. stub launches the fake DOS game
@@ -82,7 +82,7 @@ Resolution:
 
 ### 6. The COM supervisor needed explicit memory shrink
 
-The first `AMLSTUB.COM` attempt failed to start `AML2.EXE`.
+The first `AML.COM` attempt failed to start `AMLEDIT.EXE`.
 
 Cause:
 
@@ -106,7 +106,7 @@ Files used by the test:
 
 Additional failure-path coverage now exists in `tests/test_aml2_failure_paths.sh`:
 
-- missing `AML2.EXE`
+- missing `AMLEDIT.EXE`
 - invalid launch working directory
 
 ## Tradeoff

@@ -1313,6 +1313,12 @@ static int aml_ui_apply_automation(AmlState *state)
         return AML_UI_AUTO_REDRAW;
     }
 
+    if (strcmp(line, "help") == 0) {
+        aml_ui_trace_event("auto_help");
+        aml_ui_show_help_overlay(state);
+        return AML_UI_AUTO_REDRAW;
+    }
+
     if (strcmp(line, "move_up") == 0) {
         aml_ui_move_entry_up(state);
         aml_ui_trace_event("auto_move_up");

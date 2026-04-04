@@ -65,12 +65,12 @@ download_base_img
 
 echo "Preparing boot floppy ..."
 cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlstub.com" ::AMLSTUB.COM
+mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
+mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.e2e.cfg" ::LAUNCHER.CFG
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.AUT" ::AML2.AUT
-printf '@ECHO OFF\r\nAMLSTUB.COM\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting QEMU ..."

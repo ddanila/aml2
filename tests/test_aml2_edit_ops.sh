@@ -46,7 +46,7 @@ run_case() {
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
+    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.edit.cfg" ::LAUNCHER.CFG
     mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
     printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
@@ -90,7 +90,7 @@ echo "Building aml2 for edit-operation tests ..."
 BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 download_base_img
 
-run_case "viewer mode blocks save" "AML2.EXE" "$REPO_ROOT/tests/AML2.VWR"
+run_case "viewer mode blocks save" "AMLEDIT.EXE" "$REPO_ROOT/tests/AML2.VWR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
@@ -111,7 +111,7 @@ if lines != expected:
     raise SystemExit(f"unexpected viewer-mode result: {lines!r}")
 PY
 
-run_case "reorder then save" "AML2.EXE /E" "$REPO_ROOT/tests/AML2.EDR"
+run_case "reorder then save" "AMLEDIT.EXE /E" "$REPO_ROOT/tests/AML2.EDR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
@@ -132,7 +132,7 @@ if lines != expected:
     raise SystemExit(f"unexpected reorder result: {lines!r}")
 PY
 
-run_case "delete then save" "AML2.EXE /E" "$REPO_ROOT/tests/AML2.EDD"
+run_case "delete then save" "AMLEDIT.EXE /E" "$REPO_ROOT/tests/AML2.EDD"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 if grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"; then

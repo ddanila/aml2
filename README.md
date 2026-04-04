@@ -2,7 +2,7 @@
 
 `aml2` is a small DOS launcher.
 
-It uses a tiny custom text UI, a supervisor stub (`AMLSTUB.COM`), and a simple `LAUNCHER.CFG` format.
+It uses a tiny custom text UI, a supervisor stub (`AML.COM`), and a simple `LAUNCHER.CFG` format.
 
 ## Screenshot
 
@@ -11,15 +11,15 @@ It uses a tiny custom text UI, a supervisor stub (`AMLSTUB.COM`), and a simple `
 ## What It Does
 
 - shows entries from `LAUNCHER.CFG`
-- launches the selected item through `AMLSTUB.COM`
+- launches the selected item through `AML.COM`
 - supports viewer mode by default
-- supports editor mode with `AML2.EXE /E`
+- supports editor mode with `AMLEDIT.EXE /E`
 - writes `AML2.RUN` as the handoff file between launcher and stub
 
 Current output sizes from `./tools/build.sh` are approximately:
 
-- `aml2.exe`: 23 KB
-- `amlstub.com`: 787 bytes
+- `amledit.exe`: 23 KB
+- `aml.com`: 818 bytes
 
 ## Quick Start
 
@@ -33,21 +33,21 @@ Build:
 Normal DOS-side entrypoint:
 
 ```text
-AMLSTUB.COM
+AML.COM
 ```
 
-Do not start with `AML2.EXE` in normal use. The stub is what relaunches the launcher after a game exits.
+Do not start with `AMLEDIT.EXE` in normal use. The stub is what relaunches the launcher after a game exits.
 
 Expected DOS-side files:
 
-- `AMLSTUB.COM`
-- `AML2.EXE`
+- `AML.COM`
+- `AMLEDIT.EXE`
 - `LAUNCHER.CFG`
 - the executables or batch files referenced by `LAUNCHER.CFG`
 
 ## Command Line
 
-`AML2.EXE` supports:
+`AMLEDIT.EXE` supports:
 
 - `/E` to enable editor mode
 - `/?` to print usage and exit
@@ -105,8 +105,8 @@ The zip contains:
 
 - `README.md`
 - `LAUNCHER.CFG`
-- `AML2.EXE`
-- `AMLSTUB.COM`
+- `AMLEDIT.EXE`
+- `AML.COM`
 
 ## Manual QEMU Run
 

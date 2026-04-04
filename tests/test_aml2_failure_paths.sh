@@ -45,17 +45,19 @@ run_case() {
     local cfg="$2"
     local include_launcher="$3"
     local pattern="$4"
+    local auto="$5"
+    local final_pattern="$6"
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlstub.com" ::AMLSTUB.COM
+    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
     if [[ "$include_launcher" == "yes" ]]; then
-        mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml2.exe" ::AML2.EXE
+        mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
     fi
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.AUT" ::AML2.AUT
-    printf '@ECHO OFF\r\nAMLSTUB.COM\r\n' > "$AUTOEXEC"
+    mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
+    printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$TRACE_LOG" "$TRACE_NORM"
@@ -78,7 +80,7 @@ run_case() {
     SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
         "$QMP_SOCK" "$SCREEN_LOG" \
         "$pattern" '' \
-        'A>' ''
+        "$final_pattern" ''
 
     kill "$QEMU_PID" 2>/dev/null || true
     wait "$QEMU_PID" 2>/dev/null || true
@@ -92,7 +94,9 @@ run_case() {
     fi
 
     grep -q "$pattern" "$SCREEN_LOG"
-    grep -q '^A>$' "$SCREEN_LOG"
+    if [[ -n "$final_pattern" ]]; then
+        grep -q "^$final_pattern$" "$SCREEN_LOG"
+    fi
 }
 
 trap cleanup EXIT
@@ -101,9 +105,10 @@ mkdir -p "$OUT_DIR"
 
 echo "Building launcher, stub, and fake game ..."
 BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+mkdir -p "$OUT_DIR"
 download_base_img
 
-run_case "missing launcher" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "AML2?"
-run_case "bad path" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "RUN?"
+run_case "missing launcher" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLEDIT.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
+run_case "bad path" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""
 
 echo "failure path checks passed"

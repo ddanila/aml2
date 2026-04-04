@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <direct.h>
 #include <dos.h>
 #include <stdio.h>
 
@@ -9,6 +10,9 @@ int main(void)
 #if AML_TEST_HOOKS
     FILE *fp;
     FILE *trace;
+    char cwd[128];
+    const char *auto_path = AML_AUTO_FILE;
+    const char *trace_path = AML_TRACE_FILE;
 #endif
 
     puts("FAKE GAME");
@@ -17,12 +21,22 @@ int main(void)
     puts("Press any key to return.");
 
 #if AML_TEST_HOOKS
-    fp = fopen(AML_AUTO_FILE, "r");
+    fp = fopen(auto_path, "r");
+    if (fp == NULL) {
+        auto_path = "A:\\AML2.AUT";
+        trace_path = "A:\\AML2.TRC";
+        fp = fopen(auto_path, "r");
+    }
     if (fp != NULL) {
         fclose(fp);
-        trace = fopen(AML_TRACE_FILE, "a");
+        trace = fopen(trace_path, "a");
         if (trace != NULL) {
             fputs("fakegame\n", trace);
+            if (getcwd(cwd, sizeof(cwd)) != NULL) {
+                fputs("cwd=", trace);
+                fputs(cwd, trace);
+                fputc('\n', trace);
+            }
             fclose(trace);
         }
         sleep(3);

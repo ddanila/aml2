@@ -74,6 +74,8 @@ init_home proc near
     mov ah, 19h
     int 21h
     mov [home_drive], al
+    add al, 'A'
+    mov [command_shell], al
 
     mov byte ptr [home_path], '\'
     lea si, home_path + 1
@@ -244,12 +246,12 @@ print_dollar proc near
     ret
 print_dollar endp
 
-launcher_name     db 'AML2.EXE',0
-command_shell     db 'COMMAND.COM',0
+launcher_name     db 'AMLEDIT.EXE',0
+command_shell     db 'A:\COMMAND.COM',0
 run_file_name     db 'AML2.RUN',0
-msg_launcher_fail db 'AML2?',13,10,'$'
-msg_command_fail  db 'RUN?',13,10,'$'
-msg_resize_fail   db 'MEM?',13,10,'$'
+msg_launcher_fail db 'NO AMLEDIT.EXE',13,10,'$'
+msg_command_fail  db 'RUN FAILED',13,10,'$'
+msg_resize_fail   db 'NO MEMORY',13,10,'$'
 
 home_drive       db 0
 home_path        db 64 dup (0)

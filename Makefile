@@ -18,8 +18,8 @@ OBJS = \
 FAKEGAME_OBJS = \
     build/fakegame.obj
 
-all: build aml2.exe amlstub.com
-test-build: build aml2.exe amlstub.com fakegame.exe
+all: build amledit.exe aml.com
+test-build: build amledit.exe aml.com fakegame.exe
 
 build:
 	mkdir -p build
@@ -45,14 +45,14 @@ build/fakegame.obj: tests/fakegame.c
 build/amlstub.obj: stub/amlstub.asm
 	$(WASM) -0 -bt=dos -mt -zq -zcm=tasm -fo=build/amlstub.obj -fr=build/amlstub.err stub/amlstub.asm
 
-aml2.exe: $(OBJS)
-	$(WLINK) $(LDFLAGS) name aml2.exe file { $(OBJS) }
+amledit.exe: $(OBJS)
+	$(WLINK) $(LDFLAGS) name amledit.exe file { $(OBJS) }
 
-amlstub.com: build/amlstub.obj tools/obj2com.py
-	$(PYTHON) tools/obj2com.py build/amlstub.obj amlstub.com
+aml.com: build/amlstub.obj tools/obj2com.py
+	$(PYTHON) tools/obj2com.py build/amlstub.obj aml.com
 
 fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
 clean:
-	rm -rf build aml2.exe aml2.com amlstub.exe amlstub.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h
+	rm -rf build amledit.exe amledit.com aml.exe aml.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h

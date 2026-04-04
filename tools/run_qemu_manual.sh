@@ -127,19 +127,19 @@ else
 fi
 
 cp "$BASE_IMG" "$BOOT_IMG"
-copy_into_image "$REPO_ROOT/aml2.exe"
-copy_into_image "$REPO_ROOT/amlstub.com"
+copy_into_image "$REPO_ROOT/amledit.exe"
+copy_into_image "$REPO_ROOT/aml.com"
 copy_launcher_config "$LAUNCHER_CFG_SOURCE"
 
 for extra in "$@"; do
     copy_into_image "$extra"
 done
 
-printf '@ECHO OFF\r\nAMLSTUB.COM\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting $BOOT_IMG"
-echo "Entry point: AMLSTUB.COM"
+echo "Entry point: AML.COM"
 echo "Launcher config: $LAUNCHER_CFG_SOURCE"
 if [[ $# -gt 0 ]]; then
     echo "Extra files copied: $*"

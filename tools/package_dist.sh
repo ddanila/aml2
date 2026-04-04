@@ -20,8 +20,8 @@ rm -rf "$STAGE_DIR"/*
 
 cp README.md "$STAGE_DIR/README.md"
 cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
-cp aml2.exe "$STAGE_DIR/AML2.EXE"
-cp amlstub.com "$STAGE_DIR/AMLSTUB.COM"
+cp amledit.exe "$STAGE_DIR/AMLEDIT.EXE"
+cp aml.com "$STAGE_DIR/AML.COM"
 
 mkdir -p "$DIST_DIR"
 ZIP_PATH="$DIST_DIR/aml2-${BUILD_TAG}.zip"

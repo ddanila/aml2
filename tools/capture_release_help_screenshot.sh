@@ -115,11 +115,11 @@ download_base_img
 generate_manual_config
 
 cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AML2.EXE" ::AML2.EXE
-mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AMLSTUB.COM" ::AMLSTUB.COM
+mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AMLEDIT.EXE" ::AMLEDIT.EXE
+mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AML.COM" ::AML.COM
 mcopy -o -i "$BOOT_IMG" "$CFG_PATH" ::LAUNCHER.CFG
 
-printf '@ECHO OFF\r\nAML2.EXE\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$PPM_OUT" "$PNG_OUT" "$PNG_2X_OUT"

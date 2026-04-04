@@ -6,18 +6,18 @@ Use a tiny supervisor process to keep the launcher out of conventional memory wh
 
 The architecture is:
 
-- `AMLSTUB.COM`: outer loop and child launcher
-- `AML2.EXE`: UI and config parser
+- `AML.COM`: outer loop and child launcher
+- `AMLEDIT.EXE`: UI and config parser
 
 ## Runtime Flow
 
 1. `AMLSTUB` starts.
-2. `AMLSTUB` runs `AML2.EXE` and waits.
+2. `AML` runs `AMLEDIT.EXE` and waits.
 3. `AML2` lets the user choose a program.
 4. `AML2` writes a launch request to `AML2.RUN` and exits.
 5. `AMLSTUB` reads `AML2.RUN`.
 6. `AMLSTUB` launches the requested command.
-7. When the child exits, `AMLSTUB` starts `AML2.EXE` again.
+7. When the child exits, `AML` starts `AMLEDIT.EXE` again.
 8. If no launch request exists, `AMLSTUB` exits to DOS.
 
 ## Handoff File
@@ -70,8 +70,8 @@ The stub loop gives the same user-visible effect with much lower risk.
 
 Current state:
 
-- tested runtime path now uses `AMLSTUB.COM`
-- `AMLSTUB.COM` is built with Open Watcom `wasm`
+- tested runtime path now uses `AML.COM`
+- `AML.COM` is built with Open Watcom `wasm`
 - the OMF object is converted to `.COM` with a small repo-local converter
 - current tested size is 787 bytes
 
@@ -79,7 +79,7 @@ Current state:
 
 The supervisor should:
 
-1. launch `AML2.EXE`
+1. launch `AMLEDIT.EXE`
 2. check `AML2.RUN`
 3. if missing, exit
 4. if present, read command and path
@@ -93,13 +93,13 @@ The supervisor should:
 
 The `.COM` stub must resize its DOS memory block before calling `EXEC`.
 
-Without that step, DOS cannot load `AML2.EXE` because the freshly started `.COM` stub owns essentially all available memory.
+Without that step, DOS cannot load `AMLEDIT.EXE` because the freshly started `.COM` stub owns essentially all available memory.
 
 ## Error Handling
 
 For the first version:
 
-- if `AML2.EXE` cannot be started, print an error and exit
+- if `AMLEDIT.EXE` cannot be started, print an error and exit
 - if `AML2.RUN` cannot be parsed, print an error, delete it, and exit
 - if the target command fails to start, print an error and return to the launcher loop
 
