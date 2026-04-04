@@ -20,7 +20,7 @@ rm -rf "$STAGE_DIR"/*
 
 cp README.md "$STAGE_DIR/README.md"
 cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
-cp amledit.exe "$STAGE_DIR/AMLEDIT.EXE"
+cp amlui.exe "$STAGE_DIR/AMLUI.EXE"
 cp aml.com "$STAGE_DIR/AML.COM"
 
 mkdir -p "$DIST_DIR"

@@ -15,7 +15,7 @@ Internal notes for ongoing work on `aml2`.
 - keep runtime behavior simple before chasing more size
 - avoid dynamic allocation in the main launcher path
 - treat `.COM` pressure as a stub concern first, not a launcher concern
-- `AML.COM` owns the default viewer-mode entrypoint; direct `AMLEDIT.EXE` runs require explicit `/V` or `/E`
+- `AML.COM` owns the default viewer-mode entrypoint; direct `AMLUI.EXE` runs require explicit `/V` or `/E`
 
 ## Toolchain
 

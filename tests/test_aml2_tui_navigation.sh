@@ -47,10 +47,10 @@ BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 download_base_img
 
 cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
+mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.long.cfg" ::LAUNCHER.CFG
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.END" ::AML2.AUT
-printf '@ECHO OFF\r\nAMLEDIT.EXE /V\r\n' > "$AUTOEXEC"
+printf '@ECHO OFF\r\nAMLUI.EXE /V\r\n' > "$AUTOEXEC"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"

@@ -115,7 +115,7 @@ download_base_img
 generate_manual_config
 
 cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AMLEDIT.EXE" ::AMLEDIT.EXE
+mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AMLUI.EXE" ::AMLUI.EXE
 mcopy -o -i "$BOOT_IMG" "$STAGE_DIR/AML.COM" ::AML.COM
 mcopy -o -i "$BOOT_IMG" "$CFG_PATH" ::LAUNCHER.CFG
 

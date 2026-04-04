@@ -65,7 +65,7 @@ download_base_img
 
 echo "Preparing boot floppy ..."
 cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
+mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.e2e.cfg" ::LAUNCHER.CFG

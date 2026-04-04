@@ -18,7 +18,7 @@ It uses a tiny custom text UI, a supervisor stub (`AML.COM`), and a simple `LAUN
 
 Current output sizes from `./tools/build.sh` are approximately:
 
-- `amledit.exe`: 23 KB
+- `amlui.exe`: 23 KB
 - `aml.com`: 926 bytes
 
 ## Quick Start
@@ -36,12 +36,12 @@ Normal DOS-side entrypoint:
 AML.COM
 ```
 
-Do not start with `AMLEDIT.EXE` in normal use. `AML.COM` is the public entrypoint and relaunches the launcher after a game exits.
+Do not start with `AMLUI.EXE` in normal use. `AML.COM` is the public entrypoint and relaunches the launcher after a game exits.
 
 Expected DOS-side files:
 
 - `AML.COM`
-- `AMLEDIT.EXE`
+- `AMLUI.EXE`
 - `LAUNCHER.CFG`
 - the executables or batch files referenced by `LAUNCHER.CFG`
 
@@ -52,13 +52,13 @@ Expected DOS-side files:
 - no args to start in viewer mode
 - `/E` to start in editor mode
 
-`AMLEDIT.EXE` supports:
+`AMLUI.EXE` supports:
 
 - `/V` to enter viewer mode explicitly
 - `/E` to enable editor mode
 - `/?` to print usage and exit
 
-Direct `AMLEDIT.EXE` runs require an explicit mode. Mutation actions are only available in editor mode.
+Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only available in editor mode.
 
 ## Config Format
 
@@ -111,7 +111,7 @@ The zip contains:
 
 - `README.md`
 - `LAUNCHER.CFG`
-- `AMLEDIT.EXE`
+- `AMLUI.EXE`
 - `AML.COM`
 
 ## Manual QEMU Run

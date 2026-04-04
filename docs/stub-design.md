@@ -7,17 +7,17 @@ Use a tiny supervisor process to keep the launcher out of conventional memory wh
 The architecture is:
 
 - `AML.COM`: outer loop and child launcher
-- `AMLEDIT.EXE`: UI and config parser
+- `AMLUI.EXE`: UI and config parser
 
 ## Runtime Flow
 
 1. `AMLSTUB` starts.
-2. `AML` runs `AMLEDIT.EXE` and waits.
+2. `AML` runs `AMLUI.EXE` and waits.
 3. `AML2` lets the user choose a program.
 4. `AML2` writes a launch request to `AML2.RUN` and exits.
 5. `AMLSTUB` reads `AML2.RUN`.
 6. `AMLSTUB` launches the requested command.
-7. When the child exits, `AML` starts `AMLEDIT.EXE` again.
+7. When the child exits, `AML` starts `AMLUI.EXE` again.
 8. If no launch request exists, `AMLSTUB` exits to DOS.
 
 ## Handoff File
@@ -79,7 +79,7 @@ Current state:
 
 The supervisor should:
 
-1. launch `AMLEDIT.EXE`
+1. launch `AMLUI.EXE`
 2. check `AML2.RUN`
 3. if missing, exit
 4. if present, read command and path
@@ -93,13 +93,13 @@ The supervisor should:
 
 The `.COM` stub must resize its DOS memory block before calling `EXEC`.
 
-Without that step, DOS cannot load `AMLEDIT.EXE` because the freshly started `.COM` stub owns essentially all available memory.
+Without that step, DOS cannot load `AMLUI.EXE` because the freshly started `.COM` stub owns essentially all available memory.
 
 ## Error Handling
 
 For the first version:
 
-- if `AMLEDIT.EXE` cannot be started, print an error and exit
+- if `AMLUI.EXE` cannot be started, print an error and exit
 - if `AML2.RUN` cannot be parsed, print an error, delete it, and exit
 - if the target command fails to start, print an error and return to the launcher loop
 

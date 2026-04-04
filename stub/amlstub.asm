@@ -290,10 +290,10 @@ print_dollar proc near
     ret
 print_dollar endp
 
-launcher_name     db 'AMLEDIT.EXE',0
+launcher_name     db 'AMLUI.EXE',0
 command_shell     db 'A:\COMMAND.COM',0
 run_file_name     db 'AML2.RUN',0
-msg_launcher_fail db 'NO AMLEDIT.EXE',13,10,'$'
+msg_launcher_fail db 'NO AMLUI.EXE',13,10,'$'
 msg_command_fail  db 'RUN FAILED',13,10,'$'
 msg_resize_fail   db 'NO MEMORY',13,10,'$'
 msg_usage         db 'AML usage: AML [/E]',13,10,'$'

@@ -52,7 +52,7 @@ run_case() {
     cp "$BASE_IMG" "$BOOT_IMG"
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
     if [[ "$include_launcher" == "yes" ]]; then
-        mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
+        mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
     fi
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
@@ -108,7 +108,7 @@ BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/bui
 mkdir -p "$OUT_DIR"
 download_base_img
 
-run_case "missing launcher" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLEDIT.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
+run_case "missing launcher" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
 run_case "bad path" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""
 
 echo "failure path checks passed"

@@ -41,11 +41,11 @@ grep -q "Press any key to return" "$TRACE_LOG"
 
 (
     cd "$REPO_ROOT"
-    timeout 10 "$KVIKDOS_BIN" amledit.exe > "$USAGE_LOG" 2>&1 || true
+    timeout 10 "$KVIKDOS_BIN" amlui.exe > "$USAGE_LOG" 2>&1 || true
 )
 
-grep -q "AMLEDIT usage:" "$USAGE_LOG"
-grep -q "AMLEDIT /V | /E | /?" "$USAGE_LOG"
+grep -q "AMLUI usage:" "$USAGE_LOG"
+grep -q "AMLUI /V | /E | /?" "$USAGE_LOG"
 grep -q "Run AML.COM instead." "$USAGE_LOG"
 
 rm -f "$REPO_ROOT/AML2.AUT" "$REPO_ROOT/AML2.TRC"

@@ -38,8 +38,8 @@ static int aml_arg_is(const char *arg, const char *value)
 
 static void aml_print_usage(void)
 {
-    printf("AMLEDIT usage:\r\n");
-    printf("  AMLEDIT /V | /E | /?\r\n");
+    printf("AMLUI usage:\r\n");
+    printf("  AMLUI /V | /E | /?\r\n");
     printf("\r\n");
     printf("  /V   View mode.\r\n");
     printf("  /E   Enable editor mode.\r\n");
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     if (rc != 0) {
         aml_ui_show_message(
             "No launcher.cfg yet",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AMLEDIT /E to create entries.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to create entries.",
             state.editor_mode ? "Use F2 to save the new configuration." : "",
             ""
         );
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     } else if (state.entry_count <= 0) {
         aml_ui_show_message(
             "Launcher config is empty",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AMLEDIT /E to add entries.",
+            state.editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to add entries.",
             state.editor_mode ? "Use F2 to save changes." : "",
             ""
         );
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                     &state,
                     "Viewer mode",
                     "Editing is disabled in the default mode.",
-                    "Run AMLEDIT /E to save changes.",
+                    "Run AMLUI /E to save changes.",
                     ""
                 );
                 aml_ui_wait_for_ack();

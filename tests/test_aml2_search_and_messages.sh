@@ -46,12 +46,12 @@ run_case() {
 
     echo "=== $name ==="
     cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amledit.exe" ::AMLEDIT.EXE
+    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
     if [[ -n "$auto" ]]; then
         mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
     fi
-    printf '@ECHO OFF\r\nAMLEDIT.EXE /V\r\n' > "$AUTOEXEC"
+    printf '@ECHO OFF\r\nAMLUI.EXE /V\r\n' > "$AUTOEXEC"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"
@@ -108,6 +108,6 @@ run_case \
     "f10" \
     "A>" \
     ""
-grep -q 'Run AMLEDIT /E to add entries.' "$SCREEN_LOG"
+grep -q 'Run AMLUI /E to add entries.' "$SCREEN_LOG"
 
 echo "search/message tests passed"

@@ -127,7 +127,7 @@ else
 fi
 
 cp "$BASE_IMG" "$BOOT_IMG"
-copy_into_image "$REPO_ROOT/amledit.exe"
+copy_into_image "$REPO_ROOT/amlui.exe"
 copy_into_image "$REPO_ROOT/aml.com"
 copy_launcher_config "$LAUNCHER_CFG_SOURCE"
 
