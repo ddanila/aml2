@@ -79,15 +79,15 @@ static int confirm_delete(const AmlState *state)
     for (;;) {
         int key = getch();
 
-        if (key == AML_KEY_ESC) {
+        if (key == UI_KEY_ESC) {
             return 0;
         }
-        if (key == AML_KEY_ENTER) {
+        if (key == UI_KEY_ENTER) {
             return 1;
         }
-        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+        if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             key = getch();
-            if (key == AML_KEY_ESC) {
+            if (key == UI_KEY_ESC) {
                 return 0;
             }
         }
@@ -96,7 +96,7 @@ static int confirm_delete(const AmlState *state)
 
 static int edit_field(int key, char *buf, int max_len, int *len, int *cursor)
 {
-    if (key == AML_KEY_BACKSPACE) {
+    if (key == UI_KEY_BACKSPACE) {
         if (*cursor > 0 && *len > 0) {
             memmove(&buf[*cursor - 1], &buf[*cursor], (size_t)(*len - *cursor + 1));
             (*len)--;
@@ -104,30 +104,30 @@ static int edit_field(int key, char *buf, int max_len, int *len, int *cursor)
         }
         return 1;
     }
-    if (key == AML_KEY_DEL) {
+    if (key == UI_KEY_DEL) {
         if (*cursor < *len) {
             memmove(&buf[*cursor], &buf[*cursor + 1], (size_t)(*len - *cursor));
             (*len)--;
         }
         return 1;
     }
-    if (key == AML_KEY_LEFT) {
+    if (key == UI_KEY_LEFT) {
         if (*cursor > 0) {
             (*cursor)--;
         }
         return 1;
     }
-    if (key == AML_KEY_RIGHT) {
+    if (key == UI_KEY_RIGHT) {
         if (*cursor < *len) {
             (*cursor)++;
         }
         return 1;
     }
-    if (key == AML_KEY_HOME) {
+    if (key == UI_KEY_HOME) {
         *cursor = 0;
         return 1;
     }
-    if (key == AML_KEY_END) {
+    if (key == UI_KEY_END) {
         *cursor = *len;
         return 1;
     }
@@ -203,7 +203,7 @@ static int prompt_entry(AmlEntry *entry, int is_new)
         ui_show_cursor();
 
         key = getch();
-        if (key == AML_KEY_ESC) {
+        if (key == UI_KEY_ESC) {
             ui_hide_cursor();
             return 0;
         }
@@ -211,15 +211,15 @@ static int prompt_entry(AmlEntry *entry, int is_new)
             field = (field + 1) % 3;
             continue;
         }
-        if (key == AML_KEY_ENTER) {
+        if (key == UI_KEY_ENTER) {
             if (field < 2) {
                 field++;
             }
             continue;
         }
-        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+        if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             key = getch();
-            if (key == AML_KEY_F2) {
+            if (key == UI_KEY_F2) {
                 if (name[0] == '\0' || command[0] == '\0') {
                     ui_show_message(
                         "Name and command required",
@@ -235,9 +235,9 @@ static int prompt_entry(AmlEntry *entry, int is_new)
                 strcpy(entry->path, path);
                 ui_hide_cursor();
                 return 1;
-            } else if (key == AML_KEY_UP) {
+            } else if (key == UI_KEY_UP) {
                 field = (field + 2) % 3;
-            } else if (key == AML_KEY_DOWN) {
+            } else if (key == UI_KEY_DOWN) {
                 field = (field + 1) % 3;
             } else {
                 if (field == 1) {
@@ -467,17 +467,17 @@ AmlUiAction ui_show_debug_run_menu(const AmlState *state)
         ui_flush();
         key = getch();
 
-        if (key == AML_KEY_ESC) {
+        if (key == UI_KEY_ESC) {
             return (AmlUiAction)-1;
         }
-        if (key == AML_KEY_ENTER) {
+        if (key == UI_KEY_ENTER) {
             return actions[selected];
         }
-        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+        if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             key = getch();
-            if (key == AML_KEY_UP) {
+            if (key == UI_KEY_UP) {
                 selected = (selected + 2) % 3;
-            } else if (key == AML_KEY_DOWN) {
+            } else if (key == UI_KEY_DOWN) {
                 selected = (selected + 1) % 3;
             }
         }

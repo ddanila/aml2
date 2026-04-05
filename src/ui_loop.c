@@ -53,14 +53,14 @@ static int prompt_search(AmlState *state, const char **status)
         ui_flush();
 
         key = getch();
-        if (key == AML_KEY_ESC) {
+        if (key == UI_KEY_ESC) {
             *status = "Search cancelled";
             return 0;
         }
-        if (key == AML_KEY_ENTER) {
+        if (key == UI_KEY_ENTER) {
             return finish_search(state, query, len, status);
         }
-        if (key == AML_KEY_BACKSPACE) {
+        if (key == UI_KEY_BACKSPACE) {
             if (len > 0) {
                 query[--len] = '\0';
             }
@@ -101,41 +101,41 @@ static AmlUiAction apply_test_automation(AmlState *state)
 
 static AmlUiAction handle_extended_key(AmlState *state, int key)
 {
-    if (key == AML_KEY_F1) {
+    if (key == UI_KEY_F1) {
         ui_show_help_overlay(state);
-    } else if (key == AML_KEY_F2) {
+    } else if (key == UI_KEY_F2) {
         return AML_UI_SAVE;
-    } else if (key == AML_KEY_F3) {
+    } else if (key == UI_KEY_F3) {
         ui_show_details_overlay(state);
-    } else if (key == AML_KEY_F4) {
+    } else if (key == UI_KEY_F4) {
         ui_edit_entry(state);
-    } else if (key == AML_KEY_F5) {
+    } else if (key == UI_KEY_F5) {
         ui_move_entry_up(state);
-    } else if (key == AML_KEY_F6) {
+    } else if (key == UI_KEY_F6) {
         ui_move_entry_down(state);
-    } else if (key == AML_KEY_INS) {
+    } else if (key == UI_KEY_INS) {
         ui_insert_entry(state);
-    } else if (key == AML_KEY_F8) {
+    } else if (key == UI_KEY_F8) {
         ui_delete_entry_with_confirm(state);
-    } else if (key == AML_KEY_F9) {
+    } else if (key == UI_KEY_F9) {
         if (ui_has_entries(state)) {
             return ui_show_debug_run_menu(state);
         }
-    } else if (key == AML_KEY_F10) {
+    } else if (key == UI_KEY_F10) {
         return AML_UI_QUIT;
     } else if (!ui_has_entries(state)) {
         return (AmlUiAction)UI_AUTO_NONE;
-    } else if (key == AML_KEY_HOME) {
+    } else if (key == UI_KEY_HOME) {
         ui_select_first(state);
-    } else if (key == AML_KEY_END) {
+    } else if (key == UI_KEY_END) {
         ui_select_last(state);
-    } else if (key == AML_KEY_PGUP) {
+    } else if (key == UI_KEY_PGUP) {
         ui_select_page_up(state);
-    } else if (key == AML_KEY_PGDN) {
+    } else if (key == UI_KEY_PGDN) {
         ui_select_page_down(state);
-    } else if (key == AML_KEY_UP) {
+    } else if (key == UI_KEY_UP) {
         ui_select_prev_wrap(state);
-    } else if (key == AML_KEY_DOWN) {
+    } else if (key == UI_KEY_DOWN) {
         ui_select_next_wrap(state);
     }
 
@@ -181,19 +181,19 @@ AmlUiAction ui_run(AmlState *state)
         wait_for_input_redraw(state, status, &last_second);
         key = getch();
 
-        if (key == AML_KEY_ENTER) {
+        if (key == UI_KEY_ENTER) {
             if (ui_has_entries(state)) {
                 return AML_UI_LAUNCH;
             }
             status = "No launcher entries available";
             continue;
         }
-        if (key == AML_KEY_SLASH && ui_has_entries(state)) {
+        if (key == UI_KEY_SLASH && ui_has_entries(state)) {
             prompt_search(state, &status);
             ui_sync_view_top(state);
             continue;
         }
-        if (key == AML_KEY_EXTENDED || key == AML_KEY_EXTENDED_2) {
+        if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             action = handle_extended_key(state, getch());
             if (action >= 0) {
                 return action;
@@ -202,7 +202,7 @@ AmlUiAction ui_run(AmlState *state)
             status = "";
             continue;
         }
-        if (key == AML_KEY_QUESTION) {
+        if (key == UI_KEY_QUESTION) {
             ui_show_help_overlay(state);
             status = "";
             continue;
