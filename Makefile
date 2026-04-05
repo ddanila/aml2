@@ -65,8 +65,8 @@ build/ui_test.obj: src/ui_test.c src/ui_int.h include/aml.h include/ui.h include
 build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c
 
-build/fakegame.obj: tests/fakegame.c
-	$(WCC) $(CFLAGS) -fo=build/fakegame.obj tests/fakegame.c
+build/fakegame.obj: tests/dos/fakegame.c
+	$(WCC) $(CFLAGS) -fo=build/fakegame.obj tests/dos/fakegame.c
 
 build/amlstub.obj: stub/amlstub.asm
 	$(WASM) -0 -bt=dos -mt -zq -zcm=tasm -fo=build/amlstub.obj -fr=build/amlstub.err stub/amlstub.asm

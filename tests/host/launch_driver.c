@@ -237,6 +237,40 @@ static int aml_check_child_exec(const char *root)
     return 0;
 }
 
+static int aml_check_run_request_io(const char *root)
+{
+    AmlEntry entry;
+    char request_path[PATH_MAX];
+    char command_line[AML_MAX_COMMAND + 4];
+    char path_line[AML_MAX_PATH + 4];
+    FILE *fp;
+
+    aml_fill_entry(&entry, "GAME.EXE", "C:\\GAMES");
+    snprintf(request_path, sizeof(request_path), "%s/AML2.RUN", root);
+
+    if (aml_expect(aml_write_run_request(&entry, request_path) == 0, "run request write succeeds")) return 1;
+
+    fp = fopen(request_path, "r");
+    if (fp == NULL) {
+        perror(request_path);
+        return 1;
+    }
+    if (fgets(command_line, sizeof(command_line), fp) == NULL ||
+        fgets(path_line, sizeof(path_line), fp) == NULL) {
+        fprintf(stderr, "FAIL: run request file incomplete\n");
+        fclose(fp);
+        return 1;
+    }
+    fclose(fp);
+
+    if (aml_expect(strcmp(command_line, "GAME.EXE\n") == 0, "run request command line matches")) return 1;
+    if (aml_expect(strcmp(path_line, "C:\\GAMES\n") == 0, "run request path line matches")) return 1;
+    if (aml_expect(aml_clear_run_request(request_path) == 0, "run request clear succeeds")) return 1;
+    if (aml_expect(access(request_path, F_OK) != 0, "run request removed")) return 1;
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2) {
@@ -247,6 +281,7 @@ int main(int argc, char **argv)
     if (aml_setup_check_tree(argv[1])) return 1;
     if (aml_check_launch_validation(argv[1])) return 1;
     if (aml_check_child_exec(argv[1])) return 1;
+    if (aml_check_run_request_io(argv[1])) return 1;
 
     puts("launch checks passed");
     return 0;

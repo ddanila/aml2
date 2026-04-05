@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+source "$(cd "$(dirname "$0")" && pwd)/../lib/dos.sh"
 
 aml_test_init_paths "aml2_hotkeys_and_help"
 
@@ -44,18 +44,18 @@ aml_test_download_base_img
 
 run_case \
     "extended hotkey range" \
-    "$REPO_ROOT/tests/launcher.hotkeys.cfg" \
+    "$REPO_ROOT/tests/data/cfg/launcher.hotkeys.cfg" \
     "AMLUI.EXE /V" \
-    "$REPO_ROOT/tests/AML2.HKA" \
+    "$REPO_ROOT/tests/data/auto/AML2.HKA" \
     'Entry 36' '' \
     'A>' ''
 grep -q 'Entry 36' "$SCREEN_LOG"
 
 run_case \
     "help dialog" \
-    "$REPO_ROOT/tests/launcher.e2e.cfg" \
+    "$REPO_ROOT/tests/data/cfg/launcher.e2e.cfg" \
     "AMLUI.EXE /E" \
-    "$REPO_ROOT/tests/AML2.HLP" \
+    "$REPO_ROOT/tests/data/auto/AML2.HLP" \
     'EDIT' 'Launcher Help'
 grep -q 'F8     Delete current entry' "$SCREEN_LOG"
 grep -q 'F10    Exit to DOS' "$SCREEN_LOG"

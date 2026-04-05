@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+source "$(cd "$(dirname "$0")" && pwd)/../lib/dos.sh"
 
 aml_test_init_paths "aml2_edit_ops"
 
@@ -27,7 +27,7 @@ run_case() {
     echo "=== $name ==="
     aml_test_reset_boot_img "$BOOT_IMG"
     aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
-    aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/launcher.edit.cfg" ::LAUNCHER.CFG
+    aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/data/cfg/launcher.edit.cfg" ::LAUNCHER.CFG
     aml_test_copy_to_image "$BOOT_IMG" "$auto" ::AML2.AUT
     aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "$launch_cmd"
 
@@ -35,9 +35,7 @@ run_case() {
     aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 20 8 \
         'A>' ''
 
-    mtype -i "$BOOT_IMG" ::LAUNCHER.CFG > "$CFG_LOG"
-    tr -d '\r' < "$CFG_LOG" > "$CFG_LOG.tmp"
-    mv "$CFG_LOG.tmp" "$CFG_LOG"
+    aml_test_extract_normalized_text_file "$BOOT_IMG" ::LAUNCHER.CFG "$CFG_LOG"
 }
 
 trap cleanup EXIT
@@ -46,7 +44,7 @@ echo "Building aml2 for edit-operation tests ..."
 aml_test_build all
 aml_test_download_base_img
 
-run_case "viewer mode blocks save" "AMLUI.EXE /V" "$REPO_ROOT/tests/AML2.VWR"
+run_case "viewer mode blocks save" "AMLUI.EXE /V" "$REPO_ROOT/tests/data/auto/AML2.VWR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
@@ -67,7 +65,7 @@ if lines != expected:
     raise SystemExit(f"unexpected viewer-mode result: {lines!r}")
 PY
 
-run_case "reorder then save" "AMLUI.EXE /E" "$REPO_ROOT/tests/AML2.EDR"
+run_case "reorder then save" "AMLUI.EXE /E" "$REPO_ROOT/tests/data/auto/AML2.EDR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"
@@ -88,7 +86,7 @@ if lines != expected:
     raise SystemExit(f"unexpected reorder result: {lines!r}")
 PY
 
-run_case "delete then save" "AMLUI.EXE /E" "$REPO_ROOT/tests/AML2.EDD"
+run_case "delete then save" "AMLUI.EXE /E" "$REPO_ROOT/tests/data/auto/AML2.EDD"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"
 grep -q '^Gamma|GAMMA.EXE|$' "$CFG_LOG"
 if grep -q '^Beta|BETA.EXE|$' "$CFG_LOG"; then

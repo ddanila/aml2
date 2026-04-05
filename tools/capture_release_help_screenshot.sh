@@ -140,12 +140,12 @@ for _ in $(seq 1 50); do
     sleep 0.2
 done
 
-SCREEN_EXPECT_TIMEOUT="${SCREEN_EXPECT_TIMEOUT:-10}" python3 "$REPO_ROOT/tests/screen_expect.py" \
+SCREEN_EXPECT_TIMEOUT="${SCREEN_EXPECT_TIMEOUT:-10}" python3 "$REPO_ROOT/tests/lib/screen_expect.py" \
     "$QMP_SOCK" "$SCREEN_LOG" \
     'Arvutimuuseum Launcher' 'f1' \
     'Launcher Help' ''
 
-python3 - "$REPO_ROOT/tests/screen_expect.py" "$QMP_SOCK" "$PPM_OUT" "$PNG_OUT" "$PNG_2X_OUT" <<'PY'
+python3 - "$REPO_ROOT/tests/lib/screen_expect.py" "$QMP_SOCK" "$PPM_OUT" "$PNG_OUT" "$PNG_2X_OUT" <<'PY'
 import importlib.util
 import sys
 from PIL import Image

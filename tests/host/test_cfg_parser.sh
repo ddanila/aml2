@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_DIR="$REPO_ROOT/out/cfg_parser"
 TEST_INCLUDE_DIR="$OUT_DIR/test-include"
 BASIC_CFG="$OUT_DIR/cfg-basic.cfg"
@@ -42,7 +42,7 @@ rm -f "$MISSING_CFG" "$SAVED_CFG" "$DRIVER_BIN"
 
 cc -I"$TEST_INCLUDE_DIR" \
    -I"$REPO_ROOT/include" \
-   "$REPO_ROOT/tests/cfg_parser_driver.c" \
+   "$REPO_ROOT/tests/host/cfg_parser_driver.c" \
    "$REPO_ROOT/src/cfg.c" \
    -o "$DRIVER_BIN"
 

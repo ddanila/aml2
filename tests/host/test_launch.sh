@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_DIR="$REPO_ROOT/out/launch"
 TEST_INCLUDE_DIR="$OUT_DIR/test-include"
 DRIVER_BIN="$OUT_DIR/launch_driver"
@@ -62,7 +62,7 @@ cc -include strings.h \
    -Dstricmp=strcasecmp \
    -I"$TEST_INCLUDE_DIR" \
    -I"$REPO_ROOT/include" \
-   "$REPO_ROOT/tests/launch_driver.c" \
+   "$REPO_ROOT/tests/host/launch_driver.c" \
    "$REPO_ROOT/src/launch.c" \
    -o "$DRIVER_BIN"
 

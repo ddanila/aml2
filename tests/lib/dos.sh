@@ -7,7 +7,7 @@ AML_TEST_QEMU_PID=""
 aml_test_init_paths() {
     local test_name="$1"
 
-    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
     AML_TEST_OUT_ROOT="$REPO_ROOT/out"
     AML_TEST_OUT_DIR="$AML_TEST_OUT_ROOT/$test_name"
     AML_TEST_BASE_IMG="${MSDOS_BASE_IMG:-$AML_TEST_OUT_ROOT/floppy-minimal.img}"
@@ -105,7 +105,7 @@ aml_test_run_screen_case() {
     aml_test_start_qemu "$boot_img" "$qmp_sock" "$qemu_log" "$qemu_timeout"
     aml_test_wait_for_qmp "$qmp_sock"
 
-    SCREEN_EXPECT_TIMEOUT="$expect_timeout" python3 "$REPO_ROOT/tests/screen_expect.py" \
+    SCREEN_EXPECT_TIMEOUT="$expect_timeout" python3 "$REPO_ROOT/tests/lib/screen_expect.py" \
         "$qmp_sock" "$screen_log" \
         "$@"
 
@@ -157,4 +157,34 @@ aml_test_build() {
     fi
 
     BUILD_TARGETS="$targets" EXTRA_CFLAGS="$cflags" "$REPO_ROOT/tools/build.sh"
+}
+
+aml_test_extract_text_file() {
+    local boot_img="$1"
+    local image_path="$2"
+    local host_path="$3"
+
+    mtype -i "$boot_img" "$image_path" > "$host_path"
+}
+
+aml_test_extract_normalized_text_file() {
+    local boot_img="$1"
+    local image_path="$2"
+    local host_path="$3"
+
+    aml_test_extract_text_file "$boot_img" "$image_path" "$host_path"
+    tr -d '\r' < "$host_path" > "$host_path.tmp"
+    mv "$host_path.tmp" "$host_path"
+}
+
+aml_test_extract_optional_normalized_text_file() {
+    local boot_img="$1"
+    local image_path="$2"
+    local host_path="$3"
+
+    if mdir -i "$boot_img" "$image_path" >/dev/null 2>&1; then
+        aml_test_extract_normalized_text_file "$boot_img" "$image_path" "$host_path"
+    else
+        : > "$host_path"
+    fi
 }

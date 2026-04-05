@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+source "$(cd "$(dirname "$0")" && pwd)/../lib/dos.sh"
 
 aml_test_init_paths "aml2_failure_paths"
 
@@ -45,12 +45,7 @@ run_case() {
         "$pattern" '' \
         "$final_pattern" ''
 
-    if mdir -i "$BOOT_IMG" ::AML2.TRC >/dev/null 2>&1; then
-        mtype -i "$BOOT_IMG" ::AML2.TRC > "$TRACE_LOG"
-        tr -d '\r' < "$TRACE_LOG" > "$TRACE_NORM"
-    else
-        : > "$TRACE_NORM"
-    fi
+    aml_test_extract_optional_normalized_text_file "$BOOT_IMG" ::AML2.TRC "$TRACE_NORM"
 
     grep -q "$pattern" "$SCREEN_LOG"
     if [[ -n "$final_pattern" ]]; then
@@ -64,8 +59,8 @@ echo "Building launcher, stub, and fake game ..."
 aml_test_build test-build
 aml_test_download_base_img
 
-run_case "missing launcher" "AML.COM" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
-run_case "bad path" "AML.COM" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""
-run_case "direct amlui launch" "AMLUI.EXE /V" "$REPO_ROOT/tests/launcher.e2e.cfg" "yes" "Start with AML.COM to launch games." "$REPO_ROOT/tests/AML2.LAUNCH" ""
+run_case "missing launcher" "AML.COM" "$REPO_ROOT/tests/data/cfg/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/data/auto/AML2.AUT" "A>"
+run_case "bad path" "AML.COM" "$REPO_ROOT/tests/data/cfg/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/data/auto/AML2.LAUNCH" ""
+run_case "direct amlui launch" "AMLUI.EXE /V" "$REPO_ROOT/tests/data/cfg/launcher.e2e.cfg" "yes" "Start with AML.COM to launch games." "$REPO_ROOT/tests/data/auto/AML2.LAUNCH" ""
 
 echo "failure path checks passed"

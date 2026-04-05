@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+source "$(cd "$(dirname "$0")" && pwd)/../lib/dos.sh"
 
 aml_test_init_paths "aml2_e2e"
 
@@ -45,8 +45,8 @@ aml_test_reset_boot_img "$BOOT_IMG"
 aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
 aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
 aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
-aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/launcher.e2e.cfg" ::LAUNCHER.CFG
-aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/AML2.AUT" ::AML2.AUT
+aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/data/cfg/launcher.e2e.cfg" ::LAUNCHER.CFG
+aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/data/auto/AML2.AUT" ::AML2.AUT
 aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "AML.COM"
 
 echo "Booting QEMU ..."
@@ -55,10 +55,10 @@ aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 35 12
     'Arvutimuuseum Launcher' '' \
     'A>' ''
 
-TRACE_LOG="$OUT_DIR/aml2-trace.log"
-mtype -i "$BOOT_IMG" ::AML2.TRC > "$TRACE_LOG"
 TRACE_NORM="$OUT_DIR/aml2-trace.norm.log"
-tr -d '\r' < "$TRACE_LOG" > "$TRACE_NORM"
+TRACE_LOG="$OUT_DIR/aml2-trace.log"
+aml_test_extract_text_file "$BOOT_IMG" ::AML2.TRC "$TRACE_LOG"
+aml_test_extract_normalized_text_file "$BOOT_IMG" ::AML2.TRC "$TRACE_NORM"
 
 echo ""
 echo "--- aml2 checks ---"
