@@ -68,7 +68,7 @@ run_case() {
 trap cleanup EXIT
 
 echo "Building launcher, stub, and fake game ..."
-BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+aml_test_build test-build
 aml_test_download_base_img
 
 run_case "missing launcher" "AML.COM" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"

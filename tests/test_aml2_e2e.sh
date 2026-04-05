@@ -36,7 +36,7 @@ trap cleanup EXIT
 echo "=== aml2 DOS e2e ==="
 
 echo "Building launcher, stub, and fake game ..."
-BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+aml_test_build test-build
 
 aml_test_download_base_img
 

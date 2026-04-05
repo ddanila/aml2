@@ -48,7 +48,7 @@ run_case() {
 trap cleanup EXIT
 
 echo "Building aml2 for search/message tests ..."
-BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+aml_test_build all
 aml_test_download_base_img
 
 run_case \

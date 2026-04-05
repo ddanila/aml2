@@ -93,3 +93,14 @@ aml_test_wait_for_qmp() {
 aml_test_stop_qemu() {
     aml_test_cleanup_qemu
 }
+
+aml_test_build() {
+    local targets="${1:-all}"
+    local cflags="${2:--DAML_TEST_HOOKS=1}"
+
+    if [[ "${AML_TEST_SHARED_BUILD:-0}" == "1" ]]; then
+        return
+    fi
+
+    BUILD_TARGETS="$targets" EXTRA_CFLAGS="$cflags" "$REPO_ROOT/tools/build.sh"
+}

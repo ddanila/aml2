@@ -10,6 +10,11 @@ run_test() {
     bash "$REPO_ROOT/$script"
 }
 
+echo "=== shared test build ==="
+AML_TEST_SHARED_BUILD=0 BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+
+export AML_TEST_SHARED_BUILD=1
+
 run_test tests/test_cfg_parser.sh
 run_test tests/test_launch.sh
 run_test tests/test_aml2_tui_navigation.sh

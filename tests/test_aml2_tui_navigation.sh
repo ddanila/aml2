@@ -21,7 +21,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Building aml2 for TUI navigation test ..."
-BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
+aml_test_build all
 aml_test_download_base_img
 
 cp "$BASE_IMG" "$BOOT_IMG"
