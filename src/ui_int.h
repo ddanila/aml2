@@ -63,32 +63,56 @@ enum {
     UI_AUTO_REDRAW = -2
 };
 
-typedef enum UiDialogItemKind {
-    UI_DIALOG_ITEM_TEXT_AT,
-    UI_DIALOG_ITEM_TEXT_CENTERED,
-    UI_DIALOG_ITEM_TEXT_ELLIPSIS,
-    UI_DIALOG_ITEM_DETAIL_LINE
-} UiDialogItemKind;
-
-typedef struct UiDialogItem {
-    UiDialogItemKind kind;
-    int row;
-    int col;
-    int width;
-    const char *label;
-    const char *text;
-    unsigned char attr;
-} UiDialogItem;
-
-typedef struct UiDialogSpec {
+typedef struct UiDialogBox {
     int left;
     int top;
     int right;
     int bottom;
     const char *title;
-    const UiDialogItem *items;
-    int item_count;
-} UiDialogSpec;
+} UiDialogBox;
+
+typedef struct UiNoticeDialog {
+    UiDialogBox box;
+    const char *line1;
+    const char *line2;
+    const char *line3;
+} UiNoticeDialog;
+
+typedef struct UiConfirmDialog {
+    UiDialogBox box;
+    const char *question;
+    const char *value;
+    int value_col;
+    int value_width;
+    const char *footer;
+} UiConfirmDialog;
+
+typedef struct UiDetailDialogRow {
+    const char *label;
+    const char *value;
+} UiDetailDialogRow;
+
+typedef struct UiDetailDialog {
+    UiDialogBox box;
+    const UiDetailDialogRow *rows;
+    int row_count;
+    int first_row;
+    int row_step;
+    unsigned char value_attr;
+} UiDetailDialog;
+
+typedef struct UiTextLineDialogLine {
+    int row;
+    const char *text;
+    unsigned char attr;
+} UiTextLineDialogLine;
+
+typedef struct UiTextLineDialog {
+    UiDialogBox box;
+    int col;
+    const UiTextLineDialogLine *lines;
+    int line_count;
+} UiTextLineDialog;
 
 void ui_hide_cursor(void);
 void ui_show_cursor(void);
@@ -109,7 +133,21 @@ unsigned ui_current_second(void);
 void ui_draw_frame(void);
 int ui_dialog_row(int top, int inner_row);
 void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title);
-void ui_draw_dialog(const UiDialogSpec *spec);
+UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title);
+UiNoticeDialog ui_notice_dialog(UiDialogBox box, const char *line1, const char *line2, const char *line3);
+UiConfirmDialog ui_confirm_dialog(UiDialogBox box, const char *question, const char *value,
+                                  int value_col, int value_width, const char *footer);
+UiDetailDialogRow ui_detail_dialog_row(const char *label, const char *value);
+UiDetailDialog ui_detail_dialog_spec(UiDialogBox box, const UiDetailDialogRow *rows,
+                                     int row_count, int first_row, int row_step,
+                                     unsigned char value_attr);
+UiTextLineDialogLine ui_text_line_dialog_line(int row, const char *text, unsigned char attr);
+UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
+                                     const UiTextLineDialogLine *lines, int line_count);
+void ui_draw_notice_dialog(const UiNoticeDialog *dialog);
+void ui_draw_confirm_dialog(const UiConfirmDialog *dialog);
+void ui_draw_detail_dialog(const UiDetailDialog *dialog);
+void ui_draw_text_line_dialog(const UiTextLineDialog *dialog);
 void ui_draw_header_on_frame_common(int modified);
 void ui_draw_header_on_frame(const AmlState *state);
 int ui_hotkey_index(int key);

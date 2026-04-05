@@ -336,33 +336,150 @@ void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char 
     draw_dialog_box(left, top, right, bottom, title);
 }
 
-static void draw_dialog_item(int top, const UiDialogItem *item)
+UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title)
 {
-    int row = ui_dialog_row(top, item->row);
+    UiDialogBox box;
 
-    switch (item->kind) {
-    case UI_DIALOG_ITEM_TEXT_AT:
-        ui_write_at(item->col, row, item->text, item->attr);
-        break;
-    case UI_DIALOG_ITEM_TEXT_CENTERED:
-        ui_write_centered(row, item->text, item->attr);
-        break;
-    case UI_DIALOG_ITEM_TEXT_ELLIPSIS:
-        ui_write_ellipsis(item->col, row, item->text, item->width, item->attr);
-        break;
-    case UI_DIALOG_ITEM_DETAIL_LINE:
-        ui_draw_detail_line(row, item->label, item->text, item->attr);
-        break;
+    box.left = left;
+    box.top = top;
+    box.right = right;
+    box.bottom = bottom;
+    box.title = title;
+    return box;
+}
+
+UiNoticeDialog ui_notice_dialog(UiDialogBox box, const char *line1, const char *line2, const char *line3)
+{
+    UiNoticeDialog dialog;
+
+    dialog.box = box;
+    dialog.line1 = line1;
+    dialog.line2 = line2;
+    dialog.line3 = line3;
+    return dialog;
+}
+
+UiConfirmDialog ui_confirm_dialog(UiDialogBox box, const char *question, const char *value,
+                                  int value_col, int value_width, const char *footer)
+{
+    UiConfirmDialog dialog;
+
+    dialog.box = box;
+    dialog.question = question;
+    dialog.value = value;
+    dialog.value_col = value_col;
+    dialog.value_width = value_width;
+    dialog.footer = footer;
+    return dialog;
+}
+
+UiDetailDialogRow ui_detail_dialog_row(const char *label, const char *value)
+{
+    UiDetailDialogRow row;
+
+    row.label = label;
+    row.value = value;
+    return row;
+}
+
+UiDetailDialog ui_detail_dialog_spec(UiDialogBox box, const UiDetailDialogRow *rows,
+                                     int row_count, int first_row, int row_step,
+                                     unsigned char value_attr)
+{
+    UiDetailDialog dialog;
+
+    dialog.box = box;
+    dialog.rows = rows;
+    dialog.row_count = row_count;
+    dialog.first_row = first_row;
+    dialog.row_step = row_step;
+    dialog.value_attr = value_attr;
+    return dialog;
+}
+
+UiTextLineDialogLine ui_text_line_dialog_line(int row, const char *text, unsigned char attr)
+{
+    UiTextLineDialogLine line;
+
+    line.row = row;
+    line.text = text;
+    line.attr = attr;
+    return line;
+}
+
+UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
+                                     const UiTextLineDialogLine *lines, int line_count)
+{
+    UiTextLineDialog dialog;
+
+    dialog.box = box;
+    dialog.col = col;
+    dialog.lines = lines;
+    dialog.line_count = line_count;
+    return dialog;
+}
+
+void ui_draw_notice_dialog(const UiNoticeDialog *dialog)
+{
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+
+    if (dialog->line1 != NULL && dialog->line1[0] != '\0') {
+        ui_write_centered(ui_dialog_row(dialog->box.top, 2), dialog->line1, UI_ATTR_DIALOG_TEXT);
+    }
+    if (dialog->line2 != NULL && dialog->line2[0] != '\0') {
+        ui_write_centered(ui_dialog_row(dialog->box.top, 3), dialog->line2, UI_ATTR_DIALOG_DIM);
+    }
+    if (dialog->line3 != NULL && dialog->line3[0] != '\0') {
+        ui_write_centered(ui_dialog_row(dialog->box.top, 5), dialog->line3, UI_ATTR_HELP);
     }
 }
 
-void ui_draw_dialog(const UiDialogSpec *spec)
+void ui_draw_confirm_dialog(const UiConfirmDialog *dialog)
+{
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+    ui_write_centered(ui_dialog_row(dialog->box.top, 2), dialog->question, UI_ATTR_DIALOG_TEXT);
+    ui_write_ellipsis(
+        dialog->value_col, ui_dialog_row(dialog->box.top, 3),
+        dialog->value, dialog->value_width, UI_ATTR_DIALOG_DIM
+    );
+    ui_write_centered(ui_dialog_row(dialog->box.top, 5), dialog->footer, UI_ATTR_HELP);
+}
+
+void ui_draw_detail_dialog(const UiDetailDialog *dialog)
 {
     int i;
 
-    draw_dialog_box(spec->left, spec->top, spec->right, spec->bottom, spec->title);
-    for (i = 0; i < spec->item_count; ++i) {
-        draw_dialog_item(spec->top, &spec->items[i]);
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+    for (i = 0; i < dialog->row_count; ++i) {
+        ui_draw_detail_line(
+            ui_dialog_row(dialog->box.top, dialog->first_row + (i * dialog->row_step)),
+            dialog->rows[i].label,
+            dialog->rows[i].value,
+            dialog->value_attr
+        );
+    }
+}
+
+void ui_draw_text_line_dialog(const UiTextLineDialog *dialog)
+{
+    int i;
+
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+    for (i = 0; i < dialog->line_count; ++i) {
+        ui_write_at(
+            dialog->col,
+            ui_dialog_row(dialog->box.top, dialog->lines[i].row),
+            dialog->lines[i].text,
+            dialog->lines[i].attr
+        );
     }
 }
 
@@ -615,49 +732,9 @@ void ui_draw_detail_line(int row, const char *label, const char *value, unsigned
 
 static void draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    UiDialogItem items[3];
-    UiDialogSpec spec;
-    int item_count = 0;
+    UiNoticeDialog dialog = ui_notice_dialog(ui_dialog_box(12, 8, 67, 16, title), line1, line2, line3);
 
-    if (line1 != NULL && line1[0] != '\0') {
-        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
-        items[item_count].row = 2;
-        items[item_count].col = 0;
-        items[item_count].width = 0;
-        items[item_count].label = NULL;
-        items[item_count].text = line1;
-        items[item_count].attr = UI_ATTR_DIALOG_TEXT;
-        item_count++;
-    }
-    if (line2 != NULL && line2[0] != '\0') {
-        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
-        items[item_count].row = 3;
-        items[item_count].col = 0;
-        items[item_count].width = 0;
-        items[item_count].label = NULL;
-        items[item_count].text = line2;
-        items[item_count].attr = UI_ATTR_DIALOG_DIM;
-        item_count++;
-    }
-    if (line3 != NULL && line3[0] != '\0') {
-        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
-        items[item_count].row = 5;
-        items[item_count].col = 0;
-        items[item_count].width = 0;
-        items[item_count].label = NULL;
-        items[item_count].text = line3;
-        items[item_count].attr = UI_ATTR_HELP;
-        item_count++;
-    }
-
-    spec.left = 12;
-    spec.top = 8;
-    spec.right = 67;
-    spec.bottom = 16;
-    spec.title = title;
-    spec.items = items;
-    spec.item_count = item_count;
-    ui_draw_dialog(&spec);
+    ui_draw_notice_dialog(&dialog);
 }
 
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
