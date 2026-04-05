@@ -203,7 +203,7 @@ int ui_hotkey_index(int key);
 char ui_hotkey_char(int index);
 int ui_find_match(const AmlState *state, const char *needle);
 void ui_sync_view_top(AmlState *state);
-void ui_render(const AmlState *state, const char *status);
+void ui_render(const AmlState *state);
 int ui_read_auto_line(char *line, unsigned line_size);
 void ui_trace_event(const char *event_name);
 

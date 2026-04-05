@@ -62,7 +62,7 @@ void ui_show_details_overlay(const AmlState *state)
             rows, 4, 2, 2, UI_ATTR_DIALOG_DIM
         );
 
-        ui_render(state, "Details");
+        ui_render(state);
         ui_draw_detail_dialog(&dialog);
     }
     ui_flush();
@@ -86,7 +86,7 @@ static int confirm_delete(const AmlState *state)
             "Enter delete  Esc cancel"
         );
 
-        ui_render(state, "Delete");
+        ui_render(state);
         ui_draw_confirm_dialog(&dialog);
     }
     ui_flush();
@@ -430,7 +430,7 @@ void ui_show_help_overlay(const AmlState *state)
 
     dialog = ui_text_line_dialog(ui_dialog_box(10, 6, 69, 19, "Launcher Help"), 13, lines, 10);
 
-    ui_render(state, "Help");
+    ui_render(state);
     ui_draw_text_line_dialog(&dialog);
 
     ui_flush();
@@ -455,7 +455,7 @@ AmlUiAction ui_show_debug_run_menu(const AmlState *state)
         int key;
         UiMenuDialog dialog;
 
-        ui_render(state, "Debug Run");
+        ui_render(state);
         dialog = ui_menu_dialog(
             ui_dialog_box(10, 6, 69, 18, "Debug Run"),
             2, 14,

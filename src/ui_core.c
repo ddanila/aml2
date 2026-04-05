@@ -863,9 +863,8 @@ static void draw_entries(const AmlState *state)
     draw_scrollbar(state);
 }
 
-void ui_render(const AmlState *state, const char *status)
+void ui_render(const AmlState *state)
 {
-    (void)status;
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     ui_draw_frame();
     ui_draw_header_on_frame(state);
@@ -892,7 +891,7 @@ void ui_show_message(const char *title, const char *line1, const char *line2, co
 void ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3)
 {
     ui_hide_cursor();
-    ui_render(state, "");
+    ui_render(state);
     draw_notice_box(title, line1, line2, line3);
     ui_flush();
 }
@@ -914,9 +913,9 @@ void ui_shutdown(void)
     ui_flush();
 }
 
-void ui_draw(const AmlState *state, const char *status)
+void ui_draw(const AmlState *state)
 {
     ui_hide_cursor();
-    ui_render(state, status);
+    ui_render(state);
     ui_flush();
 }

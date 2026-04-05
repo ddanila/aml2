@@ -27,11 +27,6 @@ OBJS = \
 	$(CORE_OBJS) \
 	$(UI_OBJS)
 
-BIGFONT_OBJS = \
-	build/bigfont_demo.obj \
-	build/ui_bigtext.obj \
-	build/ui_core.obj
-
 FAKEGAME_OBJS = \
 	build/fakegame.obj
 
@@ -77,9 +72,6 @@ build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.
 build/fakegame.obj: tests/dos/fakegame.c
 	$(WCC) $(CFLAGS) -fo=build/fakegame.obj tests/dos/fakegame.c
 
-build/bigfont_demo.obj: build src/bigfont_demo.c src/ui_int.h include/ui.h include/aml.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/bigfont_demo.obj src/bigfont_demo.c
-
 build/amlstub.obj: stub/amlstub.asm
 	$(WASM) -0 -bt=dos -mt -zq -zcm=tasm -fo=build/amlstub.obj -fr=build/amlstub.err stub/amlstub.asm
 
@@ -92,8 +84,5 @@ aml.com: build/amlstub.obj tools/obj2com.py
 fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
-bigfont.exe: $(BIGFONT_OBJS)
-	$(WLINK) $(LDFLAGS) name bigfont.exe file { $(BIGFONT_OBJS) }
-
 clean:
-	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe bigfont.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h
+	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h

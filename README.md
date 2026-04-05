@@ -135,12 +135,6 @@ To copy extra DOS files onto the floppy image before boot:
 ./tools/run_qemu_manual.sh path/to/GAME.EXE path/to/EXTRA.BAT
 ```
 
-Big-font VGA text-mode experiment:
-
-```bash
-./tools/run_qemu_bigfont.sh
-```
-
 ## Tests
 
 Main checks:

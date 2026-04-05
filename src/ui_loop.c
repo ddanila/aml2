@@ -6,37 +6,16 @@
 #include "ui_ops.h"
 #include "ui_state.h"
 
-static void update_search_status(AmlState *state, const char *query, int len, const char **status)
+static void update_search_selection(AmlState *state, const char *query)
 {
     int match = ui_find_match(state, query);
 
     if (match >= 0) {
         ui_select_index(state, match);
-        *status = "Search matched";
-    } else if (len == 0) {
-        *status = "Search cleared";
-    } else {
-        *status = "No matching entry";
     }
 }
 
-static int finish_search(AmlState *state, const char *query, int len, const char **status)
-{
-    int match = ui_find_match(state, query);
-
-    if (match >= 0) {
-        ui_select_index(state, match);
-        *status = "Search matched";
-    } else if (len == 0) {
-        *status = "Select a program";
-    } else {
-        *status = "No matching entry";
-    }
-
-    return 0;
-}
-
-static int prompt_search(AmlState *state, const char **status)
+static void prompt_search(AmlState *state)
 {
     char query[UI_SEARCH_MAX + 1];
     int len = 0;
@@ -46,7 +25,7 @@ static int prompt_search(AmlState *state, const char **status)
     for (;;) {
         int key;
 
-        ui_render(state, *status);
+        ui_render(state);
         ui_fill_rect(3, 23, 76, 23, ' ', UI_ATTR_STATUS);
         ui_write_at(3, 23, "Find:", UI_ATTR_MUTED);
         ui_write_padded(9, 23, query, UI_SEARCH_MAX, UI_ATTR_STATUS);
@@ -54,11 +33,14 @@ static int prompt_search(AmlState *state, const char **status)
 
         key = getch();
         if (key == UI_KEY_ESC) {
-            *status = "Search cancelled";
-            return 0;
+            return;
         }
         if (key == UI_KEY_ENTER) {
-            return finish_search(state, query, len, status);
+            int match = ui_find_match(state, query);
+            if (match >= 0) {
+                ui_select_index(state, match);
+            }
+            return;
         }
         if (key == UI_KEY_BACKSPACE) {
             if (len > 0) {
@@ -71,17 +53,17 @@ static int prompt_search(AmlState *state, const char **status)
             continue;
         }
 
-        update_search_status(state, query, len, status);
+        update_search_selection(state, query);
     }
 }
 
-static void wait_for_input_redraw(AmlState *state, const char *status, unsigned *last_second)
+static void wait_for_input_redraw(AmlState *state, unsigned *last_second)
 {
     while (!kbhit()) {
         unsigned now_second = ui_current_second();
 
         if (now_second != *last_second) {
-            ui_draw(state, status);
+            ui_draw(state);
             *last_second = now_second;
         }
         delay(50);
@@ -157,7 +139,6 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
 
 AmlUiAction ui_run(AmlState *state)
 {
-    const char *status = "";
     unsigned last_second = 60;
 
     ui_sync_view_top(state);
@@ -166,7 +147,7 @@ AmlUiAction ui_run(AmlState *state)
         AmlUiAction action;
         int key;
 
-        ui_draw(state, status);
+        ui_draw(state);
         last_second = ui_current_second();
 
         action = apply_test_automation(state);
@@ -178,18 +159,17 @@ AmlUiAction ui_run(AmlState *state)
             return action;
         }
 
-        wait_for_input_redraw(state, status, &last_second);
+        wait_for_input_redraw(state, &last_second);
         key = getch();
 
         if (key == UI_KEY_ENTER) {
             if (ui_has_entries(state)) {
                 return AML_UI_LAUNCH;
             }
-            status = "No launcher entries available";
             continue;
         }
         if (key == UI_KEY_SLASH && ui_has_entries(state)) {
-            prompt_search(state, &status);
+            prompt_search(state);
             ui_sync_view_top(state);
             continue;
         }
@@ -199,23 +179,16 @@ AmlUiAction ui_run(AmlState *state)
                 return action;
             }
             ui_sync_view_top(state);
-            status = "";
             continue;
         }
         if (key == UI_KEY_QUESTION) {
             ui_show_help_overlay(state);
-            status = "";
             continue;
         }
 
         action = handle_hotkey(state, key);
         if (action >= 0) {
             return action;
-        }
-        if (isprint(key)) {
-            status = "Unknown key";
-        } else {
-            status = "";
         }
     }
 }

@@ -14,7 +14,7 @@ typedef enum AmlUiAction {
 
 void ui_init(void);
 void ui_shutdown(void);
-void ui_draw(const AmlState *state, const char *status);
+void ui_draw(const AmlState *state);
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3);
 void ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3);
 void ui_wait_for_ack(void);

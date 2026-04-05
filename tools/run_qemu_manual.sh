@@ -112,7 +112,7 @@ need_tool qemu-system-i386
 
 cd "$REPO_ROOT"
 
-if [[ $# -gt 0 && "${1##*.}" == "cfg" ]]; then
+if [[ $# -gt 0 && "${1##*.}" =~ ^[Cc][Ff][Gg]$ ]]; then
     LAUNCHER_CFG_SOURCE="$1"
     shift
 fi
