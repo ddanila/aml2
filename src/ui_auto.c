@@ -3,6 +3,7 @@
 
 #include "ui_int.h"
 #include "ui_ops.h"
+#include "ui_state.h"
 
 AmlUiAction aml_ui_apply_automation(AmlState *state)
 {
@@ -24,51 +25,37 @@ AmlUiAction aml_ui_apply_automation(AmlState *state)
     }
 
     if (strcmp(line, "up") == 0 && state->entry_count > 0) {
-        if (state->selected > 0) {
-            state->selected--;
-        } else {
-            state->selected = state->entry_count - 1;
-        }
+        aml_ui_select_prev_wrap(state);
         aml_ui_trace_event("auto_up");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "down") == 0 && state->entry_count > 0) {
-        if (state->selected < state->entry_count - 1) {
-            state->selected++;
-        } else {
-            state->selected = 0;
-        }
+        aml_ui_select_next_wrap(state);
         aml_ui_trace_event("auto_down");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "home") == 0 && state->entry_count > 0) {
-        state->selected = 0;
+        aml_ui_select_first(state);
         aml_ui_trace_event("auto_home");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "end") == 0 && state->entry_count > 0) {
-        state->selected = state->entry_count - 1;
+        aml_ui_select_last(state);
         aml_ui_trace_event("auto_end");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "pgup") == 0 && state->entry_count > 0) {
-        state->selected -= AML_UI_LIST_ROWS;
-        if (state->selected < 0) {
-            state->selected = 0;
-        }
+        aml_ui_select_page_up(state);
         aml_ui_trace_event("auto_pgup");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "pgdn") == 0 && state->entry_count > 0) {
-        state->selected += AML_UI_LIST_ROWS;
-        if (state->selected >= state->entry_count) {
-            state->selected = state->entry_count - 1;
-        }
+        aml_ui_select_page_down(state);
         aml_ui_trace_event("auto_pgdn");
         return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
@@ -76,7 +63,7 @@ AmlUiAction aml_ui_apply_automation(AmlState *state)
     if (strncmp(line, "search ", 7) == 0) {
         int index = aml_ui_find_match(state, line + 7);
         if (index >= 0) {
-            state->selected = index;
+            aml_ui_select_index(state, index);
             aml_ui_trace_event("auto_search");
         } else {
             aml_ui_trace_event("auto_bad_search");
@@ -87,7 +74,7 @@ AmlUiAction aml_ui_apply_automation(AmlState *state)
     if (strncmp(line, "hotkey ", 7) == 0) {
         int index = aml_ui_hotkey_index(line[7]);
         if (index >= 0 && index < state->entry_count) {
-            state->selected = index;
+            aml_ui_select_index(state, index);
             aml_ui_trace_event("auto_hotkey");
         } else {
             aml_ui_trace_event("auto_bad_hotkey");

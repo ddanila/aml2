@@ -4,13 +4,7 @@
 
 #include "ui_int.h"
 #include "ui_ops.h"
-
-static int aml_ui_has_selection(const AmlState *state)
-{
-    return state->entry_count > 0 &&
-           state->selected >= 0 &&
-           state->selected < state->entry_count;
-}
+#include "ui_state.h"
 
 static int aml_ui_require_editor_mode(AmlState *state)
 {

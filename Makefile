@@ -16,6 +16,7 @@ OBJS = \
     build/ui_edit.obj \
     build/ui_loop.obj \
     build/ui_core.obj \
+    build/ui_state.obj \
     build/ui_test.obj \
     build/launch.obj
 
@@ -48,6 +49,9 @@ build/ui_loop.obj: src/ui_loop.c src/ui_int.h src/ui_ops.h include/aml.h include
 
 build/ui_core.obj: src/ui_core.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_core.obj src/ui_core.c
+
+build/ui_state.obj: src/ui_state.c src/ui_int.h src/ui_state.h include/aml.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_state.obj src/ui_state.c
 
 build/ui_test.obj: src/ui_test.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_test.obj src/ui_test.c

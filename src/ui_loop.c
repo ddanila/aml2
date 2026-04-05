@@ -5,6 +5,7 @@
 #include "ui.h"
 #include "ui_int.h"
 #include "ui_ops.h"
+#include "ui_state.h"
 
 static int aml_ui_prompt_search(AmlState *state, const char **status)
 {
@@ -31,7 +32,7 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
         if (key == AML_KEY_ENTER) {
             match = aml_ui_find_match(state, query);
             if (match >= 0) {
-                state->selected = match;
+                aml_ui_select_index(state, match);
                 *status = "Search matched";
             } else if (len == 0) {
                 *status = "Select a program";
@@ -53,7 +54,7 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
 
         match = aml_ui_find_match(state, query);
         if (match >= 0) {
-            state->selected = match;
+            aml_ui_select_index(state, match);
             *status = "Search matched";
         } else if (len == 0) {
             *status = "Search cleared";
@@ -101,14 +102,14 @@ AmlUiAction aml_ui_run(AmlState *state)
         key = getch();
 
         if (key == AML_KEY_ENTER) {
-            if (state->entry_count > 0) {
+            if (aml_ui_has_entries(state)) {
                 return AML_UI_LAUNCH;
             }
             status = "No launcher entries available";
             continue;
         }
 
-        if (key == AML_KEY_SLASH && state->entry_count > 0) {
+        if (key == AML_KEY_SLASH && aml_ui_has_entries(state)) {
             aml_ui_prompt_search(state, &status);
             aml_ui_sync_view_top(state);
             continue;
@@ -134,7 +135,7 @@ AmlUiAction aml_ui_run(AmlState *state)
             } else if (key == AML_KEY_F8) {
                 aml_ui_delete_entry_with_confirm(state);
             } else if (key == AML_KEY_F9) {
-                if (state->entry_count > 0) {
+                if (aml_ui_has_entries(state)) {
                     int action = aml_ui_show_debug_run_menu(state);
                     if (action >= 0) {
                         return action;
@@ -142,34 +143,20 @@ AmlUiAction aml_ui_run(AmlState *state)
                 }
             } else if (key == AML_KEY_F10) {
                 return AML_UI_QUIT;
-            } else if (state->entry_count <= 0) {
+            } else if (!aml_ui_has_entries(state)) {
                 continue;
             } else if (key == AML_KEY_HOME) {
-                state->selected = 0;
+                aml_ui_select_first(state);
             } else if (key == AML_KEY_END) {
-                state->selected = state->entry_count - 1;
+                aml_ui_select_last(state);
             } else if (key == AML_KEY_PGUP) {
-                state->selected -= AML_UI_LIST_ROWS;
-                if (state->selected < 0) {
-                    state->selected = 0;
-                }
+                aml_ui_select_page_up(state);
             } else if (key == AML_KEY_PGDN) {
-                state->selected += AML_UI_LIST_ROWS;
-                if (state->selected >= state->entry_count) {
-                    state->selected = state->entry_count - 1;
-                }
+                aml_ui_select_page_down(state);
             } else if (key == AML_KEY_UP) {
-                if (state->selected > 0) {
-                    state->selected--;
-                } else {
-                    state->selected = state->entry_count - 1;
-                }
+                aml_ui_select_prev_wrap(state);
             } else if (key == AML_KEY_DOWN) {
-                if (state->selected < state->entry_count - 1) {
-                    state->selected++;
-                } else {
-                    state->selected = 0;
-                }
+                aml_ui_select_next_wrap(state);
             }
 
             aml_ui_sync_view_top(state);
@@ -185,7 +172,7 @@ AmlUiAction aml_ui_run(AmlState *state)
 
         hotkey_index = aml_ui_hotkey_index(key);
         if (hotkey_index >= 0 && hotkey_index < state->entry_count) {
-            state->selected = hotkey_index;
+            aml_ui_select_index(state, hotkey_index);
             aml_ui_sync_view_top(state);
             return AML_UI_LAUNCH;
         }
