@@ -38,7 +38,7 @@ static int finish_search(AmlState *state, const char *query, int len, const char
 
 static int prompt_search(AmlState *state, const char **status)
 {
-    char query[AML_UI_SEARCH_MAX + 1];
+    char query[UI_SEARCH_MAX + 1];
     int len = 0;
 
     query[0] = '\0';
@@ -47,9 +47,9 @@ static int prompt_search(AmlState *state, const char **status)
         int key;
 
         ui_render(state, *status);
-        ui_fill_rect(3, 23, 76, 23, ' ', AML_UI_ATTR_STATUS);
-        ui_write_at(3, 23, "Find:", AML_UI_ATTR_MUTED);
-        ui_write_padded(9, 23, query, AML_UI_SEARCH_MAX, AML_UI_ATTR_STATUS);
+        ui_fill_rect(3, 23, 76, 23, ' ', UI_ATTR_STATUS);
+        ui_write_at(3, 23, "Find:", UI_ATTR_MUTED);
+        ui_write_padded(9, 23, query, UI_SEARCH_MAX, UI_ATTR_STATUS);
         ui_flush();
 
         key = getch();
@@ -64,7 +64,7 @@ static int prompt_search(AmlState *state, const char **status)
             if (len > 0) {
                 query[--len] = '\0';
             }
-        } else if (isprint(key) && len < AML_UI_SEARCH_MAX) {
+        } else if (isprint(key) && len < UI_SEARCH_MAX) {
             query[len++] = (char)key;
             query[len] = '\0';
         } else {
@@ -95,7 +95,7 @@ static AmlUiAction apply_test_automation(AmlState *state)
     return ui_apply_automation(state);
 #else
     (void)state;
-    return (AmlUiAction)AML_UI_AUTO_NONE;
+    return (AmlUiAction)UI_AUTO_NONE;
 #endif
 }
 
@@ -124,7 +124,7 @@ static AmlUiAction handle_extended_key(AmlState *state, int key)
     } else if (key == AML_KEY_F10) {
         return AML_UI_QUIT;
     } else if (!ui_has_entries(state)) {
-        return (AmlUiAction)AML_UI_AUTO_NONE;
+        return (AmlUiAction)UI_AUTO_NONE;
     } else if (key == AML_KEY_HOME) {
         ui_select_first(state);
     } else if (key == AML_KEY_END) {
@@ -139,7 +139,7 @@ static AmlUiAction handle_extended_key(AmlState *state, int key)
         ui_select_next_wrap(state);
     }
 
-    return (AmlUiAction)AML_UI_AUTO_REDRAW;
+    return (AmlUiAction)UI_AUTO_REDRAW;
 }
 
 static AmlUiAction handle_hotkey(AmlState *state, int key)
@@ -152,7 +152,7 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
         return AML_UI_LAUNCH;
     }
 
-    return (AmlUiAction)AML_UI_AUTO_NONE;
+    return (AmlUiAction)UI_AUTO_NONE;
 }
 
 AmlUiAction ui_run(AmlState *state)
@@ -170,7 +170,7 @@ AmlUiAction ui_run(AmlState *state)
         last_second = ui_current_second();
 
         action = apply_test_automation(state);
-        if (action == AML_UI_AUTO_REDRAW) {
+        if (action == UI_AUTO_REDRAW) {
             ui_sync_view_top(state);
             continue;
         }

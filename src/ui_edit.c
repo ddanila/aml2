@@ -30,7 +30,7 @@ static int require_editor_selection(AmlState *state)
 
 static void draw_detail_line_value(int row, const char *label, const char *value)
 {
-    ui_draw_detail_line(row, label, value, AML_UI_ATTR_DIALOG_DIM);
+    ui_draw_detail_line(row, label, value, UI_ATTR_DIALOG_DIM);
 }
 
 void ui_show_details_overlay(const AmlState *state)
@@ -71,9 +71,9 @@ static int confirm_delete(const AmlState *state)
 
     ui_render(state, "Delete");
     ui_draw_titled_dialog(12, 8, 67, 16, "Delete Entry");
-    ui_write_centered(ui_dialog_row(8, 2), "Remove the current entry from LAUNCHER.CFG?", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_ellipsis(18, ui_dialog_row(8, 3), state->entries[state->selected].name, 44, AML_UI_ATTR_DIALOG_DIM);
-    ui_write_centered(ui_dialog_row(8, 5), "Enter delete  Esc cancel", AML_UI_ATTR_HELP);
+    ui_write_centered(ui_dialog_row(8, 2), "Remove the current entry from LAUNCHER.CFG?", UI_ATTR_DIALOG_TEXT);
+    ui_write_ellipsis(18, ui_dialog_row(8, 3), state->entries[state->selected].name, 44, UI_ATTR_DIALOG_DIM);
+    ui_write_centered(ui_dialog_row(8, 5), "Enter delete  Esc cancel", UI_ATTR_HELP);
     ui_flush();
 
     for (;;) {
@@ -176,16 +176,16 @@ static int prompt_entry(AmlEntry *entry, int is_new)
         int cursor_row = 10;
 
         ui_draw_titled_dialog(8, 5, 71, 18, is_new ? "Insert Entry" : "Edit Entry");
-        ui_write_at(12, ui_dialog_row(5, 3), "Name", AML_UI_ATTR_DIALOG_TEXT);
-        ui_write_at(12, ui_dialog_row(5, 5), "Command", AML_UI_ATTR_DIALOG_TEXT);
-        ui_write_at(12, ui_dialog_row(5, 7), "Path", AML_UI_ATTR_DIALOG_TEXT);
+        ui_write_at(12, ui_dialog_row(5, 3), "Name", UI_ATTR_DIALOG_TEXT);
+        ui_write_at(12, ui_dialog_row(5, 5), "Command", UI_ATTR_DIALOG_TEXT);
+        ui_write_at(12, ui_dialog_row(5, 7), "Path", UI_ATTR_DIALOG_TEXT);
         ui_write_clipped(24, ui_dialog_row(5, 3), name, field_width, 0, name_cursor,
-                             field == 0 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+                             field == 0 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
         ui_write_clipped(24, ui_dialog_row(5, 5), command, field_width, 0, command_cursor,
-                             field == 1 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
+                             field == 1 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
         ui_write_clipped(24, ui_dialog_row(5, 7), path, field_width, 0, path_cursor,
-                             field == 2 ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_DIM);
-        ui_write_centered(ui_dialog_row(5, 9), "Enter next  F2 save  Tab switch  Esc cancel", AML_UI_ATTR_HELP);
+                             field == 2 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
+        ui_write_centered(ui_dialog_row(5, 9), "Enter next  F2 save  Tab switch  Esc cancel", UI_ATTR_HELP);
         ui_flush();
         if (field == 1) {
             visible_start = ui_visible_start(command, field_width, 0, command_cursor);
@@ -414,16 +414,16 @@ void ui_show_help_overlay(const AmlState *state)
     ui_render(state, "Help");
     ui_draw_titled_dialog(left, top, right, bottom, "Launcher Help");
 
-    ui_write_at(text_col, ui_dialog_row(top, 1), "Enter  Launch selected item", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 2), "/      Search within item name", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 3), "F2     Save configuration", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 4), "F3     Show current entry details", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 5), "F4     Edit current entry", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 6), "F5/F6  Move current entry up/down", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 7), "Ins    Insert a new entry", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 8), "F8     Delete current entry", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 9), "F9     Debug run menu", AML_UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 10), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 1), "Enter  Launch selected item", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 2), "/      Search within item name", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 3), "F2     Save configuration", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 4), "F3     Show current entry details", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 5), "F4     Edit current entry", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 6), "F5/F6  Move current entry up/down", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 7), "Ins    Insert a new entry", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 8), "F8     Delete current entry", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 9), "F9     Debug run menu", UI_ATTR_DIALOG_TEXT);
+    ui_write_at(text_col, ui_dialog_row(top, 10), "F10    Exit to DOS", UI_ATTR_DIALOG_TEXT);
 
     ui_flush();
     ui_wait_for_ack();
@@ -449,21 +449,21 @@ AmlUiAction ui_show_debug_run_menu(const AmlState *state)
 
         ui_render(state, "Debug Run");
         ui_draw_titled_dialog(10, 6, 69, 18, "Debug Run");
-        ui_write_at(14, ui_dialog_row(6, 2), "Command", AML_UI_ATTR_DIALOG_TEXT);
+        ui_write_at(14, ui_dialog_row(6, 2), "Command", UI_ATTR_DIALOG_TEXT);
         ui_write_clipped(
             24, ui_dialog_row(6, 2),
             state->entries[state->selected].command,
-            39, 0, 0, AML_UI_ATTR_DIALOG_DIM
+            39, 0, 0, UI_ATTR_DIALOG_DIM
         );
 
         for (i = 0; i < 3; ++i) {
-            unsigned char attr = (i == selected) ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_DIALOG_TEXT;
+            unsigned char attr = (i == selected) ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_TEXT;
             ui_fill_rect(14, ui_dialog_row(6, 4 + i), 64, ui_dialog_row(6, 4 + i), ' ', attr);
             ui_putc(16, ui_dialog_row(6, 4 + i), (i == selected) ? 16 : 250, attr);
             ui_write_at(20, ui_dialog_row(6, 4 + i), items[i], attr);
         }
 
-        ui_write_centered(ui_dialog_row(6, 8), "Enter select  Esc cancel", AML_UI_ATTR_HELP);
+        ui_write_centered(ui_dialog_row(6, 8), "Enter select  Esc cancel", UI_ATTR_HELP);
         ui_flush();
         key = getch();
 

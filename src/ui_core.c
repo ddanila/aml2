@@ -6,7 +6,7 @@
 
 #include "ui_int.h"
 
-static unsigned short ui_backbuf[AML_UI_ROWS * AML_UI_COLS];
+static unsigned short ui_backbuf[UI_ROWS * UI_COLS];
 
 static unsigned short cell(unsigned char ch, unsigned char attr)
 {
@@ -38,14 +38,14 @@ void ui_set_cursor(int col, int row)
     if (col < 0) {
         col = 0;
     }
-    if (col >= AML_UI_COLS) {
-        col = AML_UI_COLS - 1;
+    if (col >= UI_COLS) {
+        col = UI_COLS - 1;
     }
     if (row < 0) {
         row = 0;
     }
-    if (row >= AML_UI_ROWS) {
-        row = AML_UI_ROWS - 1;
+    if (row >= UI_ROWS) {
+        row = UI_ROWS - 1;
     }
 
     regs.h.ah = 0x02;
@@ -69,7 +69,7 @@ void ui_flush(void)
     unsigned i;
 
     wait_vsync();
-    for (i = 0; i < AML_UI_ROWS * AML_UI_COLS; ++i) {
+    for (i = 0; i < UI_ROWS * UI_COLS; ++i) {
         video[i] = ui_backbuf[i];
     }
 }
@@ -87,31 +87,31 @@ void ui_fill_rect(int left, int top, int right, int bottom,
     if (top < 0) {
         top = 0;
     }
-    if (right >= AML_UI_COLS) {
-        right = AML_UI_COLS - 1;
+    if (right >= UI_COLS) {
+        right = UI_COLS - 1;
     }
-    if (bottom >= AML_UI_ROWS) {
-        bottom = AML_UI_ROWS - 1;
+    if (bottom >= UI_ROWS) {
+        bottom = UI_ROWS - 1;
     }
 
     for (row = top; row <= bottom; ++row) {
         for (col = left; col <= right; ++col) {
-            ui_backbuf[row * AML_UI_COLS + col] = fill;
+            ui_backbuf[row * UI_COLS + col] = fill;
         }
     }
 }
 
 void ui_putc(int col, int row, unsigned char ch, unsigned char attr)
 {
-    if (col < 0 || col >= AML_UI_COLS || row < 0 || row >= AML_UI_ROWS) {
+    if (col < 0 || col >= UI_COLS || row < 0 || row >= UI_ROWS) {
         return;
     }
-    ui_backbuf[row * AML_UI_COLS + col] = cell(ch, attr);
+    ui_backbuf[row * UI_COLS + col] = cell(ch, attr);
 }
 
 void ui_write_at(int col, int row, const char *text, unsigned char attr)
 {
-    while (*text != '\0' && col < AML_UI_COLS) {
+    while (*text != '\0' && col < UI_COLS) {
         ui_putc(col, row, (unsigned char)*text, attr);
         col++;
         text++;
@@ -226,7 +226,7 @@ void ui_write_ellipsis(int col, int row, const char *text, int width, unsigned c
 
 void ui_write_centered(int row, const char *text, unsigned char attr)
 {
-    int col = (AML_UI_COLS - (int)strlen(text)) / 2;
+    int col = (UI_COLS - (int)strlen(text)) / 2;
 
     if (col < 1) {
         col = 1;
@@ -252,19 +252,19 @@ void ui_draw_frame(void)
 {
     int i;
 
-    ui_putc(AML_UI_FRAME_LEFT, AML_UI_FRAME_TOP, 218, AML_UI_ATTR_FRAME);
-    ui_putc(AML_UI_FRAME_RIGHT, AML_UI_FRAME_TOP, 191, AML_UI_ATTR_FRAME);
-    ui_putc(AML_UI_FRAME_LEFT, AML_UI_FRAME_BOTTOM, 192, AML_UI_ATTR_FRAME);
-    ui_putc(AML_UI_FRAME_RIGHT, AML_UI_FRAME_BOTTOM, 217, AML_UI_ATTR_FRAME);
+    ui_putc(UI_FRAME_LEFT, UI_FRAME_TOP, 218, UI_ATTR_FRAME);
+    ui_putc(UI_FRAME_RIGHT, UI_FRAME_TOP, 191, UI_ATTR_FRAME);
+    ui_putc(UI_FRAME_LEFT, UI_FRAME_BOTTOM, 192, UI_ATTR_FRAME);
+    ui_putc(UI_FRAME_RIGHT, UI_FRAME_BOTTOM, 217, UI_ATTR_FRAME);
 
-    for (i = AML_UI_FRAME_LEFT + 1; i < AML_UI_FRAME_RIGHT; ++i) {
-        ui_putc(i, AML_UI_FRAME_TOP, 196, AML_UI_ATTR_FRAME);
-        ui_putc(i, AML_UI_FRAME_BOTTOM, 196, AML_UI_ATTR_FRAME);
+    for (i = UI_FRAME_LEFT + 1; i < UI_FRAME_RIGHT; ++i) {
+        ui_putc(i, UI_FRAME_TOP, 196, UI_ATTR_FRAME);
+        ui_putc(i, UI_FRAME_BOTTOM, 196, UI_ATTR_FRAME);
     }
 
-    for (i = AML_UI_FRAME_TOP + 1; i < AML_UI_FRAME_BOTTOM; ++i) {
-        ui_putc(AML_UI_FRAME_LEFT, i, 179, AML_UI_ATTR_FRAME);
-        ui_putc(AML_UI_FRAME_RIGHT, i, 179, AML_UI_ATTR_FRAME);
+    for (i = UI_FRAME_TOP + 1; i < UI_FRAME_BOTTOM; ++i) {
+        ui_putc(UI_FRAME_LEFT, i, 179, UI_ATTR_FRAME);
+        ui_putc(UI_FRAME_RIGHT, i, 179, UI_ATTR_FRAME);
     }
 }
 
@@ -273,20 +273,20 @@ static void apply_shadow(int left, int top, int right, int bottom)
     int row;
     int col;
 
-    for (row = top + 1; row <= bottom + 1 && row < AML_UI_ROWS; ++row) {
-        for (col = right + 1; col <= right + 2 && col < AML_UI_COLS; ++col) {
-            unsigned short saved = ui_backbuf[row * AML_UI_COLS + col];
-            ui_backbuf[row * AML_UI_COLS + col] =
-                cell((unsigned char)(saved & 0x00FF), AML_UI_ATTR_SHADOW);
+    for (row = top + 1; row <= bottom + 1 && row < UI_ROWS; ++row) {
+        for (col = right + 1; col <= right + 2 && col < UI_COLS; ++col) {
+            unsigned short saved = ui_backbuf[row * UI_COLS + col];
+            ui_backbuf[row * UI_COLS + col] =
+                cell((unsigned char)(saved & 0x00FF), UI_ATTR_SHADOW);
         }
     }
 
     row = bottom + 1;
-    if (row < AML_UI_ROWS) {
-        for (col = left + 2; col <= right + 2 && col < AML_UI_COLS; ++col) {
-            unsigned short saved = ui_backbuf[row * AML_UI_COLS + col];
-            ui_backbuf[row * AML_UI_COLS + col] =
-                cell((unsigned char)(saved & 0x00FF), AML_UI_ATTR_SHADOW);
+    if (row < UI_ROWS) {
+        for (col = left + 2; col <= right + 2 && col < UI_COLS; ++col) {
+            unsigned short saved = ui_backbuf[row * UI_COLS + col];
+            ui_backbuf[row * UI_COLS + col] =
+                cell((unsigned char)(saved & 0x00FF), UI_ATTR_SHADOW);
         }
     }
 }
@@ -298,15 +298,15 @@ static void draw_dialog_box(int left, int top, int right, int bottom, const char
     int i;
 
     apply_shadow(left, top, right, bottom);
-    ui_fill_rect(left, top, right, bottom, ' ', AML_UI_ATTR_DIALOG);
-    ui_putc(left, top, 218, AML_UI_ATTR_FRAME);
-    ui_putc(right, top, 191, AML_UI_ATTR_FRAME);
-    ui_putc(left, bottom, 192, AML_UI_ATTR_FRAME);
-    ui_putc(right, bottom, 217, AML_UI_ATTR_FRAME);
-    ui_fill_rect(left + 1, top, right - 1, top, 196, AML_UI_ATTR_FRAME);
-    ui_fill_rect(left + 1, bottom, right - 1, bottom, 196, AML_UI_ATTR_FRAME);
-    ui_fill_rect(left, top + 1, left, bottom - 1, 179, AML_UI_ATTR_FRAME);
-    ui_fill_rect(right, top + 1, right, bottom - 1, 179, AML_UI_ATTR_FRAME);
+    ui_fill_rect(left, top, right, bottom, ' ', UI_ATTR_DIALOG);
+    ui_putc(left, top, 218, UI_ATTR_FRAME);
+    ui_putc(right, top, 191, UI_ATTR_FRAME);
+    ui_putc(left, bottom, 192, UI_ATTR_FRAME);
+    ui_putc(right, bottom, 217, UI_ATTR_FRAME);
+    ui_fill_rect(left + 1, top, right - 1, top, 196, UI_ATTR_FRAME);
+    ui_fill_rect(left + 1, bottom, right - 1, bottom, 196, UI_ATTR_FRAME);
+    ui_fill_rect(left, top + 1, left, bottom - 1, 179, UI_ATTR_FRAME);
+    ui_fill_rect(right, top + 1, right, bottom - 1, 179, UI_ATTR_FRAME);
 
     if (title != NULL && title[0] != '\0') {
         title_len = (int)strlen(title);
@@ -318,11 +318,11 @@ static void draw_dialog_box(int left, int top, int right, int bottom, const char
             title_col = left + 2;
         }
 
-        ui_putc(title_col - 1, top, ' ', AML_UI_ATTR_DIALOG);
+        ui_putc(title_col - 1, top, ' ', UI_ATTR_DIALOG);
         for (i = 0; i < title_len; ++i) {
-            ui_putc(title_col + i, top, (unsigned char)title[i], AML_UI_ATTR_DIALOG_TEXT);
+            ui_putc(title_col + i, top, (unsigned char)title[i], UI_ATTR_DIALOG_TEXT);
         }
-        ui_putc(title_col + title_len, top, ' ', AML_UI_ATTR_DIALOG);
+        ui_putc(title_col + title_len, top, ' ', UI_ATTR_DIALOG);
     }
 }
 
@@ -375,13 +375,13 @@ void ui_draw_header_on_frame_common(int modified)
         title[clock_col - 1] = '\0';
     }
 
-    ui_fill_rect(1, 0, AML_UI_FRAME_RIGHT - 1, 0, 196, AML_UI_ATTR_FRAME);
-    ui_write_at(1, 0, title, AML_UI_ATTR_TITLE);
-    ui_write_2digit_at(clock_col, 0, now.hour, AML_UI_ATTR_HELP);
-    ui_putc(clock_col + 2, 0, (now.second & 1) ? ':' : ' ', AML_UI_ATTR_HELP);
-    ui_write_2digit_at(clock_col + 3, 0, now.minute, AML_UI_ATTR_HELP);
+    ui_fill_rect(1, 0, UI_FRAME_RIGHT - 1, 0, 196, UI_ATTR_FRAME);
+    ui_write_at(1, 0, title, UI_ATTR_TITLE);
+    ui_write_2digit_at(clock_col, 0, now.hour, UI_ATTR_HELP);
+    ui_putc(clock_col + 2, 0, (now.second & 1) ? ':' : ' ', UI_ATTR_HELP);
+    ui_write_2digit_at(clock_col + 3, 0, now.minute, UI_ATTR_HELP);
     if (modified) {
-        ui_putc(78, 0, '*', AML_UI_ATTR_HELP);
+        ui_putc(78, 0, '*', UI_ATTR_HELP);
     }
 }
 
@@ -389,7 +389,7 @@ void ui_draw_header_on_frame(const AmlState *state)
 {
     ui_draw_header_on_frame_common(state->modified);
     if (state->editor_mode) {
-        ui_write_at(66, 0, "EDIT", AML_UI_ATTR_HELP);
+        ui_write_at(66, 0, "EDIT", UI_ATTR_HELP);
     }
 }
 
@@ -468,7 +468,7 @@ int ui_find_match(const AmlState *state, const char *needle)
 
 static void clamp_view_top(AmlState *state)
 {
-    if (state->entry_count <= AML_UI_LIST_ROWS) {
+    if (state->entry_count <= UI_LIST_ROWS) {
         state->view_top = 0;
         return;
     }
@@ -476,8 +476,8 @@ static void clamp_view_top(AmlState *state)
     if (state->view_top < 0) {
         state->view_top = 0;
     }
-    if (state->view_top > state->entry_count - AML_UI_LIST_ROWS) {
-        state->view_top = state->entry_count - AML_UI_LIST_ROWS;
+    if (state->view_top > state->entry_count - UI_LIST_ROWS) {
+        state->view_top = state->entry_count - UI_LIST_ROWS;
     }
 }
 
@@ -500,14 +500,14 @@ void ui_sync_view_top(AmlState *state)
     }
 
     clamp_view_top(state);
-    margin = AML_UI_LIST_ROWS / 4;
+    margin = UI_LIST_ROWS / 4;
     top_band = state->view_top + margin;
-    bottom_band = state->view_top + AML_UI_LIST_ROWS - margin - 1;
+    bottom_band = state->view_top + UI_LIST_ROWS - margin - 1;
 
     if (state->selected < top_band) {
         state->view_top = state->selected - margin;
     } else if (state->selected > bottom_band) {
-        state->view_top = state->selected - (AML_UI_LIST_ROWS - margin - 1);
+        state->view_top = state->selected - (UI_LIST_ROWS - margin - 1);
     }
 
     clamp_view_top(state);
@@ -516,22 +516,22 @@ void ui_sync_view_top(AmlState *state)
 static void draw_scrollbar(const AmlState *state)
 {
     int row;
-    int thumb_row = AML_UI_LIST_ROW + 1;
+    int thumb_row = UI_LIST_ROW + 1;
 
-    ui_putc(AML_UI_SCROLL_COL, AML_UI_LIST_ROW, 30, AML_UI_ATTR_SCROLL);
-    ui_putc(AML_UI_SCROLL_COL, AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1, 31, AML_UI_ATTR_SCROLL);
+    ui_putc(UI_SCROLL_COL, UI_LIST_ROW, 30, UI_ATTR_SCROLL);
+    ui_putc(UI_SCROLL_COL, UI_LIST_ROW + UI_LIST_ROWS - 1, 31, UI_ATTR_SCROLL);
 
-    for (row = AML_UI_LIST_ROW + 1; row < AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1; ++row) {
-        ui_putc(AML_UI_SCROLL_COL, row, 176, AML_UI_ATTR_SCROLL);
+    for (row = UI_LIST_ROW + 1; row < UI_LIST_ROW + UI_LIST_ROWS - 1; ++row) {
+        ui_putc(UI_SCROLL_COL, row, 176, UI_ATTR_SCROLL);
     }
 
-    if (state->entry_count > AML_UI_LIST_ROWS) {
-        int track = AML_UI_LIST_ROWS - 2;
-        thumb_row = AML_UI_LIST_ROW + 1 +
+    if (state->entry_count > UI_LIST_ROWS) {
+        int track = UI_LIST_ROWS - 2;
+        thumb_row = UI_LIST_ROW + 1 +
             ((state->selected * (track - 1)) / (state->entry_count - 1));
     }
 
-    ui_putc(AML_UI_SCROLL_COL, thumb_row, 219, AML_UI_ATTR_SCROLL_THUMB);
+    ui_putc(UI_SCROLL_COL, thumb_row, 219, UI_ATTR_SCROLL_THUMB);
 }
 
 static void draw_entries(const AmlState *state)
@@ -540,29 +540,29 @@ static void draw_entries(const AmlState *state)
     int index;
     int top = state->view_top;
 
-    ui_fill_rect(AML_UI_LIST_LEFT, AML_UI_LIST_ROW, AML_UI_LIST_RIGHT,
-                 AML_UI_LIST_ROW + AML_UI_LIST_ROWS - 1, ' ', AML_UI_ATTR_TEXT);
+    ui_fill_rect(UI_LIST_LEFT, UI_LIST_ROW, UI_LIST_RIGHT,
+                 UI_LIST_ROW + UI_LIST_ROWS - 1, ' ', UI_ATTR_TEXT);
 
     if (state->entry_count <= 0) {
-        ui_write_at(6, 10, "No entries available.", AML_UI_ATTR_DIALOG_TEXT);
-        ui_write_at(6, 12, "Check LAUNCHER.CFG or press F10 to exit.", AML_UI_ATTR_DIALOG_DIM);
+        ui_write_at(6, 10, "No entries available.", UI_ATTR_DIALOG_TEXT);
+        ui_write_at(6, 12, "Check LAUNCHER.CFG or press F10 to exit.", UI_ATTR_DIALOG_DIM);
         draw_scrollbar(state);
         return;
     }
 
     for (row = 0, index = top;
-         row < AML_UI_LIST_ROWS && index < state->entry_count;
+         row < UI_LIST_ROWS && index < state->entry_count;
          ++row, ++index) {
-        int y = AML_UI_LIST_ROW + row;
-        unsigned char attr = (index == state->selected) ? AML_UI_ATTR_SELECTED : AML_UI_ATTR_TEXT;
+        int y = UI_LIST_ROW + row;
+        unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
         char hotkey = ui_hotkey_char(index);
 
-        ui_fill_rect(AML_UI_LIST_LEFT + 1, y, AML_UI_SCROLL_COL - 1, y, ' ', attr);
+        ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y, ' ', attr);
         ui_putc(4, y, (index == state->selected) ? 16 : 250, attr);
         ui_putc(6, y, '[', attr);
         ui_putc(7, y, (unsigned char)hotkey, attr);
         ui_putc(8, y, ']', attr);
-        ui_write_ellipsis(11, y, state->entries[index].name, AML_UI_SCROLL_COL - 11, attr);
+        ui_write_ellipsis(11, y, state->entries[index].name, UI_SCROLL_COL - 11, attr);
     }
 
     draw_scrollbar(state);
@@ -571,7 +571,7 @@ static void draw_entries(const AmlState *state)
 void ui_render(const AmlState *state, const char *status)
 {
     (void)status;
-    ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     ui_draw_frame();
     ui_draw_header_on_frame(state);
     draw_entries(state);
@@ -579,7 +579,7 @@ void ui_render(const AmlState *state, const char *status)
 
 void ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr)
 {
-    ui_write_at(18, row, label, AML_UI_ATTR_DIALOG_TEXT);
+    ui_write_at(18, row, label, UI_ATTR_DIALOG_TEXT);
     ui_write_padded(28, row, value, 34, attr);
 }
 
@@ -588,20 +588,20 @@ static void draw_notice_box(const char *title, const char *line1, const char *li
     ui_draw_titled_dialog(12, 8, 67, 16, title);
 
     if (line1 != NULL && line1[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 2), line1, AML_UI_ATTR_DIALOG_TEXT);
+        ui_write_centered(ui_dialog_row(8, 2), line1, UI_ATTR_DIALOG_TEXT);
     }
     if (line2 != NULL && line2[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 3), line2, AML_UI_ATTR_DIALOG_DIM);
+        ui_write_centered(ui_dialog_row(8, 3), line2, UI_ATTR_DIALOG_DIM);
     }
     if (line3 != NULL && line3[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 5), line3, AML_UI_ATTR_HELP);
+        ui_write_centered(ui_dialog_row(8, 5), line3, UI_ATTR_HELP);
     }
 }
 
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
 {
     ui_hide_cursor();
-    ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     ui_draw_frame();
     ui_draw_header_on_frame_common(0);
     draw_notice_box(title, line1, line2, line3);
@@ -619,15 +619,15 @@ void ui_show_notice(const AmlState *state, const char *title, const char *line1,
 void ui_init(void)
 {
     ui_hide_cursor();
-    ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
+    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     ui_flush();
 }
 
 void ui_shutdown(void)
 {
-    ui_set_cursor(0, AML_UI_ROWS - 1);
+    ui_set_cursor(0, UI_ROWS - 1);
     ui_show_cursor();
-    ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', 0x07);
+    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', 0x07);
     ui_flush();
 }
 
