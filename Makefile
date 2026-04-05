@@ -13,6 +13,8 @@ OBJS = \
     build/main.obj \
     build/cfg.obj \
     build/ui.obj \
+    build/ui_core.obj \
+    build/ui_test.obj \
     build/launch.obj
 
 FAKEGAME_OBJS = \
@@ -33,8 +35,14 @@ build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/laun
 build/cfg.obj: src/cfg.c include/aml.h include/cfg.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/cfg.obj src/cfg.c
 
-build/ui.obj: src/ui.c include/aml.h include/ui.h include/aml_build.h
+build/ui.obj: src/ui.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui.obj src/ui.c
+
+build/ui_core.obj: src/ui_core.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_core.obj src/ui_core.c
+
+build/ui_test.obj: src/ui_test.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_test.obj src/ui_test.c
 
 build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c

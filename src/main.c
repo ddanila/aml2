@@ -48,6 +48,11 @@ static void aml_print_usage(void)
     printf("Start AML.COM for the normal launcher loop.\r\n");
 }
 
+static void aml_reset_launcher_state(AmlState *state)
+{
+    memset(state, 0, sizeof(*state));
+}
+
 static void aml_show_notice_and_wait(const AmlState *state,
                                      const char *title,
                                      const char *line1,
@@ -107,6 +112,30 @@ static int aml_handle_launch_check(const AmlState *state, int rc)
     return 0;
 }
 
+static void aml_show_initial_config_status(const AmlState *state, int rc)
+{
+    if (rc != 0) {
+        aml_ui_show_message(
+            "No launcher.cfg yet",
+            state->editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to create entries.",
+            state->editor_mode ? "Use F2 to save the new configuration." : "",
+            ""
+        );
+        aml_ui_wait_for_ack();
+        return;
+    }
+
+    if (state->entry_count <= 0) {
+        aml_ui_show_message(
+            "Launcher config is empty",
+            state->editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to add entries.",
+            state->editor_mode ? "Use F2 to save changes." : "",
+            ""
+        );
+        aml_ui_wait_for_ack();
+    }
+}
+
 int main(int argc, char **argv)
 {
     int rc;
@@ -114,13 +143,10 @@ int main(int argc, char **argv)
     int launched = AML_EXIT_OK;
     int i;
     int mode_set = 0;
+    int editor_mode;
+    int supervised;
 
-    state.entry_count = 0;
-    state.selected = 0;
-    state.view_top = 0;
-    state.modified = 0;
-    state.editor_mode = 0;
-    state.supervised = 0;
+    aml_reset_launcher_state(&state);
 
     for (i = 1; i < argc; ++i) {
         if (aml_arg_is(argv[i], "/v") || aml_arg_is(argv[i], "/V")) {
@@ -155,31 +181,15 @@ int main(int argc, char **argv)
 
     rc = aml_load_config(&state, AML_CONFIG_FILE);
     if (rc != 0) {
-        state.entry_count = 0;
-        state.selected = 0;
-        state.view_top = 0;
-        state.modified = 0;
+        editor_mode = state.editor_mode;
+        supervised = state.supervised;
+        aml_reset_launcher_state(&state);
+        state.editor_mode = editor_mode;
+        state.supervised = supervised;
     }
 
     aml_ui_init();
-
-    if (rc != 0) {
-        aml_ui_show_message(
-            "No launcher.cfg yet",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to create entries.",
-            state.editor_mode ? "Use F2 to save the new configuration." : "",
-            ""
-        );
-        aml_ui_wait_for_ack();
-    } else if (state.entry_count <= 0) {
-        aml_ui_show_message(
-            "Launcher config is empty",
-            state.editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to add entries.",
-            state.editor_mode ? "Use F2 to save changes." : "",
-            ""
-        );
-        aml_ui_wait_for_ack();
-    }
+    aml_show_initial_config_status(&state, rc);
 
     for (;;) {
         action = aml_ui_run(&state);
