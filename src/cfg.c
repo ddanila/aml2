@@ -60,6 +60,10 @@ static int parse_config_line(AmlState *state, char *line)
     char *entry_path;
     AmlEntry *entry;
 
+    if (state->entry_count >= AML_MAX_PROGRAMS) {
+        return 1;
+    }
+
     trim_newline(line);
 
     command_start = trim_field(line);
@@ -87,10 +91,6 @@ static int parse_config_line(AmlState *state, char *line)
 
     if (name[0] == '\0' || command[0] == '\0') {
         return 0;
-    }
-
-    if (state->entry_count >= AML_MAX_PROGRAMS) {
-        return 1;
     }
 
     entry = &state->entries[state->entry_count++];

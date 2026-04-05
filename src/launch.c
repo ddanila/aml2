@@ -54,12 +54,15 @@ static AmlLaunchTargetKind classify_target(const char *command)
 
 static int directory_exists(const char *path)
 {
+    unsigned original_drive;
+    unsigned drives;
     char original[AML_MAX_PATH];
 
     if (path[0] == '\0') {
         return 1;
     }
 
+    _dos_getdrive(&original_drive);
     if (getcwd(original, sizeof(original)) == NULL) {
         return 0;
     }
@@ -68,6 +71,7 @@ static int directory_exists(const char *path)
         return 0;
     }
 
+    _dos_setdrive(original_drive, &drives);
     chdir(original);
     return 1;
 }

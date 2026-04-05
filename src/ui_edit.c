@@ -170,9 +170,12 @@ static int prompt_entry(AmlEntry *entry, int is_new)
     int path_cursor;
     int field_width = 40;
 
-    strcpy(name, is_new ? "" : entry->name);
-    strcpy(command, is_new ? "" : entry->command);
-    strcpy(path, is_new ? "" : entry->path);
+    strncpy(name, is_new ? "" : entry->name, sizeof(name) - 1);
+    name[sizeof(name) - 1] = '\0';
+    strncpy(command, is_new ? "" : entry->command, sizeof(command) - 1);
+    command[sizeof(command) - 1] = '\0';
+    strncpy(path, is_new ? "" : entry->path, sizeof(path) - 1);
+    path[sizeof(path) - 1] = '\0';
     name_len = strlen(name);
     command_len = strlen(command);
     path_len = strlen(path);
@@ -239,9 +242,12 @@ static int prompt_entry(AmlEntry *entry, int is_new)
                     ui_wait_for_ack();
                     continue;
                 }
-                strcpy(entry->name, name);
-                strcpy(entry->command, command);
-                strcpy(entry->path, path);
+                strncpy(entry->name, name, sizeof(entry->name) - 1);
+                entry->name[sizeof(entry->name) - 1] = '\0';
+                strncpy(entry->command, command, sizeof(entry->command) - 1);
+                entry->command[sizeof(entry->command) - 1] = '\0';
+                strncpy(entry->path, path, sizeof(entry->path) - 1);
+                entry->path[sizeof(entry->path) - 1] = '\0';
                 ui_hide_cursor();
                 return 1;
             } else if (key == UI_KEY_UP) {

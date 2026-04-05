@@ -34,7 +34,9 @@ void ui_select_first(AmlState *state)
 
 void ui_select_last(AmlState *state)
 {
-    ui_select_index(state, state->entry_count - 1);
+    if (ui_has_entries(state)) {
+        ui_select_index(state, state->entry_count - 1);
+    }
 }
 
 void ui_select_prev_wrap(AmlState *state)
