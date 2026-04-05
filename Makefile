@@ -16,6 +16,7 @@ CORE_OBJS = \
 
 UI_OBJS = \
 	build/ui_auto.obj \
+	build/ui_bigtext.obj \
 	build/ui_edit.obj \
 	build/ui_loop.obj \
 	build/ui_core.obj \
@@ -25,6 +26,11 @@ UI_OBJS = \
 OBJS = \
 	$(CORE_OBJS) \
 	$(UI_OBJS)
+
+BIGFONT_OBJS = \
+	build/bigfont_demo.obj \
+	build/ui_bigtext.obj \
+	build/ui_core.obj
 
 FAKEGAME_OBJS = \
 	build/fakegame.obj
@@ -50,6 +56,9 @@ build/ui_auto.obj: src/ui_auto.c src/ui_int.h src/ui_ops.h include/aml.h include
 build/ui_edit.obj: src/ui_edit.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_edit.obj src/ui_edit.c
 
+build/ui_bigtext.obj: src/ui_bigtext.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_bigtext.obj src/ui_bigtext.c
+
 build/ui_loop.obj: src/ui_loop.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_loop.obj src/ui_loop.c
 
@@ -68,6 +77,9 @@ build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.
 build/fakegame.obj: tests/dos/fakegame.c
 	$(WCC) $(CFLAGS) -fo=build/fakegame.obj tests/dos/fakegame.c
 
+build/bigfont_demo.obj: build src/bigfont_demo.c src/ui_int.h include/ui.h include/aml.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/bigfont_demo.obj src/bigfont_demo.c
+
 build/amlstub.obj: stub/amlstub.asm
 	$(WASM) -0 -bt=dos -mt -zq -zcm=tasm -fo=build/amlstub.obj -fr=build/amlstub.err stub/amlstub.asm
 
@@ -80,5 +92,8 @@ aml.com: build/amlstub.obj tools/obj2com.py
 fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
+bigfont.exe: $(BIGFONT_OBJS)
+	$(WLINK) $(LDFLAGS) name bigfont.exe file { $(BIGFONT_OBJS) }
+
 clean:
-	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h
+	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe bigfont.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h

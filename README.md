@@ -4,6 +4,8 @@
 
 It uses a tiny custom text UI, a supervisor stub (`AML.COM`), and a simple `LAUNCHER.CFG` format.
 
+The main launcher list is rendered in a custom VGA text-mode big font. It shows 10 entries per page, using 2 text rows per game name.
+
 ## Screenshot
 
 ![aml2 screenshot](assets/aml2-screenshot.png)
@@ -131,6 +133,12 @@ To copy extra DOS files onto the floppy image before boot:
 
 ```bash
 ./tools/run_qemu_manual.sh path/to/GAME.EXE path/to/EXTRA.BAT
+```
+
+Big-font VGA text-mode experiment:
+
+```bash
+./tools/run_qemu_bigfont.sh
 ```
 
 ## Tests

@@ -63,10 +63,10 @@ void ui_select_next_wrap(AmlState *state)
 
 void ui_select_page_up(AmlState *state)
 {
-    ui_select_index(state, state->selected - UI_LIST_ROWS);
+    ui_select_index(state, state->selected - UI_LIST_VISIBLE);
 }
 
 void ui_select_page_down(AmlState *state)
 {
-    ui_select_index(state, state->selected + UI_LIST_ROWS);
+    ui_select_index(state, state->selected + UI_LIST_VISIBLE);
 }

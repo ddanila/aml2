@@ -18,6 +18,10 @@ void ui_draw(const AmlState *state, const char *status);
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3);
 void ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3);
 void ui_wait_for_ack(void);
+int ui_bigtext_enable(void);
+void ui_bigtext_disable(void);
+int ui_bigtext_is_enabled(void);
+void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr);
 AmlUiAction ui_run(AmlState *state);
 
 #endif

@@ -6,8 +6,10 @@
 enum {
     UI_ROWS = 25,
     UI_COLS = 80,
-    UI_LIST_ROW = 1,
-    UI_LIST_ROWS = 23,
+    UI_LIST_ROW = 2,
+    UI_LIST_ROWS = 20,
+    UI_LIST_VISIBLE = 10,
+    UI_LIST_ENTRY_ROWS = 2,
     UI_SEARCH_MAX = 24,
     UI_FRAME_LEFT = 0,
     UI_FRAME_TOP = 0,
@@ -193,6 +195,10 @@ int ui_edit_dialog_cursor_row(const UiDialogBox *box, const UiEditField *field);
 void ui_draw_menu_dialog(const UiMenuDialog *dialog);
 void ui_draw_header_on_frame_common(int modified);
 void ui_draw_header_on_frame(const AmlState *state);
+int ui_bigtext_enable(void);
+void ui_bigtext_disable(void);
+int ui_bigtext_is_enabled(void);
+void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr);
 int ui_hotkey_index(int key);
 char ui_hotkey_char(int index);
 int ui_find_match(const AmlState *state, const char *needle);

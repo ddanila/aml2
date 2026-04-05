@@ -735,7 +735,7 @@ int ui_find_match(const AmlState *state, const char *needle)
 
 static void clamp_view_top(AmlState *state)
 {
-    if (state->entry_count <= UI_LIST_ROWS) {
+    if (state->entry_count <= UI_LIST_VISIBLE) {
         state->view_top = 0;
         return;
     }
@@ -743,8 +743,8 @@ static void clamp_view_top(AmlState *state)
     if (state->view_top < 0) {
         state->view_top = 0;
     }
-    if (state->view_top > state->entry_count - UI_LIST_ROWS) {
-        state->view_top = state->entry_count - UI_LIST_ROWS;
+    if (state->view_top > state->entry_count - UI_LIST_VISIBLE) {
+        state->view_top = state->entry_count - UI_LIST_VISIBLE;
     }
 }
 
@@ -767,14 +767,14 @@ void ui_sync_view_top(AmlState *state)
     }
 
     clamp_view_top(state);
-    margin = UI_LIST_ROWS / 4;
+    margin = UI_LIST_VISIBLE / 4;
     top_band = state->view_top + margin;
-    bottom_band = state->view_top + UI_LIST_ROWS - margin - 1;
+    bottom_band = state->view_top + UI_LIST_VISIBLE - margin - 1;
 
     if (state->selected < top_band) {
         state->view_top = state->selected - margin;
     } else if (state->selected > bottom_band) {
-        state->view_top = state->selected - (UI_LIST_ROWS - margin - 1);
+        state->view_top = state->selected - (UI_LIST_VISIBLE - margin - 1);
     }
 
     clamp_view_top(state);
@@ -792,7 +792,7 @@ static void draw_scrollbar(const AmlState *state)
         ui_putc(UI_SCROLL_COL, row, 176, UI_ATTR_SCROLL);
     }
 
-    if (state->entry_count > UI_LIST_ROWS) {
+    if (state->entry_count > UI_LIST_VISIBLE) {
         int track = UI_LIST_ROWS - 2;
         thumb_row = UI_LIST_ROW + 1 +
             ((state->selected * (track - 1)) / (state->entry_count - 1));
@@ -806,6 +806,7 @@ static void draw_entries(const AmlState *state)
     int row;
     int index;
     int top = state->view_top;
+    char big_name[23];
 
     ui_fill_rect(UI_LIST_LEFT, UI_LIST_ROW, UI_LIST_RIGHT,
                  UI_LIST_ROW + UI_LIST_ROWS - 1, ' ', UI_ATTR_TEXT);
@@ -817,19 +818,46 @@ static void draw_entries(const AmlState *state)
         return;
     }
 
+    ui_bigtext_enable();
+
     for (row = 0, index = top;
-         row < UI_LIST_ROWS && index < state->entry_count;
+         row < UI_LIST_VISIBLE && index < state->entry_count;
          ++row, ++index) {
-        int y = UI_LIST_ROW + row;
+        int y = UI_LIST_ROW + (row * UI_LIST_ENTRY_ROWS);
         unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
         char hotkey = ui_hotkey_char(index);
+        size_t src_i;
+        size_t dst_i;
 
-        ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y, ' ', attr);
-        ui_putc(4, y, (index == state->selected) ? 16 : 250, attr);
+        ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y + 1, ' ', attr);
         ui_putc(6, y, '[', attr);
         ui_putc(7, y, (unsigned char)hotkey, attr);
         ui_putc(8, y, ']', attr);
-        ui_write_ellipsis(11, y, state->entries[index].name, UI_SCROLL_COL - 11, attr);
+
+        dst_i = 0;
+        for (src_i = 0;
+             dst_i < sizeof(big_name) - 1 && state->entries[index].name[src_i] != '\0';
+             ++src_i) {
+            unsigned char ch = (unsigned char)state->entries[index].name[src_i];
+            char out = ' ';
+
+            if (isalpha(ch)) {
+                out = (char)toupper(ch);
+            } else if (isdigit(ch)) {
+                out = (char)ch;
+            } else if (ch == ' ') {
+                out = ' ';
+            }
+
+            if (out != ' ' || (dst_i > 0 && big_name[dst_i - 1] != ' ')) {
+                big_name[dst_i++] = out;
+            }
+        }
+        while (dst_i > 0 && big_name[dst_i - 1] == ' ') {
+            --dst_i;
+        }
+        big_name[dst_i] = '\0';
+        ui_bigtext_write_at(11, y, big_name, attr);
     }
 
     draw_scrollbar(state);
@@ -872,12 +900,14 @@ void ui_show_notice(const AmlState *state, const char *title, const char *line1,
 void ui_init(void)
 {
     ui_hide_cursor();
+    ui_bigtext_enable();
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     ui_flush();
 }
 
 void ui_shutdown(void)
 {
+    ui_bigtext_disable();
     ui_set_cursor(0, UI_ROWS - 1);
     ui_show_cursor();
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', 0x07);
