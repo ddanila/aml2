@@ -100,41 +100,62 @@ static int aml_parse_config_line(AmlState *state, char *line)
     return 0;
 }
 
-AmlCfgStatus aml_load_config(AmlState *state, const char *path)
+static AmlCfgStatus aml_open_config_for_read(const char *path, FILE **fp)
 {
-    FILE *fp;
-    char line[AML_MAX_LINE + 1];
-
-    aml_reset_config_state(state);
-
-    fp = fopen(path, "r");
-    if (fp == NULL) {
+    *fp = fopen(path, "r");
+    if (*fp == NULL) {
         return AML_CFG_IO_ERROR;
     }
+
+    return AML_CFG_OK;
+}
+
+static void aml_load_config_lines(AmlState *state, FILE *fp)
+{
+    char line[AML_MAX_LINE + 1];
 
     while (fgets(line, sizeof(line), fp) != NULL) {
         if (aml_parse_config_line(state, line)) {
             break;
         }
     }
+}
 
+AmlCfgStatus aml_load_config(AmlState *state, const char *path)
+{
+    FILE *fp;
+
+    aml_reset_config_state(state);
+
+    if (aml_open_config_for_read(path, &fp) != AML_CFG_OK) {
+        return AML_CFG_IO_ERROR;
+    }
+
+    aml_load_config_lines(state, fp);
     fclose(fp);
     return AML_CFG_OK;
 }
 
-AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
+static AmlCfgStatus aml_open_config_for_write(const char *path, FILE **fp)
 {
-    FILE *fp;
-    int i;
-
-    fp = fopen(path, "w");
-    if (fp == NULL) {
+    *fp = fopen(path, "w");
+    if (*fp == NULL) {
         return AML_CFG_IO_ERROR;
     }
 
+    return AML_CFG_OK;
+}
+
+static void aml_write_config_header(FILE *fp)
+{
     fprintf(fp, "# aml2 configuration\n");
     fprintf(fp, "# Format: Name|Command|Working Directory\n");
     fprintf(fp, "\n");
+}
+
+static void aml_write_config_entries(const AmlState *state, FILE *fp)
+{
+    int i;
 
     for (i = 0; i < state->entry_count; ++i) {
         fprintf(fp, "%s|%s|%s\n",
@@ -142,7 +163,18 @@ AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
             state->entries[i].command,
             state->entries[i].path);
     }
+}
 
+AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
+{
+    FILE *fp;
+
+    if (aml_open_config_for_write(path, &fp) != AML_CFG_OK) {
+        return AML_CFG_IO_ERROR;
+    }
+
+    aml_write_config_header(fp);
+    aml_write_config_entries(state, fp);
     fclose(fp);
     return AML_CFG_OK;
 }

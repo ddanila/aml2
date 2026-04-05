@@ -180,6 +180,14 @@ static void aml_restore_mode_flags_after_load_error(AmlState *state)
     state->supervised = supervised;
 }
 
+static void aml_load_launcher_config(AmlState *state, AmlCfgStatus *cfg_status)
+{
+    *cfg_status = aml_load_config(state, AML_CONFIG_FILE);
+    if (*cfg_status != AML_CFG_OK) {
+        aml_restore_mode_flags_after_load_error(state);
+    }
+}
+
 static int aml_handle_save_action(AmlState *state)
 {
     AmlCfgStatus rc;
@@ -227,6 +235,19 @@ static AmlLaunchCheck aml_check_action_launch_entry(const AmlState *state, AmlUi
     return aml_check_launch_entry(&state->entries[state->selected]);
 }
 
+static int aml_is_launch_action(AmlUiAction action)
+{
+    return action == AML_UI_LAUNCH ||
+           action == AML_UI_LAUNCH_DEBUG ||
+           action == AML_UI_LAUNCH_CHILD_DIRECT ||
+           action == AML_UI_LAUNCH_CHILD_SHELL;
+}
+
+static int aml_has_selected_entry(const AmlState *state)
+{
+    return state->selected >= 0 && state->selected < state->entry_count;
+}
+
 static int aml_handle_child_launch_action(AmlState *state, AmlUiAction action)
 {
     AmlLaunchCheck rc;
@@ -257,10 +278,7 @@ static int aml_handle_launch_action(AmlState *state, AmlUiAction action, int *la
 {
     AmlLaunchCheck rc;
 
-    if ((action != AML_UI_LAUNCH && action != AML_UI_LAUNCH_DEBUG &&
-         action != AML_UI_LAUNCH_CHILD_DIRECT && action != AML_UI_LAUNCH_CHILD_SHELL) ||
-        state->selected < 0 ||
-        state->selected >= state->entry_count) {
+    if (!aml_is_launch_action(action) || !aml_has_selected_entry(state)) {
         return 0;
     }
 
@@ -301,10 +319,29 @@ static int aml_handle_launch_action(AmlState *state, AmlUiAction action, int *la
     return 2;
 }
 
+static int aml_handle_ui_action(AmlState *state, AmlUiAction action, int *launched)
+{
+    int rc;
+
+    if (action == AML_UI_QUIT) {
+        return 1;
+    }
+
+    if (action == AML_UI_SAVE && aml_handle_save_action(state)) {
+        return 0;
+    }
+
+    rc = aml_handle_launch_action(state, action, launched);
+    if (rc == 2) {
+        return 1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     AmlCfgStatus cfg_status;
-    AmlUiAction action;
     int launched = AML_EXIT_OK;
     int rc;
 
@@ -318,30 +355,13 @@ int main(int argc, char **argv)
     aml_trace_event("launcher");
 #endif
 
-    cfg_status = aml_load_config(&state, AML_CONFIG_FILE);
-    if (cfg_status != AML_CFG_OK) {
-        aml_restore_mode_flags_after_load_error(&state);
-    }
+    aml_load_launcher_config(&state, &cfg_status);
 
     aml_ui_init();
     aml_show_initial_config_status(&state, cfg_status);
 
     for (;;) {
-        action = aml_ui_run(&state);
-
-        if (action == AML_UI_QUIT) {
-            break;
-        }
-
-        if (action == AML_UI_SAVE && aml_handle_save_action(&state)) {
-            continue;
-        }
-
-        rc = aml_handle_launch_action(&state, action, &launched);
-        if (rc == 1) {
-            continue;
-        }
-        if (rc == 2) {
+        if (aml_handle_ui_action(&state, aml_ui_run(&state), &launched)) {
             break;
         }
     }

@@ -251,6 +251,21 @@ static AmlLaunchCheck aml_execute_child_command(const AmlEntry *entry, int force
     return aml_execute_child_direct(entry);
 }
 
+static AmlLaunchCheck aml_run_child_in_entry_directory(const AmlEntry *entry, int force_shell)
+{
+    AmlLaunchContext ctx;
+    AmlLaunchCheck rc;
+
+    rc = aml_switch_to_entry_directory(entry, &ctx);
+    if (rc != AML_LAUNCH_READY) {
+        return rc;
+    }
+
+    rc = aml_execute_child_command(entry, force_shell);
+    aml_restore_directory(&ctx);
+    return rc;
+}
+
 int aml_write_run_request(const AmlEntry *entry, const char *path)
 {
     FILE *fp;
@@ -290,15 +305,5 @@ AmlLaunchCheck aml_check_direct_launch_entry(const AmlEntry *entry)
 
 AmlLaunchCheck aml_run_entry_child(const AmlEntry *entry, int force_shell)
 {
-    AmlLaunchContext ctx;
-    AmlLaunchCheck rc;
-
-    rc = aml_switch_to_entry_directory(entry, &ctx);
-    if (rc != AML_LAUNCH_READY) {
-        return rc;
-    }
-
-    rc = aml_execute_child_command(entry, force_shell);
-    aml_restore_directory(&ctx);
-    return rc;
+    return aml_run_child_in_entry_directory(entry, force_shell);
 }

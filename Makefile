@@ -9,19 +9,25 @@ EXTRA_CFLAGS ?=
 CFLAGS = -i=include -ms -s -zq -bt=dos $(EXTRA_CFLAGS)
 LDFLAGS = system dos option quiet
 
+CORE_OBJS = \
+	build/main.obj \
+	build/cfg.obj \
+	build/launch.obj
+
+UI_OBJS = \
+	build/ui_auto.obj \
+	build/ui_edit.obj \
+	build/ui_loop.obj \
+	build/ui_core.obj \
+	build/ui_state.obj \
+	build/ui_test.obj
+
 OBJS = \
-    build/main.obj \
-    build/cfg.obj \
-    build/ui_auto.obj \
-    build/ui_edit.obj \
-    build/ui_loop.obj \
-    build/ui_core.obj \
-    build/ui_state.obj \
-    build/ui_test.obj \
-    build/launch.obj
+	$(CORE_OBJS) \
+	$(UI_OBJS)
 
 FAKEGAME_OBJS = \
-    build/fakegame.obj
+	build/fakegame.obj
 
 all: build amlui.exe aml.com
 test-build: build amlui.exe aml.com fakegame.exe
