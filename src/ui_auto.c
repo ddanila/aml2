@@ -16,7 +16,7 @@ AmlUiAction aml_ui_apply_automation(AmlState *state)
     if (strncmp(line, "launch ", 7) == 0) {
         int index = atoi(line + 7);
         if (index >= 0 && index < state->entry_count) {
-            state->selected = index;
+            aml_ui_select_index(state, index);
             aml_ui_trace_event("auto_launch");
             return AML_UI_LAUNCH;
         }

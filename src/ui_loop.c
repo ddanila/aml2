@@ -45,7 +45,6 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
 
     for (;;) {
         int key;
-        int match;
 
         aml_ui_render(state, *status);
         aml_ui_fill_rect(3, 23, 76, 23, ' ', AML_UI_ATTR_STATUS);
