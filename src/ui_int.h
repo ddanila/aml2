@@ -2,6 +2,7 @@
 #define UI_INT_H
 
 #include "aml.h"
+#include "ui.h"
 
 enum {
     AML_UI_ROWS = 25,
@@ -92,5 +93,14 @@ void aml_ui_render(const AmlState *state, const char *status);
 void aml_ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr);
 int aml_ui_read_auto_line(char *line, unsigned line_size);
 void aml_ui_trace_event(const char *event_name);
+void aml_ui_show_details_overlay(const AmlState *state);
+void aml_ui_show_help_overlay(const AmlState *state);
+AmlUiAction aml_ui_show_debug_run_menu(const AmlState *state);
+void aml_ui_insert_entry(AmlState *state);
+void aml_ui_edit_entry(AmlState *state);
+void aml_ui_delete_entry(AmlState *state);
+void aml_ui_delete_entry_with_confirm(AmlState *state);
+void aml_ui_move_entry_up(AmlState *state);
+void aml_ui_move_entry_down(AmlState *state);
 
 #endif

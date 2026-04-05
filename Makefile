@@ -13,6 +13,7 @@ OBJS = \
     build/main.obj \
     build/cfg.obj \
     build/ui.obj \
+    build/ui_edit.obj \
     build/ui_core.obj \
     build/ui_test.obj \
     build/launch.obj
@@ -37,6 +38,9 @@ build/cfg.obj: src/cfg.c include/aml.h include/cfg.h include/aml_build.h
 
 build/ui.obj: src/ui.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui.obj src/ui.c
+
+build/ui_edit.obj: src/ui_edit.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_edit.obj src/ui_edit.c
 
 build/ui_core.obj: src/ui_core.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_core.obj src/ui_core.c

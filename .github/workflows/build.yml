@@ -31,11 +31,17 @@ jobs:
       - name: Install zip
         run: sudo apt-get update && sudo apt-get install -y zip
 
+      - name: Install DOS test tools
+        run: sudo apt-get install -y mtools qemu-system-x86
+
       - name: Set up Open Watcom
         run: ./tools/setup_openwatcom.sh
 
       - name: Build DOS binaries
         run: ./tools/build.sh
+
+      - name: Run sequential regression suite
+        run: bash tests/run_all.sh
 
       - name: Package artifact
         run: ./tools/package_dist.sh
