@@ -926,9 +926,7 @@ static int aml_ui_prompt_entry(AmlEntry *entry, int is_new)
         }
 
         handled = aml_ui_edit_field(key, buf, max_len, len_ptr, cursor_ptr);
-        if (!handled && key == AML_KEY_QUESTION) {
-            buf = buf;
-        }
+        (void)handled;
     }
 }
 

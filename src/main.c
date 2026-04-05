@@ -48,6 +48,65 @@ static void aml_print_usage(void)
     printf("Start AML.COM for the normal launcher loop.\r\n");
 }
 
+static void aml_show_notice_and_wait(const AmlState *state,
+                                     const char *title,
+                                     const char *line1,
+                                     const char *line2,
+                                     const char *line3)
+{
+    aml_ui_show_notice(state, title, line1, line2, line3);
+    aml_ui_wait_for_ack();
+}
+
+static int aml_handle_launch_check(const AmlState *state, int rc)
+{
+    if (rc == AML_LAUNCH_STUB_MISSING) {
+        aml_show_notice_and_wait(
+            state,
+            "Missing AML.COM",
+            "Launcher handoff needs AML.COM in this folder.",
+            "Start AML.COM from the launcher directory.",
+            ""
+        );
+        return 1;
+    }
+
+    if (rc == AML_LAUNCH_BAD_PATH) {
+        aml_show_notice_and_wait(
+            state,
+            "Game folder not found",
+            "The configured working directory does not exist.",
+            "Edit the entry and fix the path.",
+            ""
+        );
+        return 1;
+    }
+
+    if (rc == AML_LAUNCH_TARGET_MISSING) {
+        aml_show_notice_and_wait(
+            state,
+            "Game file not found",
+            "The configured command does not exist in that folder.",
+            "Edit the entry and check the program name.",
+            ""
+        );
+        return 1;
+    }
+
+    if (rc == AML_LAUNCH_DIRECT_UNSUPPORTED) {
+        aml_show_notice_and_wait(
+            state,
+            "Direct run unsupported",
+            "This mode only supports plain .EXE and .COM targets.",
+            "Use the shell option for .BAT files or command lines.",
+            ""
+        );
+        return 1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     int rc;
@@ -131,36 +190,33 @@ int main(int argc, char **argv)
 
         if (action == AML_UI_SAVE) {
             if (!state.editor_mode) {
-                aml_ui_show_notice(
+                aml_show_notice_and_wait(
                     &state,
                     "Viewer mode",
                     "Editing is disabled in the default mode.",
                     "Run AMLUI /E to save changes.",
                     ""
                 );
-                aml_ui_wait_for_ack();
                 continue;
             }
             rc = aml_save_config(&state, AML_CONFIG_FILE);
             if (rc != 0) {
-                aml_ui_show_notice(
+                aml_show_notice_and_wait(
                     &state,
                     "Save failed",
                     "Could not write LAUNCHER.CFG.",
                     "Check disk space and write permissions.",
                     ""
                 );
-                aml_ui_wait_for_ack();
             } else {
                 state.modified = 0;
-                aml_ui_show_notice(
+                aml_show_notice_and_wait(
                     &state,
                     "Configuration saved",
                     "LAUNCHER.CFG was updated successfully.",
                     "",
                     ""
                 );
-                aml_ui_wait_for_ack();
             }
             continue;
         }
@@ -170,14 +226,13 @@ int main(int argc, char **argv)
             state.selected >= 0 &&
             state.selected < state.entry_count) {
             if ((action == AML_UI_LAUNCH || action == AML_UI_LAUNCH_DEBUG) && !state.supervised) {
-                aml_ui_show_notice(
+                aml_show_notice_and_wait(
                     &state,
                     "Launch disabled",
                     "AMLUI.EXE was started directly.",
                     "Start with AML.COM to launch games.",
                     ""
                 );
-                aml_ui_wait_for_ack();
                 continue;
             }
             if (action == AML_UI_LAUNCH_CHILD_DIRECT) {
@@ -185,48 +240,7 @@ int main(int argc, char **argv)
             } else {
                 rc = aml_check_launch_entry(&state.entries[state.selected]);
             }
-            if (rc == AML_LAUNCH_STUB_MISSING) {
-                aml_ui_show_notice(
-                    &state,
-                    "Missing AML.COM",
-                    "Launcher handoff needs AML.COM in this folder.",
-                    "Start AML.COM from the launcher directory.",
-                    ""
-                );
-                aml_ui_wait_for_ack();
-                continue;
-            }
-            if (rc == AML_LAUNCH_BAD_PATH) {
-                aml_ui_show_notice(
-                    &state,
-                    "Game folder not found",
-                    "The configured working directory does not exist.",
-                    "Edit the entry and fix the path.",
-                    ""
-                );
-                aml_ui_wait_for_ack();
-                continue;
-            }
-            if (rc == AML_LAUNCH_TARGET_MISSING) {
-                aml_ui_show_notice(
-                    &state,
-                    "Game file not found",
-                    "The configured command does not exist in that folder.",
-                    "Edit the entry and check the program name.",
-                    ""
-                );
-                aml_ui_wait_for_ack();
-                continue;
-            }
-            if (rc == AML_LAUNCH_DIRECT_UNSUPPORTED) {
-                aml_ui_show_notice(
-                    &state,
-                    "Direct run unsupported",
-                    "This mode only supports plain .EXE and .COM targets.",
-                    "Use the shell option for .BAT files or command lines.",
-                    ""
-                );
-                aml_ui_wait_for_ack();
+            if (aml_handle_launch_check(&state, rc)) {
                 continue;
             }
 
@@ -238,28 +252,26 @@ int main(int argc, char **argv)
                 );
                 aml_ui_init();
                 if (rc == AML_LAUNCH_CHILD_FAILED) {
-                    aml_ui_show_notice(
+                    aml_show_notice_and_wait(
                         &state,
                         "Run failed",
                         "The selected program could not be started.",
                         "Check the program name and DOS environment.",
                         ""
                     );
-                    aml_ui_wait_for_ack();
                 }
                 continue;
             }
 
             rc = aml_write_run_request(&state.entries[state.selected], AML_RUN_FILE);
             if (rc != 0) {
-                aml_ui_show_notice(
+                aml_show_notice_and_wait(
                     &state,
                     "Failed to write AML2.RUN",
                     "The launcher could not hand off the selected entry.",
                     "Check write permissions and available disk space.",
                     ""
                 );
-                aml_ui_wait_for_ack();
                 continue;
             }
 #if AML_TEST_HOOKS

@@ -36,6 +36,17 @@ static int aml_has_program_extension(const char *command)
            stricmp(dot, ".bat") == 0;
 }
 
+static int aml_is_batch_file(const char *command)
+{
+    const char *dot = strrchr(command, '.');
+
+    if (dot == NULL) {
+        return 0;
+    }
+
+    return stricmp(dot, ".bat") == 0;
+}
+
 static int aml_directory_exists(const char *path)
 {
     char original[AML_MAX_PATH];
@@ -113,8 +124,6 @@ int aml_clear_run_request(const char *path)
 
 int aml_check_launch_entry(const AmlEntry *entry)
 {
-    char target[AML_MAX_PATH + AML_MAX_COMMAND + 2];
-
     if (access(AML_STUB_FILE, 0) != 0) {
         return AML_LAUNCH_STUB_MISSING;
     }
@@ -128,6 +137,13 @@ int aml_check_launch_entry(const AmlEntry *entry)
         return AML_LAUNCH_READY;
     }
 
+    return aml_check_direct_launch_entry(entry);
+}
+
+static int aml_check_existing_target(const AmlEntry *entry)
+{
+    char target[AML_MAX_PATH + AML_MAX_COMMAND + 2];
+
     aml_join_path(target, sizeof(target), entry->path, entry->command);
     if (access(target, 0) != 0) {
         return AML_LAUNCH_TARGET_MISSING;
@@ -138,24 +154,17 @@ int aml_check_launch_entry(const AmlEntry *entry)
 
 int aml_check_direct_launch_entry(const AmlEntry *entry)
 {
-    char target[AML_MAX_PATH + AML_MAX_COMMAND + 2];
-
     if (!aml_directory_exists(entry->path)) {
         return AML_LAUNCH_BAD_PATH;
     }
 
     if (!aml_is_simple_launch(entry->command) ||
         !aml_has_program_extension(entry->command) ||
-        stricmp(strrchr(entry->command, '.'), ".bat") == 0) {
+        aml_is_batch_file(entry->command)) {
         return AML_LAUNCH_DIRECT_UNSUPPORTED;
     }
 
-    aml_join_path(target, sizeof(target), entry->path, entry->command);
-    if (access(target, 0) != 0) {
-        return AML_LAUNCH_TARGET_MISSING;
-    }
-
-    return AML_LAUNCH_READY;
+    return aml_check_existing_target(entry);
 }
 
 static void aml_restore_directory(unsigned old_drive, const char *old_dir)

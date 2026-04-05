@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-KVIKDOS_DIR="/home/ddanila/fun/msdos/kvikdos"
+KVIKDOS_DIR="${KVIKDOS_DIR:-/home/ddanila/fun/msdos/kvikdos}"
 KVIKDOS_BIN="$KVIKDOS_DIR/kvikdos"
 OUT_DIR="$REPO_ROOT/out"
 TRACE_LOG="$OUT_DIR/kvikdos-trace.log"
@@ -12,12 +12,17 @@ USAGE_LOG="$OUT_DIR/kvikdos-usage.log"
 mkdir -p "$OUT_DIR"
 
 if [[ ! -d "$KVIKDOS_DIR" ]]; then
-    echo "kvikdos source tree not found at $KVIKDOS_DIR" >&2
-    exit 1
+    echo "SKIP: kvikdos source tree not found at $KVIKDOS_DIR"
+    exit 0
 fi
 
 if ! file "$KVIKDOS_BIN" 2>/dev/null | grep -q 'ELF'; then
     make -C "$KVIKDOS_DIR" kvikdos
+fi
+
+if [[ ! -x "$KVIKDOS_BIN" ]]; then
+    echo "SKIP: kvikdos binary not available at $KVIKDOS_BIN"
+    exit 0
 fi
 
 rm -f "$REPO_ROOT/AML2.AUT" "$REPO_ROOT/AML2.TRC"
