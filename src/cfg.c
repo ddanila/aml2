@@ -4,6 +4,14 @@
 
 #include "cfg.h"
 
+static void aml_reset_config_state(AmlState *state)
+{
+    state->entry_count = 0;
+    state->selected = 0;
+    state->view_top = 0;
+    state->modified = 0;
+}
+
 static void aml_copy_field(char *dst, unsigned dst_size, const char *src)
 {
     if (dst_size == 0) {
@@ -41,73 +49,77 @@ static char *aml_trim_field(char *text)
     return text;
 }
 
+static int aml_parse_config_line(AmlState *state, char *line)
+{
+    char *name_end;
+    char *command_start;
+    char *command_end;
+    char *path_start;
+    char *name;
+    char *command;
+    char *entry_path;
+    AmlEntry *entry;
+
+    aml_trim_newline(line);
+
+    command_start = aml_trim_field(line);
+    if (command_start[0] == '\0' || command_start[0] == '#') {
+        return 0;
+    }
+
+    name_end = strchr(command_start, '|');
+    if (name_end == NULL) {
+        return 0;
+    }
+
+    *name_end = '\0';
+    command_start = name_end + 1;
+    command_end = strchr(command_start, '|');
+    if (command_end == NULL) {
+        return 0;
+    }
+
+    *command_end = '\0';
+    path_start = command_end + 1;
+    name = aml_trim_field(line);
+    command = aml_trim_field(command_start);
+    entry_path = aml_trim_field(path_start);
+
+    if (name[0] == '\0' || command[0] == '\0') {
+        return 0;
+    }
+
+    if (state->entry_count >= AML_MAX_PROGRAMS) {
+        return 1;
+    }
+
+    entry = &state->entries[state->entry_count++];
+    aml_copy_field(entry->name, sizeof(entry->name), name);
+    aml_copy_field(entry->command, sizeof(entry->command), command);
+    aml_copy_field(entry->path, sizeof(entry->path), entry_path);
+    return 0;
+}
+
 int aml_load_config(AmlState *state, const char *path)
 {
     FILE *fp;
     char line[AML_MAX_LINE + 1];
 
-    state->entry_count = 0;
-    state->selected = 0;
-    state->view_top = 0;
-    state->modified = 0;
+    aml_reset_config_state(state);
 
     fp = fopen(path, "r");
     if (fp == NULL) {
-        return 1;
+        return AML_CFG_IO_ERROR;
     }
 
     while (fgets(line, sizeof(line), fp) != NULL) {
-        char *name_end;
-        char *command_start;
-        char *command_end;
-        char *path_start;
-        char *name;
-        char *command;
-        char *entry_path;
-        AmlEntry *entry;
-
-        aml_trim_newline(line);
-
-        command_start = aml_trim_field(line);
-
-        if (command_start[0] == '\0' || command_start[0] == '#') {
-            continue;
-        }
-
-        name_end = strchr(command_start, '|');
-        if (name_end == NULL) {
-            continue;
-        }
-
-        *name_end = '\0';
-        command_start = name_end + 1;
-        command_end = strchr(command_start, '|');
-        if (command_end == NULL) {
-            continue;
-        }
-
-        *command_end = '\0';
-        path_start = command_end + 1;
-        name = aml_trim_field(line);
-        command = aml_trim_field(command_start);
-        entry_path = aml_trim_field(path_start);
-
-        if (name[0] == '\0' || command[0] == '\0') {
-            continue;
-        }
-
-        if (state->entry_count >= AML_MAX_PROGRAMS) {
+        if (aml_parse_config_line(state, line)) {
             break;
         }
-
-        entry = &state->entries[state->entry_count++];
-        aml_copy_field(entry->name, sizeof(entry->name), name);
-        aml_copy_field(entry->command, sizeof(entry->command), command);
-        aml_copy_field(entry->path, sizeof(entry->path), entry_path);
     }
 
     fclose(fp);
-    return 0;
+    return AML_CFG_OK;
 }
 
 int aml_save_config(const AmlState *state, const char *path)
@@ -117,7 +129,7 @@ int aml_save_config(const AmlState *state, const char *path)
 
     fp = fopen(path, "w");
     if (fp == NULL) {
-        return 1;
+        return AML_CFG_IO_ERROR;
     }
 
     fprintf(fp, "# aml2 configuration\n");
@@ -132,5 +144,5 @@ int aml_save_config(const AmlState *state, const char *path)
     }
 
     fclose(fp);
-    return 0;
+    return AML_CFG_OK;
 }
