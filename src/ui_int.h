@@ -63,6 +63,33 @@ enum {
     UI_AUTO_REDRAW = -2
 };
 
+typedef enum UiDialogItemKind {
+    UI_DIALOG_ITEM_TEXT_AT,
+    UI_DIALOG_ITEM_TEXT_CENTERED,
+    UI_DIALOG_ITEM_TEXT_ELLIPSIS,
+    UI_DIALOG_ITEM_DETAIL_LINE
+} UiDialogItemKind;
+
+typedef struct UiDialogItem {
+    UiDialogItemKind kind;
+    int row;
+    int col;
+    int width;
+    const char *label;
+    const char *text;
+    unsigned char attr;
+} UiDialogItem;
+
+typedef struct UiDialogSpec {
+    int left;
+    int top;
+    int right;
+    int bottom;
+    const char *title;
+    const UiDialogItem *items;
+    int item_count;
+} UiDialogSpec;
+
 void ui_hide_cursor(void);
 void ui_show_cursor(void);
 void ui_set_cursor(int col, int row);
@@ -82,6 +109,7 @@ unsigned ui_current_second(void);
 void ui_draw_frame(void);
 int ui_dialog_row(int top, int inner_row);
 void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title);
+void ui_draw_dialog(const UiDialogSpec *spec);
 void ui_draw_header_on_frame_common(int modified);
 void ui_draw_header_on_frame(const AmlState *state);
 int ui_hotkey_index(int key);

@@ -336,6 +336,36 @@ void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char 
     draw_dialog_box(left, top, right, bottom, title);
 }
 
+static void draw_dialog_item(int top, const UiDialogItem *item)
+{
+    int row = ui_dialog_row(top, item->row);
+
+    switch (item->kind) {
+    case UI_DIALOG_ITEM_TEXT_AT:
+        ui_write_at(item->col, row, item->text, item->attr);
+        break;
+    case UI_DIALOG_ITEM_TEXT_CENTERED:
+        ui_write_centered(row, item->text, item->attr);
+        break;
+    case UI_DIALOG_ITEM_TEXT_ELLIPSIS:
+        ui_write_ellipsis(item->col, row, item->text, item->width, item->attr);
+        break;
+    case UI_DIALOG_ITEM_DETAIL_LINE:
+        ui_draw_detail_line(row, item->label, item->text, item->attr);
+        break;
+    }
+}
+
+void ui_draw_dialog(const UiDialogSpec *spec)
+{
+    int i;
+
+    draw_dialog_box(spec->left, spec->top, spec->right, spec->bottom, spec->title);
+    for (i = 0; i < spec->item_count; ++i) {
+        draw_dialog_item(spec->top, &spec->items[i]);
+    }
+}
+
 void ui_wait_for_ack(void)
 {
 #if AML_TEST_HOOKS
@@ -585,17 +615,49 @@ void ui_draw_detail_line(int row, const char *label, const char *value, unsigned
 
 static void draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
 {
-    ui_draw_titled_dialog(12, 8, 67, 16, title);
+    UiDialogItem items[3];
+    UiDialogSpec spec;
+    int item_count = 0;
 
     if (line1 != NULL && line1[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 2), line1, UI_ATTR_DIALOG_TEXT);
+        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
+        items[item_count].row = 2;
+        items[item_count].col = 0;
+        items[item_count].width = 0;
+        items[item_count].label = NULL;
+        items[item_count].text = line1;
+        items[item_count].attr = UI_ATTR_DIALOG_TEXT;
+        item_count++;
     }
     if (line2 != NULL && line2[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 3), line2, UI_ATTR_DIALOG_DIM);
+        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
+        items[item_count].row = 3;
+        items[item_count].col = 0;
+        items[item_count].width = 0;
+        items[item_count].label = NULL;
+        items[item_count].text = line2;
+        items[item_count].attr = UI_ATTR_DIALOG_DIM;
+        item_count++;
     }
     if (line3 != NULL && line3[0] != '\0') {
-        ui_write_centered(ui_dialog_row(8, 5), line3, UI_ATTR_HELP);
+        items[item_count].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
+        items[item_count].row = 5;
+        items[item_count].col = 0;
+        items[item_count].width = 0;
+        items[item_count].label = NULL;
+        items[item_count].text = line3;
+        items[item_count].attr = UI_ATTR_HELP;
+        item_count++;
     }
+
+    spec.left = 12;
+    spec.top = 8;
+    spec.right = 67;
+    spec.bottom = 16;
+    spec.title = title;
+    spec.items = items;
+    spec.item_count = item_count;
+    ui_draw_dialog(&spec);
 }
 
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)

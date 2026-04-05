@@ -28,11 +28,6 @@ static int require_editor_selection(AmlState *state)
     return require_editor_mode(state) && ui_has_selection(state);
 }
 
-static void draw_detail_line_value(int row, const char *label, const char *value)
-{
-    ui_draw_detail_line(row, label, value, UI_ATTR_DIALOG_DIM);
-}
-
 void ui_show_details_overlay(const AmlState *state)
 {
     char hotkey[2];
@@ -53,12 +48,53 @@ void ui_show_details_overlay(const AmlState *state)
     hotkey[0] = ui_hotkey_char(state->selected);
     hotkey[1] = '\0';
 
-    ui_render(state, "Details");
-    ui_draw_titled_dialog(10, 6, 69, 18, "Entry Details");
-    draw_detail_line_value(ui_dialog_row(6, 2), "Name", entry->name);
-    draw_detail_line_value(ui_dialog_row(6, 4), "Command", entry->command);
-    draw_detail_line_value(ui_dialog_row(6, 6), "Path", entry->path[0] != '\0' ? entry->path : ".");
-    draw_detail_line_value(ui_dialog_row(6, 8), "Hotkey", hotkey[0] != ' ' ? hotkey : "-");
+    {
+        UiDialogItem items[4];
+        UiDialogSpec spec;
+
+        items[0].kind = UI_DIALOG_ITEM_DETAIL_LINE;
+        items[0].row = 2;
+        items[0].col = 0;
+        items[0].width = 0;
+        items[0].label = "Name";
+        items[0].text = entry->name;
+        items[0].attr = UI_ATTR_DIALOG_DIM;
+
+        items[1].kind = UI_DIALOG_ITEM_DETAIL_LINE;
+        items[1].row = 4;
+        items[1].col = 0;
+        items[1].width = 0;
+        items[1].label = "Command";
+        items[1].text = entry->command;
+        items[1].attr = UI_ATTR_DIALOG_DIM;
+
+        items[2].kind = UI_DIALOG_ITEM_DETAIL_LINE;
+        items[2].row = 6;
+        items[2].col = 0;
+        items[2].width = 0;
+        items[2].label = "Path";
+        items[2].text = entry->path[0] != '\0' ? entry->path : ".";
+        items[2].attr = UI_ATTR_DIALOG_DIM;
+
+        items[3].kind = UI_DIALOG_ITEM_DETAIL_LINE;
+        items[3].row = 8;
+        items[3].col = 0;
+        items[3].width = 0;
+        items[3].label = "Hotkey";
+        items[3].text = hotkey[0] != ' ' ? hotkey : "-";
+        items[3].attr = UI_ATTR_DIALOG_DIM;
+
+        spec.left = 10;
+        spec.top = 6;
+        spec.right = 69;
+        spec.bottom = 18;
+        spec.title = "Entry Details";
+        spec.items = items;
+        spec.item_count = 4;
+
+        ui_render(state, "Details");
+        ui_draw_dialog(&spec);
+    }
     ui_flush();
     ui_wait_for_ack();
 }
@@ -69,11 +105,45 @@ static int confirm_delete(const AmlState *state)
         return 0;
     }
 
-    ui_render(state, "Delete");
-    ui_draw_titled_dialog(12, 8, 67, 16, "Delete Entry");
-    ui_write_centered(ui_dialog_row(8, 2), "Remove the current entry from LAUNCHER.CFG?", UI_ATTR_DIALOG_TEXT);
-    ui_write_ellipsis(18, ui_dialog_row(8, 3), state->entries[state->selected].name, 44, UI_ATTR_DIALOG_DIM);
-    ui_write_centered(ui_dialog_row(8, 5), "Enter delete  Esc cancel", UI_ATTR_HELP);
+    {
+        UiDialogItem items[3];
+        UiDialogSpec spec;
+
+        items[0].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
+        items[0].row = 2;
+        items[0].col = 0;
+        items[0].width = 0;
+        items[0].label = NULL;
+        items[0].text = "Remove the current entry from LAUNCHER.CFG?";
+        items[0].attr = UI_ATTR_DIALOG_TEXT;
+
+        items[1].kind = UI_DIALOG_ITEM_TEXT_ELLIPSIS;
+        items[1].row = 3;
+        items[1].col = 18;
+        items[1].width = 44;
+        items[1].label = NULL;
+        items[1].text = state->entries[state->selected].name;
+        items[1].attr = UI_ATTR_DIALOG_DIM;
+
+        items[2].kind = UI_DIALOG_ITEM_TEXT_CENTERED;
+        items[2].row = 5;
+        items[2].col = 0;
+        items[2].width = 0;
+        items[2].label = NULL;
+        items[2].text = "Enter delete  Esc cancel";
+        items[2].attr = UI_ATTR_HELP;
+
+        spec.left = 12;
+        spec.top = 8;
+        spec.right = 67;
+        spec.bottom = 16;
+        spec.title = "Delete Entry";
+        spec.items = items;
+        spec.item_count = 3;
+
+        ui_render(state, "Delete");
+        ui_draw_dialog(&spec);
+    }
     ui_flush();
 
     for (;;) {
@@ -405,25 +475,22 @@ void ui_move_entry_down(AmlState *state)
 
 void ui_show_help_overlay(const AmlState *state)
 {
-    int left = 10;
-    int top = 6;
-    int right = 69;
-    int bottom = 19;
-    int text_col = left + 3;
+    static const UiDialogItem items[] = {
+        { UI_DIALOG_ITEM_TEXT_AT, 1, 13, 0, NULL, "Enter  Launch selected item", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 2, 13, 0, NULL, "/      Search within item name", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 3, 13, 0, NULL, "F2     Save configuration", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 4, 13, 0, NULL, "F3     Show current entry details", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 5, 13, 0, NULL, "F4     Edit current entry", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 6, 13, 0, NULL, "F5/F6  Move current entry up/down", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 7, 13, 0, NULL, "Ins    Insert a new entry", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 8, 13, 0, NULL, "F8     Delete current entry", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 9, 13, 0, NULL, "F9     Debug run menu", UI_ATTR_DIALOG_TEXT },
+        { UI_DIALOG_ITEM_TEXT_AT, 10, 13, 0, NULL, "F10    Exit to DOS", UI_ATTR_DIALOG_TEXT }
+    };
+    UiDialogSpec spec = { 10, 6, 69, 19, "Launcher Help", items, 10 };
 
     ui_render(state, "Help");
-    ui_draw_titled_dialog(left, top, right, bottom, "Launcher Help");
-
-    ui_write_at(text_col, ui_dialog_row(top, 1), "Enter  Launch selected item", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 2), "/      Search within item name", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 3), "F2     Save configuration", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 4), "F3     Show current entry details", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 5), "F4     Edit current entry", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 6), "F5/F6  Move current entry up/down", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 7), "Ins    Insert a new entry", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 8), "F8     Delete current entry", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 9), "F9     Debug run menu", UI_ATTR_DIALOG_TEXT);
-    ui_write_at(text_col, ui_dialog_row(top, 10), "F10    Exit to DOS", UI_ATTR_DIALOG_TEXT);
+    ui_draw_dialog(&spec);
 
     ui_flush();
     ui_wait_for_ack();
