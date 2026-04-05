@@ -14,10 +14,7 @@ start:
 
     mov bx, offset resident_end
     add bx, 15
-    shr bx, 1
-    shr bx, 1
-    shr bx, 1
-    shr bx, 1
+    shr bx, 4
     mov ah, 4Ah
     int 21h
     jc resize_fail
@@ -101,10 +98,6 @@ init_home proc near
     mov ah, 47h
     int 21h
     jc init_home_done
-
-    cmp byte ptr [home_path + 1], 0
-    jne init_home_done
-    mov byte ptr [home_path + 1], 0
 
 init_home_done:
     ret
@@ -364,33 +357,22 @@ is_direct_check_ext:
     mov al, [si]
     and al, 5Fh
     cmp al, 'E'
-    jne is_direct_check_com
-    mov al, [si + 1]
-    and al, 5Fh
-    cmp al, 'X'
-    jne is_direct_no
-    mov al, [si + 2]
-    and al, 5Fh
-    cmp al, 'E'
-    jne is_direct_no
-    cmp byte ptr [si + 3], 0
-    jne is_direct_no
-    mov al, 1
-    ret
-
-is_direct_check_com:
-    mov al, [si]
-    and al, 5Fh
+    je is_check_exe_tail
     cmp al, 'C'
     jne is_direct_no
-    mov al, [si + 1]
-    and al, 5Fh
-    cmp al, 'O'
+    mov ax, [si + 1]
+    and ax, 5F5Fh
+    cmp ax, 4D4Fh           ; 'O' in AL (0x4F), 'M' in AH (0x4D)
     jne is_direct_no
-    mov al, [si + 2]
-    and al, 5Fh
-    cmp al, 'M'
+    jmp is_check_ext_null
+
+is_check_exe_tail:
+    mov ax, [si + 1]
+    and ax, 5F5Fh
+    cmp ax, 4558h           ; 'X' in AL (0x58), 'E' in AH (0x45)
     jne is_direct_no
+
+is_check_ext_null:
     cmp byte ptr [si + 3], 0
     jne is_direct_no
     mov al, 1
