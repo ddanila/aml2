@@ -167,7 +167,6 @@ void ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr);
 unsigned ui_current_second(void);
 void ui_draw_frame(void);
 int ui_dialog_row(int top, int inner_row);
-void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title);
 UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title);
 UiNoticeDialog ui_notice_dialog(UiDialogBox box, const char *line1, const char *line2, const char *line3);
 UiConfirmDialog ui_confirm_dialog(UiDialogBox box, const char *question, const char *value,
@@ -176,7 +175,6 @@ UiDetailDialogRow ui_detail_dialog_row(const char *label, const char *value);
 UiDetailDialog ui_detail_dialog_spec(UiDialogBox box, const UiDetailDialogRow *rows,
                                      int row_count, int first_row, int row_step,
                                      unsigned char value_attr);
-UiTextLineDialogLine ui_text_line_dialog_line(int row, const char *text, unsigned char attr);
 UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
                                      const UiTextLineDialogLine *lines, int line_count);
 UiEditField ui_edit_field(int row, const char *label, const char *text,

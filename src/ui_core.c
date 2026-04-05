@@ -331,11 +331,6 @@ int ui_dialog_row(int top, int inner_row)
     return top + 1 + inner_row;
 }
 
-void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title)
-{
-    draw_dialog_box(left, top, right, bottom, title);
-}
-
 UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title)
 {
     UiDialogBox box;
@@ -395,16 +390,6 @@ UiDetailDialog ui_detail_dialog_spec(UiDialogBox box, const UiDetailDialogRow *r
     dialog.row_step = row_step;
     dialog.value_attr = value_attr;
     return dialog;
-}
-
-UiTextLineDialogLine ui_text_line_dialog_line(int row, const char *text, unsigned char attr)
-{
-    UiTextLineDialogLine line;
-
-    line.row = row;
-    line.text = text;
-    line.attr = attr;
-    return line;
 }
 
 UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
