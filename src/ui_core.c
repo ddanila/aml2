@@ -336,7 +336,7 @@ void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char 
     draw_dialog_box(left, top, right, bottom, title);
 }
 
-void aml_ui_wait_for_ack(void)
+void ui_wait_for_ack(void)
 {
 #if AML_TEST_HOOKS
     for (;;) {
@@ -598,7 +598,7 @@ static void draw_notice_box(const char *title, const char *line1, const char *li
     }
 }
 
-void aml_ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
+void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3)
 {
     ui_hide_cursor();
     ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
@@ -608,7 +608,7 @@ void aml_ui_show_message(const char *title, const char *line1, const char *line2
     ui_flush();
 }
 
-void aml_ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3)
+void ui_show_notice(const AmlState *state, const char *title, const char *line1, const char *line2, const char *line3)
 {
     ui_hide_cursor();
     ui_render(state, "");
@@ -616,14 +616,14 @@ void aml_ui_show_notice(const AmlState *state, const char *title, const char *li
     ui_flush();
 }
 
-void aml_ui_init(void)
+void ui_init(void)
 {
     ui_hide_cursor();
     ui_fill_rect(0, 0, AML_UI_COLS - 1, AML_UI_ROWS - 1, ' ', AML_UI_ATTR_BG);
     ui_flush();
 }
 
-void aml_ui_shutdown(void)
+void ui_shutdown(void)
 {
     ui_set_cursor(0, AML_UI_ROWS - 1);
     ui_show_cursor();
@@ -631,7 +631,7 @@ void aml_ui_shutdown(void)
     ui_flush();
 }
 
-void aml_ui_draw(const AmlState *state, const char *status)
+void ui_draw(const AmlState *state, const char *status)
 {
     ui_hide_cursor();
     ui_render(state, status);

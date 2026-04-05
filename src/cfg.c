@@ -121,7 +121,7 @@ static void load_config_lines(AmlState *state, FILE *fp)
     }
 }
 
-AmlCfgStatus aml_load_config(AmlState *state, const char *path)
+AmlCfgStatus cfg_load(AmlState *state, const char *path)
 {
     FILE *fp;
 
@@ -165,7 +165,7 @@ static void write_config_entries(const AmlState *state, FILE *fp)
     }
 }
 
-AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
+AmlCfgStatus cfg_save(const AmlState *state, const char *path)
 {
     FILE *fp;
 

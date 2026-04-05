@@ -266,7 +266,7 @@ static AmlLaunchCheck run_child_in_entry_directory(const AmlEntry *entry, int fo
     return rc;
 }
 
-int aml_write_run_request(const AmlEntry *entry, const char *path)
+int launch_write_run_request(const AmlEntry *entry, const char *path)
 {
     FILE *fp;
 
@@ -284,7 +284,7 @@ int aml_write_run_request(const AmlEntry *entry, const char *path)
     return 0;
 }
 
-int aml_clear_run_request(const char *path)
+int launch_clear_run_request(const char *path)
 {
     if (remove(path) != 0) {
         return 1;
@@ -293,17 +293,17 @@ int aml_clear_run_request(const char *path)
     return 0;
 }
 
-AmlLaunchCheck aml_check_launch_entry(const AmlEntry *entry)
+AmlLaunchCheck launch_check_entry(const AmlEntry *entry)
 {
     return validate_entry(entry, 1, 0);
 }
 
-AmlLaunchCheck aml_check_direct_launch_entry(const AmlEntry *entry)
+AmlLaunchCheck launch_check_direct_entry(const AmlEntry *entry)
 {
     return validate_entry(entry, 0, 1);
 }
 
-AmlLaunchCheck aml_run_entry_child(const AmlEntry *entry, int force_shell)
+AmlLaunchCheck launch_run_child(const AmlEntry *entry, int force_shell)
 {
     return run_child_in_entry_directory(entry, force_shell);
 }

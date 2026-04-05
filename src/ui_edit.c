@@ -12,14 +12,14 @@ static int require_editor_mode(AmlState *state)
         return 1;
     }
 
-    aml_ui_show_notice(
+    ui_show_notice(
         state,
         "Viewer mode",
         "Editing is disabled in the default mode.",
         "",
         ""
     );
-    aml_ui_wait_for_ack();
+    ui_wait_for_ack();
     return 0;
 }
 
@@ -39,13 +39,13 @@ void ui_show_details_overlay(const AmlState *state)
     const AmlEntry *entry;
 
     if (!ui_has_selection(state)) {
-        aml_ui_show_message(
+        ui_show_message(
             "No current entry",
             "There is nothing to show yet.",
             "Use Ins to add a new record.",
             ""
         );
-        aml_ui_wait_for_ack();
+        ui_wait_for_ack();
         return;
     }
 
@@ -60,7 +60,7 @@ void ui_show_details_overlay(const AmlState *state)
     draw_detail_line_value(ui_dialog_row(6, 6), "Path", entry->path[0] != '\0' ? entry->path : ".");
     draw_detail_line_value(ui_dialog_row(6, 8), "Hotkey", hotkey[0] != ' ' ? hotkey : "-");
     ui_flush();
-    aml_ui_wait_for_ack();
+    ui_wait_for_ack();
 }
 
 static int confirm_delete(const AmlState *state)
@@ -221,13 +221,13 @@ static int prompt_entry(AmlEntry *entry, int is_new)
             key = getch();
             if (key == AML_KEY_F2) {
                 if (name[0] == '\0' || command[0] == '\0') {
-                    aml_ui_show_message(
+                    ui_show_message(
                         "Name and command required",
                         "Both fields must be filled in.",
                         "",
                         ""
                     );
-                    aml_ui_wait_for_ack();
+                    ui_wait_for_ack();
                     continue;
                 }
                 strcpy(entry->name, name);
@@ -283,13 +283,13 @@ void ui_insert_entry(AmlState *state)
     }
 
     if (state->entry_count >= AML_MAX_PROGRAMS) {
-        aml_ui_show_message(
+        ui_show_message(
             "List is full",
             "Maximum entry count reached.",
             "Delete something before inserting.",
             ""
         );
-        aml_ui_wait_for_ack();
+        ui_wait_for_ack();
         return;
     }
 
@@ -426,7 +426,7 @@ void ui_show_help_overlay(const AmlState *state)
     ui_write_at(text_col, ui_dialog_row(top, 10), "F10    Exit to DOS", AML_UI_ATTR_DIALOG_TEXT);
 
     ui_flush();
-    aml_ui_wait_for_ack();
+    ui_wait_for_ack();
 }
 
 AmlUiAction ui_show_debug_run_menu(const AmlState *state)

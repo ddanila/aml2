@@ -141,30 +141,30 @@ static int aml_check_launch_validation(const char *root)
     }
 
     aml_fill_entry(&entry, "GAME.EXE", "");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_READY, "stub launch ready")) return 1;
-    if (aml_expect(aml_check_direct_launch_entry(&entry) == AML_LAUNCH_READY, "direct program ready")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_READY, "stub launch ready")) return 1;
+    if (aml_expect(launch_check_direct_entry(&entry) == AML_LAUNCH_READY, "direct program ready")) return 1;
 
     aml_fill_entry(&entry, "MISSING.EXE", "");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_TARGET_MISSING, "missing target flagged")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_TARGET_MISSING, "missing target flagged")) return 1;
 
     aml_fill_entry(&entry, "START.BAT", "");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_READY, "batch allowed via stub")) return 1;
-    if (aml_expect(aml_check_direct_launch_entry(&entry) == AML_LAUNCH_DIRECT_UNSUPPORTED, "batch rejected for direct launch")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_READY, "batch allowed via stub")) return 1;
+    if (aml_expect(launch_check_direct_entry(&entry) == AML_LAUNCH_DIRECT_UNSUPPORTED, "batch rejected for direct launch")) return 1;
 
     aml_fill_entry(&entry, "echo GAME.EXE", "");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_READY, "complex command allowed via stub")) return 1;
-    if (aml_expect(aml_check_direct_launch_entry(&entry) == AML_LAUNCH_DIRECT_UNSUPPORTED, "complex command rejected for direct launch")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_READY, "complex command allowed via stub")) return 1;
+    if (aml_expect(launch_check_direct_entry(&entry) == AML_LAUNCH_DIRECT_UNSUPPORTED, "complex command rejected for direct launch")) return 1;
 
     aml_fill_entry(&entry, "GAME.EXE", "missing-dir");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_BAD_PATH, "missing path flagged")) return 1;
-    if (aml_expect(aml_check_direct_launch_entry(&entry) == AML_LAUNCH_BAD_PATH, "missing path flagged for direct")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_BAD_PATH, "missing path flagged")) return 1;
+    if (aml_expect(launch_check_direct_entry(&entry) == AML_LAUNCH_BAD_PATH, "missing path flagged for direct")) return 1;
 
     if (remove(AML_STUB_FILE) != 0) {
         perror("remove AML.COM");
         return 1;
     }
     aml_fill_entry(&entry, "GAME.EXE", "");
-    if (aml_expect(aml_check_launch_entry(&entry) == AML_LAUNCH_STUB_MISSING, "missing stub flagged")) return 1;
+    if (aml_expect(launch_check_entry(&entry) == AML_LAUNCH_STUB_MISSING, "missing stub flagged")) return 1;
 
     if (chdir(cwd) != 0) {
         perror(cwd);
@@ -192,7 +192,7 @@ static int aml_check_child_exec(const char *root)
         perror(root);
         return 1;
     }
-    if (aml_expect(aml_run_entry_child(&entry, 0) == AML_LAUNCH_READY, "direct child launch succeeds")) return 1;
+    if (aml_expect(launch_run_child(&entry, 0) == AML_LAUNCH_READY, "direct child launch succeeds")) return 1;
     if (aml_expect(strcmp(test_spawn_command, "CHILD.EXE") == 0, "spawnlp used command")) return 1;
     if (aml_expect(strcmp(test_spawn_cwd, expected_game_dir) == 0, "spawnlp ran inside entry directory")) return 1;
     if (getcwd(test_system_cwd, sizeof(test_system_cwd)) == NULL) {
@@ -203,7 +203,7 @@ static int aml_check_child_exec(const char *root)
 
     aml_reset_exec_mocks();
     test_system_result = 0;
-    if (aml_expect(aml_run_entry_child(&entry, 1) == AML_LAUNCH_READY, "shell child launch succeeds")) return 1;
+    if (aml_expect(launch_run_child(&entry, 1) == AML_LAUNCH_READY, "shell child launch succeeds")) return 1;
     if (aml_expect(strcmp(test_system_command, "CHILD.EXE") == 0, "system used command")) return 1;
     if (aml_expect(strcmp(test_system_cwd, expected_game_dir) == 0, "system ran inside entry directory")) return 1;
     if (getcwd(test_spawn_cwd, sizeof(test_spawn_cwd)) == NULL) {
@@ -214,7 +214,7 @@ static int aml_check_child_exec(const char *root)
 
     aml_reset_exec_mocks();
     test_spawn_result = -1;
-    if (aml_expect(aml_run_entry_child(&entry, 0) == AML_LAUNCH_CHILD_FAILED, "direct child failure propagated")) return 1;
+    if (aml_expect(launch_run_child(&entry, 0) == AML_LAUNCH_CHILD_FAILED, "direct child failure propagated")) return 1;
     if (getcwd(test_spawn_cwd, sizeof(test_spawn_cwd)) == NULL) {
         perror("getcwd");
         return 1;
@@ -223,7 +223,7 @@ static int aml_check_child_exec(const char *root)
 
     aml_reset_exec_mocks();
     test_system_result = -1;
-    if (aml_expect(aml_run_entry_child(&entry, 1) == AML_LAUNCH_CHILD_FAILED, "shell child failure propagated")) return 1;
+    if (aml_expect(launch_run_child(&entry, 1) == AML_LAUNCH_CHILD_FAILED, "shell child failure propagated")) return 1;
     if (getcwd(test_system_cwd, sizeof(test_system_cwd)) == NULL) {
         perror("getcwd");
         return 1;
@@ -248,7 +248,7 @@ static int aml_check_run_request_io(const char *root)
     aml_fill_entry(&entry, "GAME.EXE", "C:\\GAMES");
     snprintf(request_path, sizeof(request_path), "%s/AML2.RUN", root);
 
-    if (aml_expect(aml_write_run_request(&entry, request_path) == 0, "run request write succeeds")) return 1;
+    if (aml_expect(launch_write_run_request(&entry, request_path) == 0, "run request write succeeds")) return 1;
 
     fp = fopen(request_path, "r");
     if (fp == NULL) {
@@ -265,7 +265,7 @@ static int aml_check_run_request_io(const char *root)
 
     if (aml_expect(strcmp(command_line, "GAME.EXE\n") == 0, "run request command line matches")) return 1;
     if (aml_expect(strcmp(path_line, "C:\\GAMES\n") == 0, "run request path line matches")) return 1;
-    if (aml_expect(aml_clear_run_request(request_path) == 0, "run request clear succeeds")) return 1;
+    if (aml_expect(launch_clear_run_request(request_path) == 0, "run request clear succeeds")) return 1;
     if (aml_expect(access(request_path, F_OK) != 0, "run request removed")) return 1;
 
     return 0;

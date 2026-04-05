@@ -8,7 +8,10 @@ typedef enum AmlCfgStatus {
     AML_CFG_IO_ERROR = 1
 } AmlCfgStatus;
 
-AmlCfgStatus aml_load_config(AmlState *state, const char *path);
-AmlCfgStatus aml_save_config(const AmlState *state, const char *path);
+AmlCfgStatus cfg_load(AmlState *state, const char *path);
+AmlCfgStatus cfg_save(const AmlState *state, const char *path);
+
+#define aml_load_config cfg_load
+#define aml_save_config cfg_save
 
 #endif

@@ -58,8 +58,8 @@ static void show_notice_and_wait(const AmlState *state,
                                  const char *line2,
                                  const char *line3)
 {
-    aml_ui_show_notice(state, title, line1, line2, line3);
-    aml_ui_wait_for_ack();
+    ui_show_notice(state, title, line1, line2, line3);
+    ui_wait_for_ack();
 }
 
 static int handle_launch_check(const AmlState *state, AmlLaunchCheck rc)
@@ -114,24 +114,24 @@ static int handle_launch_check(const AmlState *state, AmlLaunchCheck rc)
 static void show_initial_config_status(const AmlState *state, AmlCfgStatus rc)
 {
     if (rc != 0) {
-        aml_ui_show_message(
+        ui_show_message(
             "No launcher.cfg yet",
             state->editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to create entries.",
             state->editor_mode ? "Use F2 to save the new configuration." : "",
             ""
         );
-        aml_ui_wait_for_ack();
+        ui_wait_for_ack();
         return;
     }
 
     if (state->entry_count <= 0) {
-        aml_ui_show_message(
+        ui_show_message(
             "Launcher config is empty",
             state->editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to add entries.",
             state->editor_mode ? "Use F2 to save changes." : "",
             ""
         );
-        aml_ui_wait_for_ack();
+        ui_wait_for_ack();
     }
 }
 
@@ -182,7 +182,7 @@ static void restore_mode_flags_after_load_error(AmlState *state)
 
 static void load_launcher_config(AmlState *state, AmlCfgStatus *cfg_status)
 {
-    *cfg_status = aml_load_config(state, AML_CONFIG_FILE);
+    *cfg_status = cfg_load(state, AML_CONFIG_FILE);
     if (*cfg_status != AML_CFG_OK) {
         restore_mode_flags_after_load_error(state);
     }
@@ -203,7 +203,7 @@ static int handle_save_action(AmlState *state)
         return 1;
     }
 
-    rc = aml_save_config(state, AML_CONFIG_FILE);
+    rc = cfg_save(state, AML_CONFIG_FILE);
     if (rc != AML_CFG_OK) {
         show_notice_and_wait(
             state,
@@ -229,10 +229,10 @@ static int handle_save_action(AmlState *state)
 static AmlLaunchCheck check_action_launch_entry(const AmlState *state, AmlUiAction action)
 {
     if (action == AML_UI_LAUNCH_CHILD_DIRECT) {
-        return aml_check_direct_launch_entry(&state->entries[state->selected]);
+        return launch_check_direct_entry(&state->entries[state->selected]);
     }
 
-    return aml_check_launch_entry(&state->entries[state->selected]);
+    return launch_check_entry(&state->entries[state->selected]);
 }
 
 static int is_launch_action(AmlUiAction action)
@@ -256,12 +256,12 @@ static int handle_child_launch_action(AmlState *state, AmlUiAction action)
         return 0;
     }
 
-    aml_ui_shutdown();
-    rc = aml_run_entry_child(
+    ui_shutdown();
+    rc = launch_run_child(
         &state->entries[state->selected],
         action == AML_UI_LAUNCH_CHILD_SHELL
     );
-    aml_ui_init();
+    ui_init();
     if (rc == AML_LAUNCH_CHILD_FAILED) {
         show_notice_and_wait(
             state,
@@ -302,7 +302,7 @@ static int handle_launch_action(AmlState *state, AmlUiAction action, int *launch
         return 1;
     }
 
-    if (aml_write_run_request(&state->entries[state->selected], AML_RUN_FILE) != 0) {
+    if (launch_write_run_request(&state->entries[state->selected], AML_RUN_FILE) != 0) {
         show_notice_and_wait(
             state,
             "Failed to write AML2.RUN",
@@ -357,15 +357,15 @@ int main(int argc, char **argv)
 
     load_launcher_config(&state, &cfg_status);
 
-    aml_ui_init();
+    ui_init();
     show_initial_config_status(&state, cfg_status);
 
     for (;;) {
-        if (handle_ui_action(&state, aml_ui_run(&state), &launched)) {
+        if (handle_ui_action(&state, ui_run(&state), &launched)) {
             break;
         }
     }
 
-    aml_ui_shutdown();
+    ui_shutdown();
     return launched;
 }

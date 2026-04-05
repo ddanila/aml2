@@ -22,7 +22,7 @@ static int aml_check_load_basic(const char *path)
     AmlState state;
 
     aml_init_state(&state);
-    if (aml_load_config(&state, path) != AML_CFG_OK) {
+    if (cfg_load(&state, path) != AML_CFG_OK) {
         fprintf(stderr, "FAIL: load basic config\n");
         return 1;
     }
@@ -42,7 +42,7 @@ static int aml_check_load_limit(const char *path)
     AmlState state;
 
     aml_init_state(&state);
-    if (aml_load_config(&state, path) != AML_CFG_OK) {
+    if (cfg_load(&state, path) != AML_CFG_OK) {
         fprintf(stderr, "FAIL: load limit config\n");
         return 1;
     }
@@ -58,7 +58,7 @@ static int aml_check_missing_load(const char *path)
     AmlState state;
 
     aml_init_state(&state);
-    if (aml_load_config(&state, path) != AML_CFG_IO_ERROR) {
+    if (cfg_load(&state, path) != AML_CFG_IO_ERROR) {
         fprintf(stderr, "FAIL: missing config should return io error\n");
         return 1;
     }
@@ -85,7 +85,7 @@ static int aml_check_save_output(const char *out_path)
     strcpy(state.entries[1].command, "TWO.BAT");
     strcpy(state.entries[1].path, "D:\\DOS");
 
-    if (aml_save_config(&state, out_path) != AML_CFG_OK) {
+    if (cfg_save(&state, out_path) != AML_CFG_OK) {
         fprintf(stderr, "FAIL: save config\n");
         return 1;
     }

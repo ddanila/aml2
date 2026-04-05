@@ -81,7 +81,7 @@ static void wait_for_input_redraw(AmlState *state, const char *status, unsigned 
         unsigned now_second = ui_current_second();
 
         if (now_second != *last_second) {
-            aml_ui_draw(state, status);
+            ui_draw(state, status);
             *last_second = now_second;
         }
         delay(50);
@@ -155,7 +155,7 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
     return (AmlUiAction)AML_UI_AUTO_NONE;
 }
 
-AmlUiAction aml_ui_run(AmlState *state)
+AmlUiAction ui_run(AmlState *state)
 {
     const char *status = "";
     unsigned last_second = 60;
@@ -166,7 +166,7 @@ AmlUiAction aml_ui_run(AmlState *state)
         AmlUiAction action;
         int key;
 
-        aml_ui_draw(state, status);
+        ui_draw(state, status);
         last_second = ui_current_second();
 
         action = apply_test_automation(state);
