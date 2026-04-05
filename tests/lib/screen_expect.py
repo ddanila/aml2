@@ -13,6 +13,8 @@ VRAM_PHYS = 0xB8000
 VRAM_SIZE = 4000
 COLS = 80
 ROWS = 25
+BIGTEXT_COL = 11
+BIGTEXT_ROWS = list(range(2, 22, 2))
 POLL_INTERVAL = 0.3
 KEY_DELAY = 0.05
 POST_MATCH_DELAY = float(os.environ.get("SCREEN_EXPECT_POST_MATCH_DELAY", "0.8"))
@@ -85,6 +87,70 @@ class QMPConnection:
         self.sock.close()
 
 
+def build_bigtext_quad_map() -> dict[tuple[int, int, int, int], str]:
+    reserved = {176, 179, 191, 192, 196, 217, 218, 219, 250}
+    codes: list[int] = []
+
+    for code in range(0x00, 0x1B):
+        if code not in reserved:
+            codes.append(code)
+    for code in range(0x80, 0x100):
+        if code not in reserved:
+            codes.append(code)
+
+    glyphs = [chr(code) for code in range(ord("A"), ord("Z") + 1)]
+    glyphs.extend(chr(code) for code in range(ord("0"), ord("9") + 1))
+
+    quad_map: dict[tuple[int, int, int, int], str] = {}
+    for idx, ch in enumerate(glyphs):
+        base = idx * 4
+        quad_map[(codes[base], codes[base + 1], codes[base + 2], codes[base + 3])] = ch
+    return quad_map
+
+
+BIGTEXT_QUAD_MAP = build_bigtext_quad_map()
+
+
+def decode_bigtext_row(chars: bytes, top_row: int) -> str:
+    if top_row < 0 or top_row + 1 >= ROWS:
+        return ""
+
+    top = chars[top_row * COLS : (top_row + 1) * COLS]
+    bottom = chars[(top_row + 1) * COLS : (top_row + 2) * COLS]
+    col = BIGTEXT_COL
+    out: list[str] = []
+
+    while col + 1 < COLS:
+        quad = (top[col], top[col + 1], bottom[col], bottom[col + 1])
+        if quad in BIGTEXT_QUAD_MAP:
+            out.append(BIGTEXT_QUAD_MAP[quad])
+            col += 2
+            if col < COLS and top[col] == 32 and bottom[col] == 32:
+                col += 1
+            continue
+
+        if top[col] == 32 and bottom[col] == 32:
+            if out and out[-1] != " ":
+                out.append(" ")
+            col += 1
+            continue
+
+        if out:
+            break
+        col += 1
+
+    return "".join(out).strip()
+
+
+def decode_bigtext_lines(chars: bytes) -> list[str]:
+    lines = []
+    for row in BIGTEXT_ROWS:
+        decoded = decode_bigtext_row(chars, row)
+        if decoded:
+            lines.append(decoded)
+    return lines
+
+
 def read_screen_text(qmp: QMPConnection, tmp_path: str) -> str:
     qmp.human_cmd(f'pmemsave 0x{VRAM_PHYS:X} {VRAM_SIZE} "{tmp_path}"')
     try:
@@ -100,6 +166,8 @@ def read_screen_text(qmp: QMPConnection, tmp_path: str) -> str:
     for row in range(ROWS):
         line = chars[row * COLS : (row + 1) * COLS]
         lines.append(line.decode("cp437", errors="replace").rstrip())
+    for decoded in decode_bigtext_lines(chars):
+        lines.append(f"[BIG] {decoded}")
     return "\n".join(lines)
 
 

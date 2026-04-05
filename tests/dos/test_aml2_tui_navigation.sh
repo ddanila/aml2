@@ -32,11 +32,11 @@ aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "AMLUI.EXE /V"
 
 aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 20 8 \
     'Arvutimuuseum Launcher' '' \
-    'Entry 19' '' \
+    'ENTRY 19' '' \
     'A>' ''
 
 grep -q 'Danila Sukharev' "$SCREEN_LOG"
-grep -q 'Entry 19' "$SCREEN_LOG"
+grep -q '\[BIG\] ENTRY 19' "$SCREEN_LOG"
 grep -q '^A>$' "$SCREEN_LOG"
 
 echo "tui navigation test passed"

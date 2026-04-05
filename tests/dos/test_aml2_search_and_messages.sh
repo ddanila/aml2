@@ -45,11 +45,11 @@ run_case \
     "search navigation" \
     "$REPO_ROOT/tests/data/cfg/launcher.long.cfg" \
     "$REPO_ROOT/tests/data/auto/AML2.SEH" \
-    "Entry 19" \
+    "ENTRY 19" \
     "" \
     "A>" \
     ""
-grep -q 'Entry 19' "$SCREEN_LOG"
+grep -q '\[BIG\] ENTRY 19' "$SCREEN_LOG"
 
 run_case \
     "empty config message" \

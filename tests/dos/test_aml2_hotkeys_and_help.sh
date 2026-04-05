@@ -47,9 +47,9 @@ run_case \
     "$REPO_ROOT/tests/data/cfg/launcher.hotkeys.cfg" \
     "AMLUI.EXE /V" \
     "$REPO_ROOT/tests/data/auto/AML2.HKA" \
-    'Entry 36' '' \
+    'ENTRY 36' '' \
     'A>' ''
-grep -q 'Entry 36' "$SCREEN_LOG"
+grep -q '\[BIG\] ENTRY 36' "$SCREEN_LOG"
 
 run_case \
     "help dialog" \
