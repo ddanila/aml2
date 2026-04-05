@@ -11,7 +11,4 @@ typedef enum AmlCfgStatus {
 AmlCfgStatus cfg_load(AmlState *state, const char *path);
 AmlCfgStatus cfg_save(const AmlState *state, const char *path);
 
-#define aml_load_config cfg_load
-#define aml_save_config cfg_save
-
 #endif
