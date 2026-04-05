@@ -21,7 +21,7 @@ The main launcher list is rendered in a custom VGA text-mode big font. It shows 
 Current output sizes from `./tools/build.sh` are approximately:
 
 - `amlui.exe`: 32 KB
-- `aml.com`: 1337 bytes
+- `aml.com`: 1295 bytes
 
 ## Quick Start
 
@@ -58,9 +58,10 @@ Expected DOS-side files:
 
 - `/V` to enter viewer mode explicitly
 - `/E` to enable editor mode
+- `/S` to enable supervised mode (passed automatically by `AML.COM`; required for game launching)
 - `/?` to print usage and exit
 
-Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only available in editor mode, and game launches are only enabled when `AMLUI.EXE` was started through `AML.COM`.
+Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only available in editor mode, and game launches are only enabled when `AMLUI.EXE` was started through `AML.COM` (or with `/S` explicitly).
 
 ## Config Format
 
@@ -68,6 +69,7 @@ Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only avai
 
 ```text
 Name|Command|Working Directory
+Name|Command|
 ```
 
 Rules:
@@ -76,7 +78,7 @@ Rules:
 - blank lines are ignored
 - surrounding whitespace is trimmed
 - `name` and `command` are required
-- `path` is optional
+- `path` is optional, but the trailing `|` is always required
 
 ## Controls
 

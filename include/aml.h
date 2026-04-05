@@ -3,7 +3,7 @@
 
 #include "aml_build.h"
 
-#define AML_CONFIG_FILE "launcher.cfg"
+#define AML_CONFIG_FILE "LAUNCHER.CFG"
 #define AML_RUN_FILE "AML2.RUN"
 #define AML_STUB_FILE "AML.COM"
 #define AML_AUTO_FILE "AML2.AUT"

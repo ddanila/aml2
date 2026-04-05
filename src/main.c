@@ -115,7 +115,7 @@ static void show_initial_config_status(const AmlState *state, AmlCfgStatus rc)
 {
     if (rc != 0) {
         ui_show_message(
-            "No launcher.cfg yet",
+            "No LAUNCHER.CFG yet",
             state->editor_mode ? "Use Ins to add an entry." : "Run AMLUI /E to create entries.",
             state->editor_mode ? "Use F2 to save the new configuration." : "",
             ""
