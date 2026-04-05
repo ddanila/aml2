@@ -33,6 +33,6 @@ Improve the config parser and saver code so it is easier to reason about and bet
 ## Verification
 
 - `./tools/build.sh`
-- `bash tests/test_aml2_failure_paths.sh`
-- `bash tests/test_aml2_edit_ops.sh`
+- `bash tests/dos/test_aml2_failure_paths.sh`
+- `bash tests/dos/test_aml2_edit_ops.sh`
 - new parser-focused test script

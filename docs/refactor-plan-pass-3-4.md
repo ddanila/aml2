@@ -5,7 +5,7 @@
 Reduce maintenance risk in the launcher UI code by:
 
 - extracting shared state and guard helpers
-- splitting the large `src/ui.c` module by responsibility
+- splitting the large UI implementation by responsibility
 
 without changing:
 
@@ -34,9 +34,9 @@ without changing:
 ## Verification
 
 - `./tools/build.sh`
-- `bash tests/test_cfg_parser.sh`
-- `bash tests/test_aml2_hotkeys_and_help.sh`
-- `bash tests/test_aml2_edit_ops.sh`
-- `bash tests/test_aml2_failure_paths.sh`
+- `bash tests/host/test_cfg_parser.sh`
+- `bash tests/dos/test_aml2_hotkeys_and_help.sh`
+- `bash tests/dos/test_aml2_edit_ops.sh`
+- `bash tests/dos/test_aml2_failure_paths.sh`
 
-Run sequentially because the current test scripts share `out/`.
+Run sequentially through the aggregate runners when you want the full suite.

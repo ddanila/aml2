@@ -2,7 +2,7 @@
 
 ## Result
 
-`tests/test_aml2_e2e.sh` now passes against real DOS under QEMU.
+`tests/dos/test_aml2_e2e.sh` now passes against real DOS under QEMU.
 
 Validated sequence:
 
@@ -104,7 +104,7 @@ Files used by the test:
 - `AML2.RUN`
   - normal launcher-to-stub handoff file
 
-Additional failure-path coverage now exists in `tests/test_aml2_failure_paths.sh`:
+Additional failure-path coverage now exists in `tests/dos/test_aml2_failure_paths.sh`:
 
 - missing `AMLUI.EXE`
 - invalid launch working directory

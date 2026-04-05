@@ -185,11 +185,28 @@ Cons:
 
 1. Rename `static` file-local helpers to drop `aml_`.
 2. Rename shared internal UI helpers from `aml_ui_*` to `ui_*`.
-3. Rename exported functions to module prefixes:
+3. Before any dialog-struct work, rename generic dialog/layout interfaces to neutral UI names and keep `AML_*` / `Aml*` only on launcher-specific state, actions, limits, and behavior.
+4. Rename exported functions to module prefixes:
    - `cfg_*`
    - `ui_*`
    - `launch_*`
-4. Decide later whether shared types should also drop the `Aml` prefix.
+5. Decide later whether shared types should also drop the `Aml` prefix.
+
+## Dialog Interface Prerequisite
+
+The dialog rendering helpers under `src/ui_core.c` and `src/ui_int.h` are increasingly acting like general UI infrastructure rather than AML-specific launcher logic.
+
+Before introducing any struct-driven dialog specification, first rename the generic dialog-facing interfaces so the ownership boundary is clearer:
+
+- keep launcher-domain names such as `AmlState`, `AmlEntry`, `AmlUiAction`, and `AML_MAX_*`
+- move generic dialog/layout helpers to neutral UI naming
+- keep the rename narrowly scoped to dialog/layout/rendering interfaces in the first pass
+
+Reason:
+
+- a dialog spec API should read like reusable UI infrastructure, not launcher business logic
+- it clarifies which parts belong to presentation plumbing versus AML application state
+- it keeps the later dialog abstraction pass smaller and easier to review
 
 ## Recommended Public API Strategy
 

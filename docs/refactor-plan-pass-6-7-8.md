@@ -32,10 +32,10 @@ without changing:
 
 ## Verification
 
-- `bash tests/test_cfg_parser.sh`
-- `bash tests/test_aml2_tui_navigation.sh`
-- `bash tests/test_aml2_search_and_messages.sh`
-- `bash tests/test_aml2_hotkeys_and_help.sh`
-- `bash tests/test_aml2_edit_ops.sh`
-- `bash tests/test_aml2_failure_paths.sh`
-- `bash tests/test_aml2_e2e.sh`
+- `bash tests/host/test_cfg_parser.sh`
+- `bash tests/dos/test_aml2_tui_navigation.sh`
+- `bash tests/dos/test_aml2_search_and_messages.sh`
+- `bash tests/dos/test_aml2_hotkeys_and_help.sh`
+- `bash tests/dos/test_aml2_edit_ops.sh`
+- `bash tests/dos/test_aml2_failure_paths.sh`
+- `bash tests/dos/test_aml2_e2e.sh`

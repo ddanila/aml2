@@ -138,16 +138,18 @@ To copy extra DOS files onto the floppy image before boot:
 Main checks:
 
 ```bash
-bash tests/test_aml2_e2e.sh
-bash tests/test_aml2_tui_navigation.sh
-bash tests/test_aml2_search_and_messages.sh
-bash tests/test_aml2_hotkeys_and_help.sh
-bash tests/test_aml2_edit_ops.sh
-bash tests/test_aml2_failure_paths.sh
-bash tests/test_kvikdos_smoke.sh
+bash tests/run_all.sh
 ```
 
-QEMU is the authoritative path for the launcher UI and stub loop. `kvikdos` is only used for fast non-TUI smoke checks.
+Targeted runners are also available:
+
+```bash
+bash tests/run_host.sh
+bash tests/run_dos_ui.sh
+bash tests/run_dos_launch.sh
+```
+
+QEMU is the authoritative path for the launcher UI and stub loop. `kvikdos` is only used for fast non-TUI smoke checks in the DOS launch suite.
 
 See [docs/stub-design.md](docs/stub-design.md), [docs/e2e-findings.md](docs/e2e-findings.md), [docs/design.md](docs/design.md), and [docs/toolchain.md](docs/toolchain.md) for implementation details.
 

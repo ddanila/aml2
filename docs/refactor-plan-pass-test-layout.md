@@ -9,7 +9,7 @@
 ## Constraints
 
 - No product behavior changes.
-- DOS/QEMU suites must remain sequential because they share `out/`.
+- DOS/QEMU suites must remain sequential at the runner level.
 - Standalone test scripts should keep working outside the aggregate runners.
 
 ## Verification

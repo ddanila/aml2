@@ -71,13 +71,13 @@ These are placeholders and should be tuned against real museum launcher data.
 - line trimming
 - bounds checks
 
-### `src/ui.c`
+### `src/ui_core.c`, `src/ui_loop.c`, `src/ui_edit.c`, `src/ui_state.c`, `src/ui_auto.c`
 
-- clear screen
-- draw frame
-- draw list
-- key input
-- selection updates
+- core rendering, frame, and dialog drawing
+- main UI loop and key input dispatch
+- edit overlays and dialog flows
+- shared selection/state helpers
+- DOS-side test automation hooks
 
 ### `src/launch.c`
 
