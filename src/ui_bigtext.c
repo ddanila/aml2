@@ -14,9 +14,11 @@ enum {
 
 static unsigned char ui_bigtext_original_font[256][UI_BIGTEXT_BYTES];
 static unsigned char ui_bigtext_patched_font[256][UI_BIGTEXT_BYTES];
+static unsigned char ui_bigtext_fancy_font[256][UI_BIGTEXT_BYTES];
 static unsigned char ui_bigtext_codes[UI_BIGTEXT_TILE_COUNT];
 static int ui_bigtext_ready;
 static int ui_bigtext_enabled;
+static int ui_bigtext_fancy_active;
 static unsigned char ui_bigtext_saved_clocking_mode;
 
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
@@ -90,9 +92,12 @@ static void ui_bigtext_capture_default_font(void)
         ((unsigned char *)ui_bigtext_original_font)[i] = font_ptr[i];
     }
     memcpy(ui_bigtext_patched_font, ui_bigtext_original_font, sizeof(ui_bigtext_patched_font));
+    memcpy(ui_bigtext_fancy_font, ui_bigtext_original_font, sizeof(ui_bigtext_fancy_font));
 }
 
-static void ui_bigtext_build_letter(unsigned char letter)
+static void ui_bigtext_build_letter_into(unsigned char letter,
+                                          unsigned char font[256][UI_BIGTEXT_BYTES],
+                                          int fancy)
 {
     unsigned char scaled_rows[32][2];
     unsigned char quads[4][UI_BIGTEXT_BYTES];
@@ -123,6 +128,16 @@ static void ui_bigtext_build_letter(unsigned char letter)
         }
     }
 
+    if (fancy) {
+        for (row = 16; row < 32; ++row) {
+            unsigned char s0 = (unsigned char)((scaled_rows[row][0] << 1) |
+                                               (scaled_rows[row][1] >> 7));
+            unsigned char s1 = (unsigned char)(scaled_rows[row][1] << 1);
+            scaled_rows[row][0] |= s0;
+            scaled_rows[row][1] |= s1;
+        }
+    }
+
     for (row = 0; row < 32; ++row) {
         for (col = 0; col < 16; ++col) {
             unsigned char mask = (unsigned char)(0x80u >> (col & 7));
@@ -137,7 +152,7 @@ static void ui_bigtext_build_letter(unsigned char letter)
     }
 
     for (q = 0; q < 4; ++q) {
-        memcpy(ui_bigtext_patched_font[ui_bigtext_codes[base + q]], quads[q], UI_BIGTEXT_BYTES);
+        memcpy(font[ui_bigtext_codes[base + q]], quads[q], UI_BIGTEXT_BYTES);
     }
 }
 
@@ -160,10 +175,12 @@ static void ui_bigtext_build_font(void)
     unsigned char ch;
 
     for (ch = 'A'; ch <= 'Z'; ++ch) {
-        ui_bigtext_build_letter(ch);
+        ui_bigtext_build_letter_into(ch, ui_bigtext_patched_font, 0);
+        ui_bigtext_build_letter_into(ch, ui_bigtext_fancy_font, 1);
     }
     for (ch = '0'; ch <= '9'; ++ch) {
-        ui_bigtext_build_letter(ch);
+        ui_bigtext_build_letter_into(ch, ui_bigtext_patched_font, 0);
+        ui_bigtext_build_letter_into(ch, ui_bigtext_fancy_font, 1);
     }
 }
 
@@ -179,18 +196,36 @@ static void ui_bigtext_prepare(void)
     ui_bigtext_ready = 1;
 }
 
+static void ui_bigtext_activate(int fancy)
+{
+    unsigned char (*font)[UI_BIGTEXT_BYTES] = fancy
+        ? ui_bigtext_fancy_font
+        : ui_bigtext_patched_font;
+
+    if (!ui_bigtext_enabled) {
+        outp(0x3C4, 0x01);
+        ui_bigtext_saved_clocking_mode = inp(0x3C5);
+        outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
+        ui_bigtext_load_font(font);
+        ui_bigtext_fancy_active = fancy;
+        ui_bigtext_enabled = 1;
+    } else if (ui_bigtext_fancy_active != fancy) {
+        ui_bigtext_load_font(font);
+        ui_bigtext_fancy_active = fancy;
+    }
+}
+
 int ui_bigtext_enable(void)
 {
     ui_bigtext_prepare();
-    if (ui_bigtext_enabled) {
-        return 1;
-    }
+    ui_bigtext_activate(0);
+    return 1;
+}
 
-    outp(0x3C4, 0x01);
-    ui_bigtext_saved_clocking_mode = inp(0x3C5);
-    outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
-    ui_bigtext_load_font(ui_bigtext_patched_font);
-    ui_bigtext_enabled = 1;
+int ui_bigtext_enable_fancy(void)
+{
+    ui_bigtext_prepare();
+    ui_bigtext_activate(1);
     return 1;
 }
 
@@ -204,6 +239,7 @@ void ui_bigtext_disable(void)
     outp(0x3C4, 0x01);
     outp(0x3C5, ui_bigtext_saved_clocking_mode);
     ui_bigtext_enabled = 0;
+    ui_bigtext_fancy_active = 0;
 }
 
 int ui_bigtext_is_enabled(void)

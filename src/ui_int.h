@@ -196,6 +196,7 @@ void ui_draw_menu_dialog(const UiMenuDialog *dialog);
 void ui_draw_header_on_frame_common(int modified);
 void ui_draw_header_on_frame(const AmlState *state);
 int ui_bigtext_enable(void);
+int ui_bigtext_enable_fancy(void);
 void ui_bigtext_disable(void);
 int ui_bigtext_is_enabled(void);
 void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr);

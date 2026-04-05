@@ -818,7 +818,7 @@ static void draw_entries(const AmlState *state)
         return;
     }
 
-    ui_bigtext_enable();
+    ui_bigtext_enable_fancy();
 
     for (row = 0, index = top;
          row < UI_LIST_VISIBLE && index < state->entry_count;
