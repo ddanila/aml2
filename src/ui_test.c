@@ -3,7 +3,7 @@
 
 #include "ui_int.h"
 
-static void aml_ui_trim_newline(char *line)
+static void trim_newline(char *line)
 {
     size_t len = strlen(line);
 
@@ -14,7 +14,7 @@ static void aml_ui_trim_newline(char *line)
 }
 
 #if AML_TEST_HOOKS
-int aml_ui_read_auto_line(char *line, unsigned line_size)
+int ui_read_auto_line(char *line, unsigned line_size)
 {
     FILE *fp;
     char current[AML_MAX_LINE + 1];
@@ -31,7 +31,7 @@ int aml_ui_read_auto_line(char *line, unsigned line_size)
     rest[0] = '\0';
 
     while (fgets(current, sizeof(current), fp) != NULL) {
-        aml_ui_trim_newline(current);
+        trim_newline(current);
         if (!found && current[0] != '\0') {
             strncpy(line, current, line_size - 1);
             line[line_size - 1] = '\0';
@@ -70,7 +70,7 @@ int aml_ui_read_auto_line(char *line, unsigned line_size)
     return 1;
 }
 
-void aml_ui_trace_event(const char *event_name)
+void ui_trace_event(const char *event_name)
 {
     FILE *fp;
 
@@ -83,14 +83,14 @@ void aml_ui_trace_event(const char *event_name)
     fclose(fp);
 }
 #else
-int aml_ui_read_auto_line(char *line, unsigned line_size)
+int ui_read_auto_line(char *line, unsigned line_size)
 {
     (void)line;
     (void)line_size;
     return 0;
 }
 
-void aml_ui_trace_event(const char *event_name)
+void ui_trace_event(const char *event_name)
 {
     (void)event_name;
 }

@@ -4,7 +4,7 @@
 
 #include "cfg.h"
 
-static void aml_reset_config_state(AmlState *state)
+static void reset_config_state(AmlState *state)
 {
     state->entry_count = 0;
     state->selected = 0;
@@ -12,7 +12,7 @@ static void aml_reset_config_state(AmlState *state)
     state->modified = 0;
 }
 
-static void aml_copy_field(char *dst, unsigned dst_size, const char *src)
+static void copy_field(char *dst, unsigned dst_size, const char *src)
 {
     if (dst_size == 0) {
         return;
@@ -22,7 +22,7 @@ static void aml_copy_field(char *dst, unsigned dst_size, const char *src)
     dst[dst_size - 1] = '\0';
 }
 
-static void aml_trim_newline(char *line)
+static void trim_newline(char *line)
 {
     size_t len = strlen(line);
 
@@ -32,7 +32,7 @@ static void aml_trim_newline(char *line)
     }
 }
 
-static char *aml_trim_field(char *text)
+static char *trim_field(char *text)
 {
     char *end;
 
@@ -49,7 +49,7 @@ static char *aml_trim_field(char *text)
     return text;
 }
 
-static int aml_parse_config_line(AmlState *state, char *line)
+static int parse_config_line(AmlState *state, char *line)
 {
     char *name_end;
     char *command_start;
@@ -60,9 +60,9 @@ static int aml_parse_config_line(AmlState *state, char *line)
     char *entry_path;
     AmlEntry *entry;
 
-    aml_trim_newline(line);
+    trim_newline(line);
 
-    command_start = aml_trim_field(line);
+    command_start = trim_field(line);
     if (command_start[0] == '\0' || command_start[0] == '#') {
         return 0;
     }
@@ -81,9 +81,9 @@ static int aml_parse_config_line(AmlState *state, char *line)
 
     *command_end = '\0';
     path_start = command_end + 1;
-    name = aml_trim_field(line);
-    command = aml_trim_field(command_start);
-    entry_path = aml_trim_field(path_start);
+    name = trim_field(line);
+    command = trim_field(command_start);
+    entry_path = trim_field(path_start);
 
     if (name[0] == '\0' || command[0] == '\0') {
         return 0;
@@ -94,13 +94,13 @@ static int aml_parse_config_line(AmlState *state, char *line)
     }
 
     entry = &state->entries[state->entry_count++];
-    aml_copy_field(entry->name, sizeof(entry->name), name);
-    aml_copy_field(entry->command, sizeof(entry->command), command);
-    aml_copy_field(entry->path, sizeof(entry->path), entry_path);
+    copy_field(entry->name, sizeof(entry->name), name);
+    copy_field(entry->command, sizeof(entry->command), command);
+    copy_field(entry->path, sizeof(entry->path), entry_path);
     return 0;
 }
 
-static AmlCfgStatus aml_open_config_for_read(const char *path, FILE **fp)
+static AmlCfgStatus open_config_for_read(const char *path, FILE **fp)
 {
     *fp = fopen(path, "r");
     if (*fp == NULL) {
@@ -110,12 +110,12 @@ static AmlCfgStatus aml_open_config_for_read(const char *path, FILE **fp)
     return AML_CFG_OK;
 }
 
-static void aml_load_config_lines(AmlState *state, FILE *fp)
+static void load_config_lines(AmlState *state, FILE *fp)
 {
     char line[AML_MAX_LINE + 1];
 
     while (fgets(line, sizeof(line), fp) != NULL) {
-        if (aml_parse_config_line(state, line)) {
+        if (parse_config_line(state, line)) {
             break;
         }
     }
@@ -125,18 +125,18 @@ AmlCfgStatus aml_load_config(AmlState *state, const char *path)
 {
     FILE *fp;
 
-    aml_reset_config_state(state);
+    reset_config_state(state);
 
-    if (aml_open_config_for_read(path, &fp) != AML_CFG_OK) {
+    if (open_config_for_read(path, &fp) != AML_CFG_OK) {
         return AML_CFG_IO_ERROR;
     }
 
-    aml_load_config_lines(state, fp);
+    load_config_lines(state, fp);
     fclose(fp);
     return AML_CFG_OK;
 }
 
-static AmlCfgStatus aml_open_config_for_write(const char *path, FILE **fp)
+static AmlCfgStatus open_config_for_write(const char *path, FILE **fp)
 {
     *fp = fopen(path, "w");
     if (*fp == NULL) {
@@ -146,14 +146,14 @@ static AmlCfgStatus aml_open_config_for_write(const char *path, FILE **fp)
     return AML_CFG_OK;
 }
 
-static void aml_write_config_header(FILE *fp)
+static void write_config_header(FILE *fp)
 {
     fprintf(fp, "# aml2 configuration\n");
     fprintf(fp, "# Format: Name|Command|Working Directory\n");
     fprintf(fp, "\n");
 }
 
-static void aml_write_config_entries(const AmlState *state, FILE *fp)
+static void write_config_entries(const AmlState *state, FILE *fp)
 {
     int i;
 
@@ -169,12 +169,12 @@ AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
 {
     FILE *fp;
 
-    if (aml_open_config_for_write(path, &fp) != AML_CFG_OK) {
+    if (open_config_for_write(path, &fp) != AML_CFG_OK) {
         return AML_CFG_IO_ERROR;
     }
 
-    aml_write_config_header(fp);
-    aml_write_config_entries(state, fp);
+    write_config_header(fp);
+    write_config_entries(state, fp);
     fclose(fp);
     return AML_CFG_OK;
 }

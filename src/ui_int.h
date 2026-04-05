@@ -63,34 +63,34 @@ enum {
     AML_UI_AUTO_REDRAW = -2
 };
 
-void aml_ui_hide_cursor(void);
-void aml_ui_show_cursor(void);
-void aml_ui_set_cursor(int col, int row);
-void aml_ui_flush(void);
-void aml_ui_fill_rect(int left, int top, int right, int bottom,
-                      unsigned char ch, unsigned char attr);
-void aml_ui_putc(int col, int row, unsigned char ch, unsigned char attr);
-void aml_ui_write_at(int col, int row, const char *text, unsigned char attr);
-void aml_ui_write_padded(int col, int row, const char *text, int width, unsigned char attr);
-int aml_ui_visible_start(const char *text, int width, int start, int cursor);
-void aml_ui_write_clipped(int col, int row, const char *text, int width,
-                          int start, int cursor, unsigned char attr);
-void aml_ui_write_ellipsis(int col, int row, const char *text, int width, unsigned char attr);
-void aml_ui_write_centered(int row, const char *text, unsigned char attr);
-void aml_ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr);
-unsigned aml_ui_current_second(void);
-void aml_ui_draw_frame(void);
-int aml_ui_dialog_row(int top, int inner_row);
-void aml_ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title);
-void aml_ui_draw_header_on_frame_common(int modified);
-void aml_ui_draw_header_on_frame(const AmlState *state);
-int aml_ui_hotkey_index(int key);
-char aml_ui_hotkey_char(int index);
-int aml_ui_find_match(const AmlState *state, const char *needle);
-void aml_ui_sync_view_top(AmlState *state);
-void aml_ui_render(const AmlState *state, const char *status);
-void aml_ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr);
-int aml_ui_read_auto_line(char *line, unsigned line_size);
-void aml_ui_trace_event(const char *event_name);
+void ui_hide_cursor(void);
+void ui_show_cursor(void);
+void ui_set_cursor(int col, int row);
+void ui_flush(void);
+void ui_fill_rect(int left, int top, int right, int bottom,
+                  unsigned char ch, unsigned char attr);
+void ui_putc(int col, int row, unsigned char ch, unsigned char attr);
+void ui_write_at(int col, int row, const char *text, unsigned char attr);
+void ui_write_padded(int col, int row, const char *text, int width, unsigned char attr);
+int ui_visible_start(const char *text, int width, int start, int cursor);
+void ui_write_clipped(int col, int row, const char *text, int width,
+                      int start, int cursor, unsigned char attr);
+void ui_write_ellipsis(int col, int row, const char *text, int width, unsigned char attr);
+void ui_write_centered(int row, const char *text, unsigned char attr);
+void ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr);
+unsigned ui_current_second(void);
+void ui_draw_frame(void);
+int ui_dialog_row(int top, int inner_row);
+void ui_draw_titled_dialog(int left, int top, int right, int bottom, const char *title);
+void ui_draw_header_on_frame_common(int modified);
+void ui_draw_header_on_frame(const AmlState *state);
+int ui_hotkey_index(int key);
+char ui_hotkey_char(int index);
+int ui_find_match(const AmlState *state, const char *needle);
+void ui_sync_view_top(AmlState *state);
+void ui_render(const AmlState *state, const char *status);
+void ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr);
+int ui_read_auto_line(char *line, unsigned line_size);
+void ui_trace_event(const char *event_name);
 
 #endif
