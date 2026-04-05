@@ -166,9 +166,7 @@ void ui_write_centered(int row, const char *text, unsigned char attr);
 void ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr);
 unsigned ui_current_second(void);
 void ui_draw_frame(void);
-int ui_dialog_row(int top, int inner_row);
 UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title);
-UiNoticeDialog ui_notice_dialog(UiDialogBox box, const char *line1, const char *line2, const char *line3);
 UiConfirmDialog ui_confirm_dialog(UiDialogBox box, const char *question, const char *value,
                                   int value_col, int value_width, const char *footer);
 UiDetailDialogRow ui_detail_dialog_row(const char *label, const char *value);
@@ -186,7 +184,6 @@ UiMenuDialog ui_menu_dialog(UiDialogBox box, int prompt_row, int prompt_col,
                             int menu_row, int menu_left, int menu_right, int item_col,
                             const char *const *items, int item_count, int selected,
                             const char *footer);
-void ui_draw_notice_dialog(const UiNoticeDialog *dialog);
 void ui_draw_confirm_dialog(const UiConfirmDialog *dialog);
 void ui_draw_detail_dialog(const UiDetailDialog *dialog);
 void ui_draw_text_line_dialog(const UiTextLineDialog *dialog);
@@ -201,7 +198,6 @@ char ui_hotkey_char(int index);
 int ui_find_match(const AmlState *state, const char *needle);
 void ui_sync_view_top(AmlState *state);
 void ui_render(const AmlState *state, const char *status);
-void ui_draw_detail_line(int row, const char *label, const char *value, unsigned char attr);
 int ui_read_auto_line(char *line, unsigned line_size);
 void ui_trace_event(const char *event_name);
 
