@@ -1,42 +1,22 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="$REPO_ROOT/out"
-BASE_IMG="${MSDOS_BASE_IMG:-$OUT_DIR/floppy-minimal.img}"
+source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+
+aml_test_init_paths "aml2_edit_ops"
+
+OUT_DIR="$AML_TEST_OUT_DIR"
+BASE_IMG="$AML_TEST_BASE_IMG"
 BOOT_IMG="$OUT_DIR/aml2-edit.img"
 AUTOEXEC="$OUT_DIR/AUTOEXEC.BAT"
 QMP_SOCK="$OUT_DIR/aml2-edit-qmp.sock"
 SCREEN_LOG="$OUT_DIR/aml2-edit-screen.log"
 QEMU_LOG="$OUT_DIR/aml2-edit-qemu.log"
 CFG_LOG="$OUT_DIR/aml2-edit-launcher.cfg"
-DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
-DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
-QEMU_PID=""
 
 cleanup() {
-    if [[ -n "$QEMU_PID" ]]; then
-        kill "$QEMU_PID" 2>/dev/null || true
-        wait "$QEMU_PID" 2>/dev/null || true
-    fi
-    rm -f "$QMP_SOCK" "$AUTOEXEC"
-}
-
-download_base_img() {
-    mkdir -p "$OUT_DIR"
-    if [[ -f "$BASE_IMG" ]]; then
-        return
-    fi
-
-    python3 - "$DOS_IMAGE_URL" "$BASE_IMG" <<'PY'
-import shutil
-import sys
-import urllib.request
-
-url, dest = sys.argv[1], sys.argv[2]
-with urllib.request.urlopen(url) as response, open(dest, "wb") as out:
-    shutil.copyfileobj(response, out)
-PY
+    aml_test_cleanup_qemu
+    aml_test_cleanup_files "$QMP_SOCK" "$AUTOEXEC"
 }
 
 run_case() {
@@ -49,33 +29,18 @@ run_case() {
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.edit.cfg" ::LAUNCHER.CFG
     mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
+    aml_test_write_autoexec "$AUTOEXEC" "$launch_cmd"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$CFG_LOG"
-    timeout 20 qemu-system-i386 \
-        -display none \
-        -monitor none \
-        -serial none \
-        -drive if=floppy,index=0,format=raw,file="$BOOT_IMG" \
-        -boot a \
-        -m 4 \
-        -qmp unix:"$QMP_SOCK",server,nowait \
-        >"$QEMU_LOG" 2>&1 &
-    QEMU_PID=$!
-
-    for _ in $(seq 1 50); do
-        [[ -S "$QMP_SOCK" ]] && break
-        sleep 0.2
-    done
+    aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 20
+    aml_test_wait_for_qmp "$QMP_SOCK"
 
     SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
         "$QMP_SOCK" "$SCREEN_LOG" \
         'A>' ''
 
-    kill "$QEMU_PID" 2>/dev/null || true
-    wait "$QEMU_PID" 2>/dev/null || true
-    QEMU_PID=""
+    aml_test_stop_qemu
 
     mtype -i "$BOOT_IMG" ::LAUNCHER.CFG > "$CFG_LOG"
     tr -d '\r' < "$CFG_LOG" > "$CFG_LOG.tmp"
@@ -84,11 +49,9 @@ run_case() {
 
 trap cleanup EXIT
 
-mkdir -p "$OUT_DIR"
-
 echo "Building aml2 for edit-operation tests ..."
 BUILD_TARGETS=all EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
-download_base_img
+aml_test_download_base_img
 
 run_case "viewer mode blocks save" "AMLUI.EXE /V" "$REPO_ROOT/tests/AML2.VWR"
 grep -q '^Alpha|ALPHA.EXE|$' "$CFG_LOG"

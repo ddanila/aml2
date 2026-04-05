@@ -1,9 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="$REPO_ROOT/out"
-BASE_IMG="${MSDOS_BASE_IMG:-$OUT_DIR/floppy-minimal.img}"
+source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+
+aml_test_init_paths "aml2_failure_paths"
+
+OUT_DIR="$AML_TEST_OUT_DIR"
+BASE_IMG="$AML_TEST_BASE_IMG"
 BOOT_IMG="$OUT_DIR/aml2-fail.img"
 AUTOEXEC="$OUT_DIR/AUTOEXEC.BAT"
 QMP_SOCK="$OUT_DIR/aml2-fail-qmp.sock"
@@ -11,33 +14,10 @@ SCREEN_LOG="$OUT_DIR/aml2-fail-screen.log"
 QEMU_LOG="$OUT_DIR/aml2-fail-qemu.log"
 TRACE_LOG="$OUT_DIR/aml2-fail-trace.log"
 TRACE_NORM="$OUT_DIR/aml2-fail-trace.norm.log"
-DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
-DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
-QEMU_PID=""
 
 cleanup() {
-    if [[ -n "$QEMU_PID" ]]; then
-        kill "$QEMU_PID" 2>/dev/null || true
-        wait "$QEMU_PID" 2>/dev/null || true
-    fi
-    rm -f "$QMP_SOCK" "$AUTOEXEC"
-}
-
-download_base_img() {
-    mkdir -p "$OUT_DIR"
-    if [[ -f "$BASE_IMG" ]]; then
-        return
-    fi
-
-    python3 - "$DOS_IMAGE_URL" "$BASE_IMG" <<'PY'
-import shutil
-import sys
-import urllib.request
-
-url, dest = sys.argv[1], sys.argv[2]
-with urllib.request.urlopen(url) as response, open(dest, "wb") as out:
-    shutil.copyfileobj(response, out)
-PY
+    aml_test_cleanup_qemu
+    aml_test_cleanup_files "$QMP_SOCK" "$AUTOEXEC"
 }
 
 run_case() {
@@ -58,34 +38,19 @@ run_case() {
     mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
     mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
     mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    printf '@ECHO OFF\r\n%s\r\n' "$launch_cmd" > "$AUTOEXEC"
+    aml_test_write_autoexec "$AUTOEXEC" "$launch_cmd"
     mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
     rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$TRACE_LOG" "$TRACE_NORM"
-    timeout 20 qemu-system-i386 \
-        -display none \
-        -monitor none \
-        -serial none \
-        -drive if=floppy,index=0,format=raw,file="$BOOT_IMG" \
-        -boot a \
-        -m 4 \
-        -qmp unix:"$QMP_SOCK",server,nowait \
-        >"$QEMU_LOG" 2>&1 &
-    QEMU_PID=$!
-
-    for _ in $(seq 1 50); do
-        [[ -S "$QMP_SOCK" ]] && break
-        sleep 0.2
-    done
+    aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 20
+    aml_test_wait_for_qmp "$QMP_SOCK"
 
     SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
         "$QMP_SOCK" "$SCREEN_LOG" \
         "$pattern" '' \
         "$final_pattern" ''
 
-    kill "$QEMU_PID" 2>/dev/null || true
-    wait "$QEMU_PID" 2>/dev/null || true
-    QEMU_PID=""
+    aml_test_stop_qemu
 
     if mdir -i "$BOOT_IMG" ::AML2.TRC >/dev/null 2>&1; then
         mtype -i "$BOOT_IMG" ::AML2.TRC > "$TRACE_LOG"
@@ -102,12 +67,9 @@ run_case() {
 
 trap cleanup EXIT
 
-mkdir -p "$OUT_DIR"
-
 echo "Building launcher, stub, and fake game ..."
 BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
-mkdir -p "$OUT_DIR"
-download_base_img
+aml_test_download_base_img
 
 run_case "missing launcher" "AML.COM" "$REPO_ROOT/tests/launcher.e2e.cfg" "no" "NO AMLUI.EXE" "$REPO_ROOT/tests/AML2.AUT" "A>"
 run_case "bad path" "AML.COM" "$REPO_ROOT/tests/launcher.badpath.cfg" "yes" "Game folder not found" "$REPO_ROOT/tests/AML2.LAUNCH" ""

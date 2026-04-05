@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="$REPO_ROOT/out"
+OUT_DIR="$REPO_ROOT/out/cfg_parser"
 TEST_INCLUDE_DIR="$OUT_DIR/test-include"
 BASIC_CFG="$OUT_DIR/cfg-basic.cfg"
 LIMIT_CFG="$OUT_DIR/cfg-limit.cfg"

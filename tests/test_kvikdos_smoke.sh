@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 KVIKDOS_DIR="${KVIKDOS_DIR:-/home/ddanila/fun/msdos/kvikdos}"
 KVIKDOS_BIN="$KVIKDOS_DIR/kvikdos"
-OUT_DIR="$REPO_ROOT/out"
+OUT_DIR="$REPO_ROOT/out/kvikdos_smoke"
 TRACE_LOG="$OUT_DIR/kvikdos-trace.log"
 STDOUT_LOG="$OUT_DIR/kvikdos-stdout.log"
 USAGE_LOG="$OUT_DIR/kvikdos-usage.log"

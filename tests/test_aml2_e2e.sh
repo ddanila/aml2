@@ -1,20 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="$REPO_ROOT/out"
-BASE_IMG="${MSDOS_BASE_IMG:-$OUT_DIR/floppy-minimal.img}"
+source "$(cd "$(dirname "$0")" && pwd)/lib_dos.sh"
+
+aml_test_init_paths "aml2_e2e"
+
+OUT_DIR="$AML_TEST_OUT_DIR"
+BASE_IMG="$AML_TEST_BASE_IMG"
 BOOT_IMG="$OUT_DIR/aml2-e2e.img"
 AUTOEXEC="$OUT_DIR/AUTOEXEC.BAT"
 QMP_SOCK="$OUT_DIR/aml2-e2e-qmp.sock"
 SCREEN_LOG="$OUT_DIR/aml2-e2e-screen.log"
 QEMU_LOG="$OUT_DIR/aml2-e2e-qemu.log"
-DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
-DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
 
 PASS=0
 FAIL=0
-QEMU_PID=""
 
 ok() {
     echo "  PASS: $1"
@@ -27,41 +27,18 @@ fail() {
 }
 
 cleanup() {
-    if [[ -n "$QEMU_PID" ]]; then
-        kill "$QEMU_PID" 2>/dev/null || true
-        wait "$QEMU_PID" 2>/dev/null || true
-    fi
-    rm -f "$QMP_SOCK" "$AUTOEXEC"
-}
-
-download_base_img() {
-    mkdir -p "$OUT_DIR"
-    if [[ -f "$BASE_IMG" ]]; then
-        return
-    fi
-
-    echo "Downloading minimal DOS floppy from $DOS_IMAGE_URL ..."
-    python3 - "$DOS_IMAGE_URL" "$BASE_IMG" <<'PY'
-import shutil
-import sys
-import urllib.request
-
-url, dest = sys.argv[1], sys.argv[2]
-with urllib.request.urlopen(url) as response, open(dest, "wb") as out:
-    shutil.copyfileobj(response, out)
-PY
+    aml_test_cleanup_qemu
+    aml_test_cleanup_files "$QMP_SOCK" "$AUTOEXEC"
 }
 
 trap cleanup EXIT
-
-mkdir -p "$OUT_DIR"
 
 echo "=== aml2 DOS e2e ==="
 
 echo "Building launcher, stub, and fake game ..."
 BUILD_TARGETS=test-build EXTRA_CFLAGS="-DAML_TEST_HOOKS=1" "$REPO_ROOT/tools/build.sh"
 
-download_base_img
+aml_test_download_base_img
 
 echo "Preparing boot floppy ..."
 cp "$BASE_IMG" "$BOOT_IMG"
@@ -70,31 +47,13 @@ mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.e2e.cfg" ::LAUNCHER.CFG
 mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.AUT" ::AML2.AUT
-printf '@ECHO OFF\r\nAML.COM\r\n' > "$AUTOEXEC"
+aml_test_write_autoexec "$AUTOEXEC" "AML.COM"
 mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
 
 echo "Booting QEMU ..."
-rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"
-timeout 35 qemu-system-i386 \
-    -display none \
-    -monitor none \
-    -serial none \
-    -drive if=floppy,index=0,format=raw,file="$BOOT_IMG" \
-    -boot a \
-    -m 4 \
-    -qmp unix:"$QMP_SOCK",server,nowait \
-    >"$QEMU_LOG" 2>&1 &
-QEMU_PID=$!
-
-for _ in $(seq 1 50); do
-    [[ -S "$QMP_SOCK" ]] && break
-    sleep 0.2
-done
-
-if [[ ! -S "$QMP_SOCK" ]]; then
-    echo "ERROR: QMP socket did not appear"
-    exit 1
-fi
+rm -f "$SCREEN_LOG"
+aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 35
+aml_test_wait_for_qmp "$QMP_SOCK"
 
 echo "Driving aml2 and fake game ..."
 SCREEN_EXPECT_TIMEOUT=12 python3 "$REPO_ROOT/tests/screen_expect.py" \
@@ -102,9 +61,7 @@ SCREEN_EXPECT_TIMEOUT=12 python3 "$REPO_ROOT/tests/screen_expect.py" \
     'Arvutimuuseum Launcher' '' \
     'A>' ''
 
-kill "$QEMU_PID" 2>/dev/null || true
-wait "$QEMU_PID" 2>/dev/null || true
-QEMU_PID=""
+aml_test_stop_qemu
 
 TRACE_LOG="$OUT_DIR/aml2-trace.log"
 mtype -i "$BOOT_IMG" ::AML2.TRC > "$TRACE_LOG"
