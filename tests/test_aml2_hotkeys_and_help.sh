@@ -26,24 +26,14 @@ run_case() {
     shift 4
 
     echo "=== $name ==="
-    cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
-    mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
-    if [[ -n "$auto" ]]; then
-        mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    fi
-    aml_test_write_autoexec "$AUTOEXEC" "$launch_cmd"
-    mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
+    aml_test_reset_boot_img "$BOOT_IMG"
+    aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
+    aml_test_copy_to_image "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
+    aml_test_copy_optional_to_image "$BOOT_IMG" "$auto" ::AML2.AUT
+    aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "$launch_cmd"
 
-    rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"
-    aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 20
-    aml_test_wait_for_qmp "$QMP_SOCK"
-
-    SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
-        "$QMP_SOCK" "$SCREEN_LOG" \
+    aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 20 8 \
         "$@"
-
-    aml_test_stop_qemu
 }
 
 trap cleanup EXIT

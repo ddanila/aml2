@@ -58,6 +58,60 @@ aml_test_write_autoexec() {
     printf '@ECHO OFF\r\n%s\r\n' "$command_text" > "$autoexec_path"
 }
 
+aml_test_reset_boot_img() {
+    local boot_img="$1"
+
+    aml_test_ensure_out_dir
+    cp "$AML_TEST_BASE_IMG" "$boot_img"
+}
+
+aml_test_copy_to_image() {
+    local boot_img="$1"
+    local host_path="$2"
+    local image_path="$3"
+
+    mcopy -o -i "$boot_img" "$host_path" "$image_path"
+}
+
+aml_test_copy_optional_to_image() {
+    local boot_img="$1"
+    local host_path="$2"
+    local image_path="$3"
+
+    if [[ -n "$host_path" ]]; then
+        aml_test_copy_to_image "$boot_img" "$host_path" "$image_path"
+    fi
+}
+
+aml_test_install_autoexec() {
+    local boot_img="$1"
+    local autoexec_path="$2"
+    local command_text="$3"
+
+    aml_test_write_autoexec "$autoexec_path" "$command_text"
+    aml_test_copy_to_image "$boot_img" "$autoexec_path" ::AUTOEXEC.BAT
+}
+
+aml_test_run_screen_case() {
+    local boot_img="$1"
+    local qmp_sock="$2"
+    local screen_log="$3"
+    local qemu_log="$4"
+    local qemu_timeout="$5"
+    local expect_timeout="$6"
+    shift 6
+
+    rm -f "$qmp_sock" "$screen_log" "$qemu_log"
+    aml_test_start_qemu "$boot_img" "$qmp_sock" "$qemu_log" "$qemu_timeout"
+    aml_test_wait_for_qmp "$qmp_sock"
+
+    SCREEN_EXPECT_TIMEOUT="$expect_timeout" python3 "$REPO_ROOT/tests/screen_expect.py" \
+        "$qmp_sock" "$screen_log" \
+        "$@"
+
+    aml_test_stop_qemu
+}
+
 aml_test_start_qemu() {
     local boot_img="$1"
     local qmp_sock="$2"

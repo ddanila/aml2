@@ -24,24 +24,16 @@ echo "Building aml2 for TUI navigation test ..."
 aml_test_build all
 aml_test_download_base_img
 
-cp "$BASE_IMG" "$BOOT_IMG"
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/launcher.long.cfg" ::LAUNCHER.CFG
-mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/tests/AML2.END" ::AML2.AUT
-aml_test_write_autoexec "$AUTOEXEC" "AMLUI.EXE /V"
-mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
+aml_test_reset_boot_img "$BOOT_IMG"
+aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
+aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/launcher.long.cfg" ::LAUNCHER.CFG
+aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/tests/AML2.END" ::AML2.AUT
+aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "AMLUI.EXE /V"
 
-rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG"
-aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 20
-aml_test_wait_for_qmp "$QMP_SOCK"
-
-SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
-    "$QMP_SOCK" "$SCREEN_LOG" \
+aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 20 8 \
     'Arvutimuuseum Launcher' '' \
     'Entry 19' '' \
     'A>' ''
-
-aml_test_stop_qemu
 
 grep -q 'Danila Sukharev' "$SCREEN_LOG"
 grep -q 'Entry 19' "$SCREEN_LOG"

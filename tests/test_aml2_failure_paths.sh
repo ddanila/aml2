@@ -30,27 +30,20 @@ run_case() {
     local final_pattern="$7"
 
     echo "=== $name ==="
-    cp "$BASE_IMG" "$BOOT_IMG"
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
+    aml_test_reset_boot_img "$BOOT_IMG"
+    aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/aml.com" ::AML.COM
     if [[ "$include_launcher" == "yes" ]]; then
-        mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
+        aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/amlui.exe" ::AMLUI.EXE
     fi
-    mcopy -o -i "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
-    mcopy -o -i "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
-    mcopy -o -i "$BOOT_IMG" "$auto" ::AML2.AUT
-    aml_test_write_autoexec "$AUTOEXEC" "$launch_cmd"
-    mcopy -o -i "$BOOT_IMG" "$AUTOEXEC" ::AUTOEXEC.BAT
+    aml_test_copy_to_image "$BOOT_IMG" "$REPO_ROOT/fakegame.exe" ::FAKEGAME.EXE
+    aml_test_copy_to_image "$BOOT_IMG" "$cfg" ::LAUNCHER.CFG
+    aml_test_copy_to_image "$BOOT_IMG" "$auto" ::AML2.AUT
+    aml_test_install_autoexec "$BOOT_IMG" "$AUTOEXEC" "$launch_cmd"
 
-    rm -f "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" "$TRACE_LOG" "$TRACE_NORM"
-    aml_test_start_qemu "$BOOT_IMG" "$QMP_SOCK" "$QEMU_LOG" 20
-    aml_test_wait_for_qmp "$QMP_SOCK"
-
-    SCREEN_EXPECT_TIMEOUT=8 python3 "$REPO_ROOT/tests/screen_expect.py" \
-        "$QMP_SOCK" "$SCREEN_LOG" \
+    rm -f "$TRACE_LOG" "$TRACE_NORM"
+    aml_test_run_screen_case "$BOOT_IMG" "$QMP_SOCK" "$SCREEN_LOG" "$QEMU_LOG" 20 8 \
         "$pattern" '' \
         "$final_pattern" ''
-
-    aml_test_stop_qemu
 
     if mdir -i "$BOOT_IMG" ::AML2.TRC >/dev/null 2>&1; then
         mtype -i "$BOOT_IMG" ::AML2.TRC > "$TRACE_LOG"
