@@ -3,12 +3,12 @@
 
 #include "aml.h"
 
-enum AmlCfgStatus {
+typedef enum AmlCfgStatus {
     AML_CFG_OK = 0,
     AML_CFG_IO_ERROR = 1
-};
+} AmlCfgStatus;
 
-int aml_load_config(AmlState *state, const char *path);
-int aml_save_config(const AmlState *state, const char *path);
+AmlCfgStatus aml_load_config(AmlState *state, const char *path);
+AmlCfgStatus aml_save_config(const AmlState *state, const char *path);
 
 #endif

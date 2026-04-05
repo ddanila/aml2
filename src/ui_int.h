@@ -1,7 +1,7 @@
 #ifndef UI_INT_H
 #define UI_INT_H
 
-#include "ui.h"
+#include "aml.h"
 
 enum {
     AML_UI_ROWS = 25,

@@ -100,7 +100,7 @@ static int aml_parse_config_line(AmlState *state, char *line)
     return 0;
 }
 
-int aml_load_config(AmlState *state, const char *path)
+AmlCfgStatus aml_load_config(AmlState *state, const char *path)
 {
     FILE *fp;
     char line[AML_MAX_LINE + 1];
@@ -122,7 +122,7 @@ int aml_load_config(AmlState *state, const char *path)
     return AML_CFG_OK;
 }
 
-int aml_save_config(const AmlState *state, const char *path)
+AmlCfgStatus aml_save_config(const AmlState *state, const char *path)
 {
     FILE *fp;
     int i;

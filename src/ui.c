@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ui.h"
 #include "ui_int.h"
 
 static int aml_ui_has_selection(const AmlState *state)
@@ -436,7 +437,7 @@ static void aml_ui_show_help_overlay(const AmlState *state)
     aml_ui_wait_for_ack();
 }
 
-static int aml_ui_show_debug_run_menu(const AmlState *state)
+static AmlUiAction aml_ui_show_debug_run_menu(const AmlState *state)
 {
     static const char *items[] = {
         "Via stub, pause on error",
@@ -475,7 +476,7 @@ static int aml_ui_show_debug_run_menu(const AmlState *state)
         key = getch();
 
         if (key == AML_KEY_ESC) {
-            return -1;
+            return (AmlUiAction)-1;
         }
         if (key == AML_KEY_ENTER) {
             return actions[selected];
@@ -491,12 +492,12 @@ static int aml_ui_show_debug_run_menu(const AmlState *state)
     }
 }
 
-static int aml_ui_apply_automation(AmlState *state)
+static AmlUiAction aml_ui_apply_automation(AmlState *state)
 {
     char line[AML_MAX_LINE + 1];
 
     if (!aml_ui_read_auto_line(line, sizeof(line))) {
-        return AML_UI_AUTO_NONE;
+        return (AmlUiAction)AML_UI_AUTO_NONE;
     }
 
     if (strncmp(line, "launch ", 7) == 0) {
@@ -517,7 +518,7 @@ static int aml_ui_apply_automation(AmlState *state)
             state->selected = state->entry_count - 1;
         }
         aml_ui_trace_event("auto_up");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "down") == 0 && state->entry_count > 0) {
@@ -527,19 +528,19 @@ static int aml_ui_apply_automation(AmlState *state)
             state->selected = 0;
         }
         aml_ui_trace_event("auto_down");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "home") == 0 && state->entry_count > 0) {
         state->selected = 0;
         aml_ui_trace_event("auto_home");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "end") == 0 && state->entry_count > 0) {
         state->selected = state->entry_count - 1;
         aml_ui_trace_event("auto_end");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "pgup") == 0 && state->entry_count > 0) {
@@ -548,7 +549,7 @@ static int aml_ui_apply_automation(AmlState *state)
             state->selected = 0;
         }
         aml_ui_trace_event("auto_pgup");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "pgdn") == 0 && state->entry_count > 0) {
@@ -557,7 +558,7 @@ static int aml_ui_apply_automation(AmlState *state)
             state->selected = state->entry_count - 1;
         }
         aml_ui_trace_event("auto_pgdn");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strncmp(line, "search ", 7) == 0) {
@@ -568,7 +569,7 @@ static int aml_ui_apply_automation(AmlState *state)
         } else {
             aml_ui_trace_event("auto_bad_search");
         }
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strncmp(line, "hotkey ", 7) == 0) {
@@ -579,31 +580,31 @@ static int aml_ui_apply_automation(AmlState *state)
         } else {
             aml_ui_trace_event("auto_bad_hotkey");
         }
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "help") == 0) {
         aml_ui_trace_event("auto_help");
         aml_ui_show_help_overlay(state);
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "move_up") == 0) {
         aml_ui_move_entry_up(state);
         aml_ui_trace_event("auto_move_up");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "move_down") == 0) {
         aml_ui_move_entry_down(state);
         aml_ui_trace_event("auto_move_down");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "delete") == 0) {
         aml_ui_delete_entry(state);
         aml_ui_trace_event("auto_delete");
-        return AML_UI_AUTO_REDRAW;
+        return (AmlUiAction)AML_UI_AUTO_REDRAW;
     }
 
     if (strcmp(line, "save") == 0) {
@@ -677,7 +678,7 @@ static int aml_ui_prompt_search(AmlState *state, const char **status)
     }
 }
 
-int aml_ui_run(AmlState *state)
+AmlUiAction aml_ui_run(AmlState *state)
 {
     const char *status = "";
     unsigned last_second = 60;
@@ -693,7 +694,7 @@ int aml_ui_run(AmlState *state)
 #if AML_TEST_HOOKS
         sleep(1);
         {
-            int auto_action = aml_ui_apply_automation(state);
+            AmlUiAction auto_action = aml_ui_apply_automation(state);
             if (auto_action == AML_UI_AUTO_REDRAW) {
                 aml_ui_sync_view_top(state);
                 continue;
