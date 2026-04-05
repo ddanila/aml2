@@ -186,35 +186,29 @@ static int prompt_entry(AmlEntry *entry, int is_new)
         int *cursor_ptr = &name_cursor;
         char *buf = name;
         int max_len = AML_MAX_NAME;
-        int visible_start = ui_visible_start(name, field_width, 0, name_cursor);
-        int cursor_col = 24 + name_cursor;
-        int cursor_row = 10;
+        UiEditField fields[3];
+        UiEditDialog dialog;
 
-        ui_draw_titled_dialog(8, 5, 71, 18, is_new ? "Insert Entry" : "Edit Entry");
-        ui_write_at(12, ui_dialog_row(5, 3), "Name", UI_ATTR_DIALOG_TEXT);
-        ui_write_at(12, ui_dialog_row(5, 5), "Command", UI_ATTR_DIALOG_TEXT);
-        ui_write_at(12, ui_dialog_row(5, 7), "Path", UI_ATTR_DIALOG_TEXT);
-        ui_write_clipped(24, ui_dialog_row(5, 3), name, field_width, 0, name_cursor,
-                             field == 0 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
-        ui_write_clipped(24, ui_dialog_row(5, 5), command, field_width, 0, command_cursor,
-                             field == 1 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
-        ui_write_clipped(24, ui_dialog_row(5, 7), path, field_width, 0, path_cursor,
-                             field == 2 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
-        ui_write_centered(ui_dialog_row(5, 9), "Enter next  F2 save  Tab switch  Esc cancel", UI_ATTR_HELP);
+        fields[0] = ui_edit_field(3, "Name", name, 24, field_width, name_cursor,
+                                  field == 0 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
+        fields[1] = ui_edit_field(5, "Command", command, 24, field_width, command_cursor,
+                                  field == 1 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
+        fields[2] = ui_edit_field(7, "Path", path, 24, field_width, path_cursor,
+                                  field == 2 ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_DIM);
+        dialog = ui_edit_dialog(
+            ui_dialog_box(8, 5, 71, 18, is_new ? "Insert Entry" : "Edit Entry"),
+            12,
+            fields,
+            3,
+            "Enter next  F2 save  Tab switch  Esc cancel"
+        );
+
+        ui_draw_edit_dialog(&dialog);
         ui_flush();
-        if (field == 1) {
-            visible_start = ui_visible_start(command, field_width, 0, command_cursor);
-            cursor_col = 24 + (command_cursor - visible_start);
-            cursor_row = ui_dialog_row(5, 5);
-        } else if (field == 2) {
-            visible_start = ui_visible_start(path, field_width, 0, path_cursor);
-            cursor_col = 24 + (path_cursor - visible_start);
-            cursor_row = ui_dialog_row(5, 7);
-        } else {
-            cursor_col = 24 + (name_cursor - visible_start);
-            cursor_row = ui_dialog_row(5, 3);
-        }
-        ui_set_cursor(cursor_col, cursor_row);
+        ui_set_cursor(
+            ui_edit_dialog_cursor_col(&fields[field]),
+            ui_edit_dialog_cursor_row(&dialog.box, &fields[field])
+        );
         ui_show_cursor();
 
         key = getch();
@@ -459,25 +453,20 @@ AmlUiAction ui_show_debug_run_menu(const AmlState *state)
 
     for (;;) {
         int key;
-        int i;
+        UiMenuDialog dialog;
 
         ui_render(state, "Debug Run");
-        ui_draw_titled_dialog(10, 6, 69, 18, "Debug Run");
-        ui_write_at(14, ui_dialog_row(6, 2), "Command", UI_ATTR_DIALOG_TEXT);
-        ui_write_clipped(
-            24, ui_dialog_row(6, 2),
+        dialog = ui_menu_dialog(
+            ui_dialog_box(10, 6, 69, 18, "Debug Run"),
+            2, 14,
+            "Command",
             state->entries[state->selected].command,
-            39, 0, 0, UI_ATTR_DIALOG_DIM
+            39,
+            4, 14, 64, 20,
+            items, 3, selected,
+            "Enter select  Esc cancel"
         );
-
-        for (i = 0; i < 3; ++i) {
-            unsigned char attr = (i == selected) ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_TEXT;
-            ui_fill_rect(14, ui_dialog_row(6, 4 + i), 64, ui_dialog_row(6, 4 + i), ' ', attr);
-            ui_putc(16, ui_dialog_row(6, 4 + i), (i == selected) ? 16 : 250, attr);
-            ui_write_at(20, ui_dialog_row(6, 4 + i), items[i], attr);
-        }
-
-        ui_write_centered(ui_dialog_row(6, 8), "Enter select  Esc cancel", UI_ATTR_HELP);
+        ui_draw_menu_dialog(&dialog);
         ui_flush();
         key = getch();
 

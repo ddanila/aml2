@@ -114,6 +114,41 @@ typedef struct UiTextLineDialog {
     int line_count;
 } UiTextLineDialog;
 
+typedef struct UiEditField {
+    int row;
+    const char *label;
+    const char *text;
+    int text_col;
+    int width;
+    int cursor;
+    unsigned char attr;
+} UiEditField;
+
+typedef struct UiEditDialog {
+    UiDialogBox box;
+    int label_col;
+    const UiEditField *fields;
+    int field_count;
+    const char *footer;
+} UiEditDialog;
+
+typedef struct UiMenuDialog {
+    UiDialogBox box;
+    int prompt_row;
+    int prompt_col;
+    const char *prompt_label;
+    const char *prompt_value;
+    int prompt_width;
+    int menu_row;
+    int menu_left;
+    int menu_right;
+    int item_col;
+    const char *const *items;
+    int item_count;
+    int selected;
+    const char *footer;
+} UiMenuDialog;
+
 void ui_hide_cursor(void);
 void ui_show_cursor(void);
 void ui_set_cursor(int col, int row);
@@ -144,10 +179,23 @@ UiDetailDialog ui_detail_dialog_spec(UiDialogBox box, const UiDetailDialogRow *r
 UiTextLineDialogLine ui_text_line_dialog_line(int row, const char *text, unsigned char attr);
 UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
                                      const UiTextLineDialogLine *lines, int line_count);
+UiEditField ui_edit_field(int row, const char *label, const char *text,
+                          int text_col, int width, int cursor, unsigned char attr);
+UiEditDialog ui_edit_dialog(UiDialogBox box, int label_col,
+                            const UiEditField *fields, int field_count, const char *footer);
+UiMenuDialog ui_menu_dialog(UiDialogBox box, int prompt_row, int prompt_col,
+                            const char *prompt_label, const char *prompt_value, int prompt_width,
+                            int menu_row, int menu_left, int menu_right, int item_col,
+                            const char *const *items, int item_count, int selected,
+                            const char *footer);
 void ui_draw_notice_dialog(const UiNoticeDialog *dialog);
 void ui_draw_confirm_dialog(const UiConfirmDialog *dialog);
 void ui_draw_detail_dialog(const UiDetailDialog *dialog);
 void ui_draw_text_line_dialog(const UiTextLineDialog *dialog);
+void ui_draw_edit_dialog(const UiEditDialog *dialog);
+int ui_edit_dialog_cursor_col(const UiEditField *field);
+int ui_edit_dialog_cursor_row(const UiDialogBox *box, const UiEditField *field);
+void ui_draw_menu_dialog(const UiMenuDialog *dialog);
 void ui_draw_header_on_frame_common(int modified);
 void ui_draw_header_on_frame(const AmlState *state);
 int ui_hotkey_index(int key);

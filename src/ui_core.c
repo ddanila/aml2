@@ -419,6 +419,59 @@ UiTextLineDialog ui_text_line_dialog(UiDialogBox box, int col,
     return dialog;
 }
 
+UiEditField ui_edit_field(int row, const char *label, const char *text,
+                          int text_col, int width, int cursor, unsigned char attr)
+{
+    UiEditField field;
+
+    field.row = row;
+    field.label = label;
+    field.text = text;
+    field.text_col = text_col;
+    field.width = width;
+    field.cursor = cursor;
+    field.attr = attr;
+    return field;
+}
+
+UiEditDialog ui_edit_dialog(UiDialogBox box, int label_col,
+                            const UiEditField *fields, int field_count, const char *footer)
+{
+    UiEditDialog dialog;
+
+    dialog.box = box;
+    dialog.label_col = label_col;
+    dialog.fields = fields;
+    dialog.field_count = field_count;
+    dialog.footer = footer;
+    return dialog;
+}
+
+UiMenuDialog ui_menu_dialog(UiDialogBox box, int prompt_row, int prompt_col,
+                            const char *prompt_label, const char *prompt_value, int prompt_width,
+                            int menu_row, int menu_left, int menu_right, int item_col,
+                            const char *const *items, int item_count, int selected,
+                            const char *footer)
+{
+    UiMenuDialog dialog;
+
+    dialog.box = box;
+    dialog.prompt_row = prompt_row;
+    dialog.prompt_col = prompt_col;
+    dialog.prompt_label = prompt_label;
+    dialog.prompt_value = prompt_value;
+    dialog.prompt_width = prompt_width;
+    dialog.menu_row = menu_row;
+    dialog.menu_left = menu_left;
+    dialog.menu_right = menu_right;
+    dialog.item_col = item_col;
+    dialog.items = items;
+    dialog.item_count = item_count;
+    dialog.selected = selected;
+    dialog.footer = footer;
+    return dialog;
+}
+
 void ui_draw_notice_dialog(const UiNoticeDialog *dialog)
 {
     draw_dialog_box(
@@ -481,6 +534,82 @@ void ui_draw_text_line_dialog(const UiTextLineDialog *dialog)
             dialog->lines[i].attr
         );
     }
+}
+
+void ui_draw_edit_dialog(const UiEditDialog *dialog)
+{
+    int i;
+
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+    for (i = 0; i < dialog->field_count; ++i) {
+        ui_write_at(
+            dialog->label_col,
+            ui_dialog_row(dialog->box.top, dialog->fields[i].row),
+            dialog->fields[i].label,
+            UI_ATTR_DIALOG_TEXT
+        );
+        ui_write_clipped(
+            dialog->fields[i].text_col,
+            ui_dialog_row(dialog->box.top, dialog->fields[i].row),
+            dialog->fields[i].text,
+            dialog->fields[i].width,
+            0,
+            dialog->fields[i].cursor,
+            dialog->fields[i].attr
+        );
+    }
+    ui_write_centered(ui_dialog_row(dialog->box.top, dialog->fields[dialog->field_count - 1].row + 2),
+                      dialog->footer, UI_ATTR_HELP);
+}
+
+int ui_edit_dialog_cursor_col(const UiEditField *field)
+{
+    int visible_start = ui_visible_start(field->text, field->width, 0, field->cursor);
+
+    return field->text_col + (field->cursor - visible_start);
+}
+
+int ui_edit_dialog_cursor_row(const UiDialogBox *box, const UiEditField *field)
+{
+    return ui_dialog_row(box->top, field->row);
+}
+
+void ui_draw_menu_dialog(const UiMenuDialog *dialog)
+{
+    int i;
+
+    draw_dialog_box(
+        dialog->box.left, dialog->box.top, dialog->box.right, dialog->box.bottom, dialog->box.title
+    );
+    ui_write_at(
+        dialog->prompt_col,
+        ui_dialog_row(dialog->box.top, dialog->prompt_row),
+        dialog->prompt_label,
+        UI_ATTR_DIALOG_TEXT
+    );
+    ui_write_clipped(
+        dialog->prompt_col + 10,
+        ui_dialog_row(dialog->box.top, dialog->prompt_row),
+        dialog->prompt_value,
+        dialog->prompt_width,
+        0,
+        0,
+        UI_ATTR_DIALOG_DIM
+    );
+
+    for (i = 0; i < dialog->item_count; ++i) {
+        unsigned char attr = (i == dialog->selected) ? UI_ATTR_SELECTED : UI_ATTR_DIALOG_TEXT;
+        int row = ui_dialog_row(dialog->box.top, dialog->menu_row + i);
+
+        ui_fill_rect(dialog->menu_left, row, dialog->menu_right, row, ' ', attr);
+        ui_putc(dialog->menu_left + 2, row, (i == dialog->selected) ? 16 : 250, attr);
+        ui_write_at(dialog->item_col, row, dialog->items[i], attr);
+    }
+
+    ui_write_centered(ui_dialog_row(dialog->box.top, dialog->menu_row + dialog->item_count + 1),
+                      dialog->footer, UI_ATTR_HELP);
 }
 
 void ui_wait_for_ack(void)
