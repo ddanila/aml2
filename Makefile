@@ -12,8 +12,9 @@ LDFLAGS = system dos option quiet
 OBJS = \
     build/main.obj \
     build/cfg.obj \
-    build/ui.obj \
+    build/ui_auto.obj \
     build/ui_edit.obj \
+    build/ui_loop.obj \
     build/ui_core.obj \
     build/ui_test.obj \
     build/launch.obj
@@ -36,11 +37,14 @@ build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/laun
 build/cfg.obj: src/cfg.c include/aml.h include/cfg.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/cfg.obj src/cfg.c
 
-build/ui.obj: src/ui.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui.obj src/ui.c
+build/ui_auto.obj: src/ui_auto.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_auto.obj src/ui_auto.c
 
-build/ui_edit.obj: src/ui_edit.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
+build/ui_edit.obj: src/ui_edit.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_edit.obj src/ui_edit.c
+
+build/ui_loop.obj: src/ui_loop.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -fo=build/ui_loop.obj src/ui_loop.c
 
 build/ui_core.obj: src/ui_core.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_core.obj src/ui_core.c

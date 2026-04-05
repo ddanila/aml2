@@ -14,6 +14,11 @@ typedef enum AmlLaunchTargetKind {
     AML_TARGET_BATCH = 2
 } AmlLaunchTargetKind;
 
+typedef struct AmlLaunchContext {
+    unsigned drive;
+    char dir[AML_MAX_PATH];
+} AmlLaunchContext;
+
 static int aml_is_simple_launch(const char *command)
 {
     while (*command != '\0') {
@@ -116,37 +121,82 @@ static AmlLaunchCheck aml_check_existing_target(const AmlEntry *entry)
     return AML_LAUNCH_READY;
 }
 
-static void aml_restore_directory(unsigned old_drive, const char *old_dir)
+static AmlLaunchCheck aml_check_entry_target(const AmlEntry *entry, AmlLaunchTargetKind kind)
 {
-    unsigned drives;
+    if (kind == AML_TARGET_COMPLEX) {
+        return AML_LAUNCH_READY;
+    }
 
-    _dos_setdrive(old_drive, &drives);
-    chdir(old_dir);
+    return aml_check_existing_target(entry);
 }
 
-static AmlLaunchCheck aml_switch_to_entry_directory(const AmlEntry *entry,
-                                                    unsigned *old_drive,
-                                                    char *old_dir,
-                                                    size_t old_dir_size)
+static AmlLaunchCheck aml_validate_entry(const AmlEntry *entry, int require_stub, int require_program)
+{
+    AmlLaunchTargetKind kind;
+    AmlLaunchCheck rc;
+
+    if (require_stub && access(AML_STUB_FILE, 0) != 0) {
+        return AML_LAUNCH_STUB_MISSING;
+    }
+
+    rc = aml_check_entry_directory(entry);
+    if (rc != AML_LAUNCH_READY) {
+        return rc;
+    }
+
+    kind = aml_classify_target(entry->command);
+    if (require_program && kind != AML_TARGET_PROGRAM) {
+        return AML_LAUNCH_DIRECT_UNSUPPORTED;
+    }
+
+    return aml_check_entry_target(entry, kind);
+}
+
+static void aml_restore_directory(const AmlLaunchContext *ctx)
 {
     unsigned drives;
 
-    _dos_getdrive(old_drive);
-    if (getcwd(old_dir, old_dir_size) == NULL) {
+    _dos_setdrive(ctx->drive, &drives);
+    chdir(ctx->dir);
+}
+
+static AmlLaunchCheck aml_capture_directory_context(AmlLaunchContext *ctx)
+{
+    _dos_getdrive(&ctx->drive);
+    if (getcwd(ctx->dir, sizeof(ctx->dir)) == NULL) {
         return AML_LAUNCH_BAD_PATH;
+    }
+
+    return AML_LAUNCH_READY;
+}
+
+static void aml_switch_to_entry_drive(const char *path)
+{
+    unsigned drives;
+
+    if (path[1] == ':') {
+        unsigned target_drive = ((unsigned char)path[0] & 0xDF) - 'A' + 1;
+        _dos_setdrive(target_drive, &drives);
+    }
+}
+
+static AmlLaunchCheck aml_switch_to_entry_directory(const AmlEntry *entry, AmlLaunchContext *ctx)
+{
+    AmlLaunchCheck rc;
+
+    rc = aml_capture_directory_context(ctx);
+    if (rc != AML_LAUNCH_READY) {
+        return rc;
     }
 
     if (entry->path[0] == '\0') {
         return AML_LAUNCH_READY;
     }
 
-    if (entry->path[1] == ':') {
-        unsigned target_drive = ((unsigned char)entry->path[0] & 0xDF) - 'A' + 1;
-        _dos_setdrive(target_drive, &drives);
-    }
+    aml_switch_to_entry_drive(entry->path);
 
     if (chdir(entry->path) != 0) {
-        aml_restore_directory(*old_drive, old_dir);
+        aml_restore_directory(ctx);
         return AML_LAUNCH_BAD_PATH;
     }
 
@@ -197,56 +247,25 @@ int aml_clear_run_request(const char *path)
 
 AmlLaunchCheck aml_check_launch_entry(const AmlEntry *entry)
 {
-    AmlLaunchTargetKind kind;
-    AmlLaunchCheck rc;
-
-    if (access(AML_STUB_FILE, 0) != 0) {
-        return AML_LAUNCH_STUB_MISSING;
-    }
-
-    rc = aml_check_entry_directory(entry);
-    if (rc != AML_LAUNCH_READY) {
-        return rc;
-    }
-
-    kind = aml_classify_target(entry->command);
-    if (kind == AML_TARGET_COMPLEX) {
-        return AML_LAUNCH_READY;
-    }
-
-    return aml_check_existing_target(entry);
+    return aml_validate_entry(entry, 1, 0);
 }
 
 AmlLaunchCheck aml_check_direct_launch_entry(const AmlEntry *entry)
 {
-    AmlLaunchTargetKind kind;
-    AmlLaunchCheck rc;
-
-    rc = aml_check_entry_directory(entry);
-    if (rc != AML_LAUNCH_READY) {
-        return rc;
-    }
-
-    kind = aml_classify_target(entry->command);
-    if (kind != AML_TARGET_PROGRAM) {
-        return AML_LAUNCH_DIRECT_UNSUPPORTED;
-    }
-
-    return aml_check_existing_target(entry);
+    return aml_validate_entry(entry, 0, 1);
 }
 
 AmlLaunchCheck aml_run_entry_child(const AmlEntry *entry, int force_shell)
 {
-    unsigned old_drive;
-    char old_dir[AML_MAX_PATH];
+    AmlLaunchContext ctx;
     AmlLaunchCheck rc;
 
-    rc = aml_switch_to_entry_directory(entry, &old_drive, old_dir, sizeof(old_dir));
+    rc = aml_switch_to_entry_directory(entry, &ctx);
     if (rc != AML_LAUNCH_READY) {
         return rc;
     }
 
     rc = aml_execute_child_command(entry, force_shell);
-    aml_restore_directory(old_drive, old_dir);
+    aml_restore_directory(&ctx);
     return rc;
 }

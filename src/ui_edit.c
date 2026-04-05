@@ -2,8 +2,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "ui.h"
 #include "ui_int.h"
+#include "ui_ops.h"
 
 static int aml_ui_has_selection(const AmlState *state)
 {
