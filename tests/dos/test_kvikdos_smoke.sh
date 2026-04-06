@@ -8,6 +8,7 @@ OUT_DIR="$REPO_ROOT/out/kvikdos_smoke"
 TRACE_LOG="$OUT_DIR/kvikdos-trace.log"
 STDOUT_LOG="$OUT_DIR/kvikdos-stdout.log"
 USAGE_LOG="$OUT_DIR/kvikdos-usage.log"
+CONFLICT_LOG="$OUT_DIR/kvikdos-conflict.log"
 
 mkdir -p "$OUT_DIR"
 
@@ -52,6 +53,14 @@ grep -q "Press any key to return" "$TRACE_LOG"
 grep -q "AMLUI usage:" "$USAGE_LOG"
 grep -q "AMLUI /V | /E | /?" "$USAGE_LOG"
 grep -q "Run AML.COM instead." "$USAGE_LOG"
+
+(
+    cd "$REPO_ROOT"
+    timeout 10 "$KVIKDOS_BIN" amlui.exe /v /e > "$CONFLICT_LOG" 2>&1 || true
+)
+
+grep -q "AMLUI usage:" "$CONFLICT_LOG"
+grep -q "/V and /E cannot be combined." "$CONFLICT_LOG"
 
 rm -f "$REPO_ROOT/AML2.AUT" "$REPO_ROOT/AML2.TRC"
 

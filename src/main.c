@@ -139,13 +139,28 @@ static int parse_args(int argc, char **argv, AmlState *state)
 {
     int i;
     int mode_set = 0;
+    int requested_mode = -1;
 
     for (i = 1; i < argc; ++i) {
         if (arg_is(argv[i], "/v") || arg_is(argv[i], "/V")) {
+            if (requested_mode == 1) {
+                print_usage();
+                printf("\r\n");
+                printf("/V and /E cannot be combined.\r\n");
+                return AML_EXIT_ERROR;
+            }
+            requested_mode = 0;
             state->editor_mode = 0;
             mode_set = 1;
         } else
         if (arg_is(argv[i], "/e") || arg_is(argv[i], "/E")) {
+            if (requested_mode == 0) {
+                print_usage();
+                printf("\r\n");
+                printf("/V and /E cannot be combined.\r\n");
+                return AML_EXIT_ERROR;
+            }
+            requested_mode = 1;
             state->editor_mode = 1;
             mode_set = 1;
         } else
