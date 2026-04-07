@@ -63,7 +63,7 @@ static void wait_for_input_redraw(AmlState *state, unsigned *last_second)
         unsigned now_second = ui_current_second();
 
         if (now_second != *last_second) {
-            ui_draw(state);
+            ui_update_clock(state);
             *last_second = now_second;
         }
         delay(50);
@@ -140,6 +140,7 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
 AmlUiAction ui_run(AmlState *state)
 {
     unsigned last_second = 60;
+    int redraw_pending = 1;
 
     ui_sync_view_top(state);
 
@@ -147,12 +148,16 @@ AmlUiAction ui_run(AmlState *state)
         AmlUiAction action;
         int key;
 
-        ui_draw(state);
-        last_second = ui_current_second();
+        if (redraw_pending) {
+            ui_draw(state);
+            last_second = ui_current_second();
+            redraw_pending = 0;
+        }
 
         action = apply_test_automation(state);
         if (action == UI_AUTO_REDRAW) {
             ui_sync_view_top(state);
+            redraw_pending = 1;
             continue;
         }
         if (action >= 0) {
@@ -171,18 +176,31 @@ AmlUiAction ui_run(AmlState *state)
         if (key == UI_KEY_SLASH && ui_has_entries(state)) {
             prompt_search(state);
             ui_sync_view_top(state);
+            redraw_pending = 1;
             continue;
         }
         if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
-            action = handle_extended_key(state, getch());
+            int ext_key = getch();
+            int old_view_top = state->view_top;
+
+            action = handle_extended_key(state, ext_key);
             if (action >= 0) {
                 return action;
             }
             ui_sync_view_top(state);
+            if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
+                state->view_top == old_view_top) {
+                ui_draw_list_area(state);
+                last_second = ui_current_second();
+                redraw_pending = 0;
+            } else {
+                redraw_pending = 1;
+            }
             continue;
         }
         if (key == UI_KEY_QUESTION) {
             ui_show_help_overlay(state);
+            redraw_pending = 1;
             continue;
         }
 
@@ -190,5 +208,6 @@ AmlUiAction ui_run(AmlState *state)
         if (action >= 0) {
             return action;
         }
+        redraw_pending = 1;
     }
 }

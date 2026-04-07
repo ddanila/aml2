@@ -78,15 +78,35 @@ static void wait_vsync(void)
     }
 }
 
-void ui_flush(void)
+static void ui_flush_rows(int top, int bottom)
 {
     unsigned short far *video = (unsigned short far *)MK_FP(0xB800, 0);
-    unsigned i;
+    int row;
+
+    if (top < 0) {
+        top = 0;
+    }
+    if (bottom >= UI_ROWS) {
+        bottom = UI_ROWS - 1;
+    }
+    if (top > bottom) {
+        return;
+    }
 
     wait_vsync();
-    for (i = 0; i < UI_ROWS * UI_COLS; ++i) {
-        video[i] = ui_backbuf[i];
+    for (row = top; row <= bottom; ++row) {
+        unsigned offset = (unsigned)row * UI_COLS;
+        unsigned col;
+
+        for (col = 0; col < UI_COLS; ++col) {
+            video[offset + col] = ui_backbuf[offset + col];
+        }
     }
+}
+
+void ui_flush(void)
+{
+    ui_flush_rows(0, UI_ROWS - 1);
 }
 
 void ui_fill_rect(int left, int top, int right, int bottom,
@@ -816,12 +836,50 @@ static void draw_scrollbar(const AmlState *state)
     ui_putc(UI_SCROLL_COL, thumb_row, 219, UI_ATTR_SCROLL_THUMB);
 }
 
+static void draw_entry_row(const AmlState *state, int index, int y)
+{
+    unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
+    char hotkey = ui_hotkey_char(index);
+    char big_name[23];
+    size_t src_i;
+    size_t dst_i;
+
+    ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y + 1, ' ', attr);
+    ui_putc(6, y, '[', attr);
+    ui_putc(7, y, (unsigned char)hotkey, attr);
+    ui_putc(8, y, ']', attr);
+
+    dst_i = 0;
+    for (src_i = 0;
+         dst_i < sizeof(big_name) - 1 && state->entries[index].name[src_i] != '\0';
+         ++src_i) {
+        unsigned char ch = (unsigned char)state->entries[index].name[src_i];
+        char out = ' ';
+
+        if (isalpha(ch)) {
+            out = (char)toupper(ch);
+        } else if (isdigit(ch)) {
+            out = (char)ch;
+        } else if (ch == ' ') {
+            out = ' ';
+        }
+
+        if (out != ' ' || (dst_i > 0 && big_name[dst_i - 1] != ' ')) {
+            big_name[dst_i++] = out;
+        }
+    }
+    while (dst_i > 0 && big_name[dst_i - 1] == ' ') {
+        --dst_i;
+    }
+    big_name[dst_i] = '\0';
+    ui_bigtext_write_at(11, y, big_name, attr);
+}
+
 static void draw_entries(const AmlState *state)
 {
     int row;
     int index;
     int top = state->view_top;
-    char big_name[23];
 
     ui_fill_rect(UI_LIST_LEFT, UI_LIST_ROW, UI_LIST_RIGHT,
                  UI_LIST_ROW + UI_LIST_ROWS - 1, ' ', UI_ATTR_TEXT);
@@ -839,43 +897,16 @@ static void draw_entries(const AmlState *state)
          row < UI_LIST_VISIBLE && index < state->entry_count;
          ++row, ++index) {
         int y = UI_LIST_ROW + (row * UI_LIST_ENTRY_ROWS);
-        unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
-        char hotkey = ui_hotkey_char(index);
-        size_t src_i;
-        size_t dst_i;
-
-        ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y + 1, ' ', attr);
-        ui_putc(6, y, '[', attr);
-        ui_putc(7, y, (unsigned char)hotkey, attr);
-        ui_putc(8, y, ']', attr);
-
-        dst_i = 0;
-        for (src_i = 0;
-             dst_i < sizeof(big_name) - 1 && state->entries[index].name[src_i] != '\0';
-             ++src_i) {
-            unsigned char ch = (unsigned char)state->entries[index].name[src_i];
-            char out = ' ';
-
-            if (isalpha(ch)) {
-                out = (char)toupper(ch);
-            } else if (isdigit(ch)) {
-                out = (char)ch;
-            } else if (ch == ' ') {
-                out = ' ';
-            }
-
-            if (out != ' ' || (dst_i > 0 && big_name[dst_i - 1] != ' ')) {
-                big_name[dst_i++] = out;
-            }
-        }
-        while (dst_i > 0 && big_name[dst_i - 1] == ' ') {
-            --dst_i;
-        }
-        big_name[dst_i] = '\0';
-        ui_bigtext_write_at(11, y, big_name, attr);
+        draw_entry_row(state, index, y);
     }
 
     draw_scrollbar(state);
+}
+
+void ui_draw_list_area(const AmlState *state)
+{
+    draw_entries(state);
+    ui_flush_rows(UI_LIST_ROW, UI_LIST_ROW + UI_LIST_ROWS - 1);
 }
 
 void ui_render(const AmlState *state)
@@ -909,6 +940,12 @@ void ui_show_notice(const AmlState *state, const char *title, const char *line1,
     ui_render(state);
     draw_notice_box(title, line1, line2, line3);
     ui_flush();
+}
+
+void ui_update_clock(const AmlState *state)
+{
+    ui_draw_header_on_frame(state);
+    ui_flush_rows(0, 0);
 }
 
 void ui_init(void)

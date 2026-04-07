@@ -155,6 +155,8 @@ void ui_hide_cursor(void);
 void ui_show_cursor(void);
 void ui_set_cursor(int col, int row);
 void ui_flush(void);
+void ui_update_clock(const AmlState *state);
+void ui_draw_list_area(const AmlState *state);
 void ui_fill_rect(int left, int top, int right, int bottom,
                   unsigned char ch, unsigned char attr);
 void ui_putc(int col, int row, unsigned char ch, unsigned char attr);
