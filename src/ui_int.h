@@ -158,6 +158,8 @@ void ui_flush(void);
 void ui_update_clock(const AmlState *state);
 void ui_draw_list_area(const AmlState *state);
 void ui_draw_selection_change(const AmlState *state, int old_selected);
+void ui_refresh_entry_view(AmlState *state, int index);
+void ui_refresh_all_entry_views(AmlState *state);
 void ui_fill_rect(int left, int top, int right, int bottom,
                   unsigned char ch, unsigned char attr);
 void ui_putc(int col, int row, unsigned char ch, unsigned char attr);

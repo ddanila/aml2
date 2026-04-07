@@ -29,8 +29,13 @@ typedef struct AmlEntry {
     char path[AML_MAX_PATH];
 } AmlEntry;
 
+typedef struct AmlEntryView {
+    char big_name[23];
+} AmlEntryView;
+
 typedef struct AmlState {
     AmlEntry entries[AML_MAX_PROGRAMS];
+    AmlEntryView entry_view[AML_MAX_PROGRAMS];
     int entry_count;
     int selected;
     int view_top;

@@ -3,6 +3,7 @@
 #include <ctype.h>
 
 #include "cfg.h"
+#include "ui_int.h"
 
 static void reset_config_state(AmlState *state)
 {
@@ -97,6 +98,7 @@ static int parse_config_line(AmlState *state, char *line)
     copy_field(entry->name, sizeof(entry->name), name);
     copy_field(entry->command, sizeof(entry->command), command);
     copy_field(entry->path, sizeof(entry->path), entry_path);
+    ui_refresh_entry_view(state, state->entry_count - 1);
     return 0;
 }
 
@@ -133,6 +135,7 @@ AmlCfgStatus cfg_load(AmlState *state, const char *path)
 
     load_config_lines(state, fp);
     fclose(fp);
+    ui_refresh_all_entry_views(state);
     return AML_CFG_OK;
 }
 

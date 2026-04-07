@@ -321,9 +321,11 @@ void ui_insert_entry(AmlState *state)
     }
     for (i = state->entry_count; i > index; --i) {
         state->entries[i] = state->entries[i - 1];
+        state->entry_view[i] = state->entry_view[i - 1];
     }
     state->entries[index] = entry;
     state->entry_count++;
+    ui_refresh_entry_view(state, index);
     state->selected = index;
     state->modified = 1;
 }
@@ -340,6 +342,7 @@ void ui_edit_entry(AmlState *state)
     }
 
     if (prompt_entry(&state->entries[state->selected], 0)) {
+        ui_refresh_entry_view(state, state->selected);
         state->modified = 1;
     }
 }
@@ -354,6 +357,7 @@ void ui_delete_entry(AmlState *state)
 
     for (i = state->selected; i < state->entry_count - 1; ++i) {
         state->entries[i] = state->entries[i + 1];
+        state->entry_view[i] = state->entry_view[i + 1];
     }
 
     state->entry_count--;
@@ -391,8 +395,14 @@ void ui_move_entry_up(AmlState *state)
     }
 
     temp = state->entries[state->selected - 1];
-    state->entries[state->selected - 1] = state->entries[state->selected];
-    state->entries[state->selected] = temp;
+    {
+        AmlEntryView temp_view = state->entry_view[state->selected - 1];
+
+        state->entries[state->selected - 1] = state->entries[state->selected];
+        state->entry_view[state->selected - 1] = state->entry_view[state->selected];
+        state->entries[state->selected] = temp;
+        state->entry_view[state->selected] = temp_view;
+    }
     state->selected--;
     state->modified = 1;
 }
@@ -412,8 +422,14 @@ void ui_move_entry_down(AmlState *state)
     }
 
     temp = state->entries[state->selected + 1];
-    state->entries[state->selected + 1] = state->entries[state->selected];
-    state->entries[state->selected] = temp;
+    {
+        AmlEntryView temp_view = state->entry_view[state->selected + 1];
+
+        state->entries[state->selected + 1] = state->entries[state->selected];
+        state->entry_view[state->selected + 1] = state->entry_view[state->selected];
+        state->entries[state->selected] = temp;
+        state->entry_view[state->selected] = temp_view;
+    }
     state->selected++;
     state->modified = 1;
 }
