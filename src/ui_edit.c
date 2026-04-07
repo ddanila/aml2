@@ -325,7 +325,7 @@ void ui_insert_entry(AmlState *state)
     }
     state->entries[index] = entry;
     state->entry_count++;
-    ui_refresh_entry_view(state, index);
+    aml_refresh_entry_view(state, index);
     state->selected = index;
     state->modified = 1;
 }
@@ -342,7 +342,7 @@ void ui_edit_entry(AmlState *state)
     }
 
     if (prompt_entry(&state->entries[state->selected], 0)) {
-        ui_refresh_entry_view(state, state->selected);
+        aml_refresh_entry_view(state, state->selected);
         state->modified = 1;
     }
 }

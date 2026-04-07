@@ -17,60 +17,6 @@ static unsigned short cell(unsigned char ch, unsigned char attr)
     return (unsigned short)ch | ((unsigned short)attr << 8);
 }
 
-static void build_big_name(char *dst, size_t dst_size, const char *src_name)
-{
-    size_t src_i;
-    size_t dst_i = 0;
-
-    if (dst_size == 0) {
-        return;
-    }
-
-    for (src_i = 0; dst_i < dst_size - 1 && src_name[src_i] != '\0'; ++src_i) {
-        unsigned char ch = (unsigned char)src_name[src_i];
-        char out = ' ';
-
-        if (isalpha(ch)) {
-            out = (char)toupper(ch);
-        } else if (isdigit(ch)) {
-            out = (char)ch;
-        } else if (ch == ' ') {
-            out = ' ';
-        }
-
-        if (out != ' ' || (dst_i > 0 && dst[dst_i - 1] != ' ')) {
-            dst[dst_i++] = out;
-        }
-    }
-
-    while (dst_i > 0 && dst[dst_i - 1] == ' ') {
-        --dst_i;
-    }
-    dst[dst_i] = '\0';
-}
-
-void ui_refresh_entry_view(AmlState *state, int index)
-{
-    if (index < 0 || index >= state->entry_count) {
-        return;
-    }
-
-    build_big_name(
-        state->entry_view[index].big_name,
-        sizeof(state->entry_view[index].big_name),
-        state->entries[index].name
-    );
-}
-
-void ui_refresh_all_entry_views(AmlState *state)
-{
-    int i;
-
-    for (i = 0; i < state->entry_count; ++i) {
-        ui_refresh_entry_view(state, i);
-    }
-}
-
 static void ui_set_text_mode_80x25(void)
 {
     union REGS regs;
