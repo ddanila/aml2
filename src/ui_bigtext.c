@@ -19,9 +19,32 @@ static unsigned char ui_bigtext_codes[UI_BIGTEXT_TILE_COUNT];
 static int ui_bigtext_ready;
 static int ui_bigtext_enabled;
 static int ui_bigtext_fancy_active;
+static int ui_bigtext_8dot_known;
+static int ui_bigtext_8dot_supported;
+static int ui_bigtext_8dot_active;
 static unsigned char ui_bigtext_saved_clocking_mode;
 
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
+
+static int ui_bigtext_should_use_8dot_clock(void)
+{
+    union REGS regs;
+
+    if (ui_bigtext_8dot_known) {
+        return ui_bigtext_8dot_supported;
+    }
+
+    regs.w.ax = 0x1A00;
+    int86(0x10, &regs, &regs);
+
+    ui_bigtext_8dot_supported = 1;
+    if (regs.h.al == 0x1A && regs.h.bl == 0x07) {
+        ui_bigtext_8dot_supported = 0;
+    }
+
+    ui_bigtext_8dot_known = 1;
+    return ui_bigtext_8dot_supported;
+}
 
 static int ui_bigtext_is_reserved_code(unsigned char code)
 {
@@ -203,9 +226,13 @@ static void ui_bigtext_activate(int fancy)
         : ui_bigtext_patched_font;
 
     if (!ui_bigtext_enabled) {
-        outp(0x3C4, 0x01);
-        ui_bigtext_saved_clocking_mode = inp(0x3C5);
-        outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
+        ui_bigtext_8dot_active = 0;
+        if (ui_bigtext_should_use_8dot_clock()) {
+            outp(0x3C4, 0x01);
+            ui_bigtext_saved_clocking_mode = inp(0x3C5);
+            outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
+            ui_bigtext_8dot_active = 1;
+        }
         ui_bigtext_load_font(font);
         ui_bigtext_fancy_active = fancy;
         ui_bigtext_enabled = 1;
@@ -236,8 +263,11 @@ void ui_bigtext_disable(void)
     }
 
     ui_bigtext_load_font(ui_bigtext_original_font);
-    outp(0x3C4, 0x01);
-    outp(0x3C5, ui_bigtext_saved_clocking_mode);
+    if (ui_bigtext_8dot_active) {
+        outp(0x3C4, 0x01);
+        outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        ui_bigtext_8dot_active = 0;
+    }
     ui_bigtext_enabled = 0;
     ui_bigtext_fancy_active = 0;
 }

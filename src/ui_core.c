@@ -8,9 +8,21 @@
 
 static unsigned short ui_backbuf[UI_ROWS * UI_COLS];
 
+enum {
+    UI_VSYNC_TIMEOUT = 0x8000
+};
+
 static unsigned short cell(unsigned char ch, unsigned char attr)
 {
     return (unsigned short)ch | ((unsigned short)attr << 8);
+}
+
+static void ui_set_text_mode_80x25(void)
+{
+    union REGS regs;
+
+    regs.w.ax = 0x0003;
+    int86(0x10, &regs, &regs);
 }
 
 void ui_hide_cursor(void)
@@ -57,9 +69,12 @@ void ui_set_cursor(int col, int row)
 
 static void wait_vsync(void)
 {
-    while (inp(0x3DA) & 0x08) {
+    unsigned timeout = UI_VSYNC_TIMEOUT;
+
+    while ((inp(0x3DA) & 0x08) != 0 && timeout-- != 0) {
     }
-    while ((inp(0x3DA) & 0x08) == 0) {
+    timeout = UI_VSYNC_TIMEOUT;
+    while ((inp(0x3DA) & 0x08) == 0 && timeout-- != 0) {
     }
 }
 
@@ -898,6 +913,7 @@ void ui_show_notice(const AmlState *state, const char *title, const char *line1,
 
 void ui_init(void)
 {
+    ui_set_text_mode_80x25();
     ui_hide_cursor();
     ui_bigtext_enable();
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
