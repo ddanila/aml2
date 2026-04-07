@@ -8,6 +8,9 @@
 
 static unsigned short ui_backbuf[UI_ROWS * UI_COLS];
 
+extern void ui_blit_row(const unsigned short *src, unsigned short far *dst);
+#pragma aux ui_blit_row parm [si] [es di] modify [cx si di];
+
 enum {
     UI_VSYNC_TIMEOUT = 0x8000
 };
@@ -96,11 +99,7 @@ static void ui_flush_rows(int top, int bottom)
     wait_vsync();
     for (row = top; row <= bottom; ++row) {
         unsigned offset = (unsigned)row * UI_COLS;
-        unsigned col;
-
-        for (col = 0; col < UI_COLS; ++col) {
-            video[offset + col] = ui_backbuf[offset + col];
-        }
+        ui_blit_row(ui_backbuf + offset, video + offset);
     }
 }
 

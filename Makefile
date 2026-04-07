@@ -17,6 +17,7 @@ CORE_OBJS = \
 UI_OBJS = \
 	build/ui_auto.obj \
 	build/ui_bigtext.obj \
+	build/ui_blit.obj \
 	build/ui_edit.obj \
 	build/ui_loop.obj \
 	build/ui_core.obj \
@@ -53,6 +54,9 @@ build/ui_edit.obj: src/ui_edit.c src/ui_int.h src/ui_ops.h include/aml.h include
 
 build/ui_bigtext.obj: src/ui_bigtext.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_bigtext.obj src/ui_bigtext.c
+
+build/ui_blit.obj: src/ui_blit.asm
+	$(WASM) -0 -bt=dos -ms -zq -zcm=tasm -fo=build/ui_blit.obj -fr=build/ui_blit.err src/ui_blit.asm
 
 build/ui_loop.obj: src/ui_loop.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/ui_loop.obj src/ui_loop.c
