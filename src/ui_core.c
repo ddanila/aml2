@@ -836,6 +836,17 @@ static void draw_scrollbar(const AmlState *state)
     ui_putc(UI_SCROLL_COL, thumb_row, 219, UI_ATTR_SCROLL_THUMB);
 }
 
+static int scrollbar_thumb_row_for_selected(const AmlState *state, int selected)
+{
+    if (state->entry_count > UI_LIST_VISIBLE) {
+        int track = UI_LIST_ROWS - 2;
+
+        return UI_LIST_ROW + 1 + ((selected * (track - 1)) / (state->entry_count - 1));
+    }
+
+    return UI_LIST_ROW + 1;
+}
+
 static void draw_entry_row(const AmlState *state, int index, int y)
 {
     unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
@@ -907,6 +918,43 @@ void ui_draw_list_area(const AmlState *state)
 {
     draw_entries(state);
     ui_flush_rows(UI_LIST_ROW, UI_LIST_ROW + UI_LIST_ROWS - 1);
+}
+
+void ui_draw_selection_change(const AmlState *state, int old_selected)
+{
+    int old_row;
+    int new_row;
+    int old_thumb_row;
+    int new_thumb_row;
+
+    if (old_selected < state->view_top ||
+        old_selected >= state->view_top + UI_LIST_VISIBLE ||
+        state->selected < state->view_top ||
+        state->selected >= state->view_top + UI_LIST_VISIBLE) {
+        ui_draw_list_area(state);
+        return;
+    }
+
+    old_row = UI_LIST_ROW + ((old_selected - state->view_top) * UI_LIST_ENTRY_ROWS);
+    new_row = UI_LIST_ROW + ((state->selected - state->view_top) * UI_LIST_ENTRY_ROWS);
+    draw_entry_row(state, old_selected, old_row);
+    if (new_row != old_row) {
+        draw_entry_row(state, state->selected, new_row);
+    }
+
+    old_thumb_row = scrollbar_thumb_row_for_selected(state, old_selected);
+    new_thumb_row = scrollbar_thumb_row_for_selected(state, state->selected);
+    ui_putc(UI_SCROLL_COL, old_thumb_row, 176, UI_ATTR_SCROLL);
+    ui_putc(UI_SCROLL_COL, new_thumb_row, 219, UI_ATTR_SCROLL_THUMB);
+
+    ui_flush_rows(old_row, old_row + 1);
+    if (new_row != old_row) {
+        ui_flush_rows(new_row, new_row + 1);
+    }
+    ui_flush_rows(old_thumb_row, old_thumb_row);
+    if (new_thumb_row != old_thumb_row) {
+        ui_flush_rows(new_thumb_row, new_thumb_row);
+    }
 }
 
 void ui_render(const AmlState *state)

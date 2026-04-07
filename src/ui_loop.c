@@ -181,6 +181,7 @@ AmlUiAction ui_run(AmlState *state)
         }
         if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             int ext_key = getch();
+            int old_selected = state->selected;
             int old_view_top = state->view_top;
 
             action = handle_extended_key(state, ext_key);
@@ -190,7 +191,7 @@ AmlUiAction ui_run(AmlState *state)
             ui_sync_view_top(state);
             if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
                 state->view_top == old_view_top) {
-                ui_draw_list_area(state);
+                ui_draw_selection_change(state, old_selected);
                 last_second = ui_current_second();
                 redraw_pending = 0;
             } else {
