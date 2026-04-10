@@ -29,22 +29,7 @@ static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
 static int ui_bigtext_should_use_8dot_clock(void)
 {
-    union REGS regs;
-
-    if (ui_bigtext_8dot_known) {
-        return ui_bigtext_8dot_supported;
-    }
-
-    regs.w.ax = 0x1A00;
-    int86(0x10, &regs, &regs);
-
-    ui_bigtext_8dot_supported = 1;
-    if (regs.h.al == 0x1A && regs.h.bl == 0x07) {
-        ui_bigtext_8dot_supported = 0;
-    }
-
-    ui_bigtext_8dot_known = 1;
-    return ui_bigtext_8dot_supported;
+    return 0;
 }
 
 static int ui_bigtext_is_reserved_code(unsigned char code)
