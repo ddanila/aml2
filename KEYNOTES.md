@@ -62,9 +62,14 @@ Run each one on the affected machine and note which display correctly.
 | `TEST_003.EXE` | Yes | Yes | No | Font + 8-dot clock (no VSYNC) |
 | `TEST_004.EXE` | Yes | Yes | Yes | Full current approach |
 | `TEST_005.EXE` | Yes | No | Yes | Font + VSYNC, no 8-dot |
+| `TEST_006.EXE` | Yes | Yes (old) | No | Font + 8-dot WITHOUT pixel clock fix |
 
 Source: `tests/video/`. Built by default with `make all`. Included in dist zip.
 These are temporary and will be removed once the video card issue is diagnosed.
+
+TEST_003/004 now include a pixel clock compensation (28.322 MHz → 25.175 MHz)
+that keeps horizontal frequency at 31.47 kHz despite 8-dot mode. TEST_006
+reproduces the old uncompensated behavior for comparison.
 
 ## Future Ideas
 

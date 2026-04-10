@@ -20,6 +20,7 @@ static unsigned char vidtest_original[256][VIDTEST_FONT_BYTES];
 static unsigned char vidtest_patched[256][VIDTEST_FONT_BYTES];
 static unsigned char vidtest_codes[VIDTEST_TILES];
 static unsigned char vidtest_saved_clocking;
+static unsigned char vidtest_saved_misc;
 
 static void set_text_mode(void)
 {
@@ -150,6 +151,8 @@ static void vidtest_load_font(void)
 
 static void vidtest_enable_8dot(void)
 {
+    vidtest_saved_misc = inp(0x3CC);
+    outp(0x3C2, (unsigned char)(vidtest_saved_misc & ~0x0C));
     outp(0x3C4, 0x01);
     vidtest_saved_clocking = inp(0x3C5);
     outp(0x3C5, (unsigned char)(vidtest_saved_clocking | 0x01));
@@ -159,6 +162,7 @@ static void vidtest_disable_8dot(void)
 {
     outp(0x3C4, 0x01);
     outp(0x3C5, vidtest_saved_clocking);
+    outp(0x3C2, vidtest_saved_misc);
 }
 
 static void vidtest_wait_vsync(void)

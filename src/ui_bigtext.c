@@ -23,6 +23,7 @@ static int ui_bigtext_8dot_known;
 static int ui_bigtext_8dot_supported;
 static int ui_bigtext_8dot_active;
 static unsigned char ui_bigtext_saved_clocking_mode;
+static unsigned char ui_bigtext_saved_misc_output;
 
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
@@ -228,6 +229,8 @@ static void ui_bigtext_activate(int fancy)
     if (!ui_bigtext_enabled) {
         ui_bigtext_8dot_active = 0;
         if (ui_bigtext_should_use_8dot_clock()) {
+            ui_bigtext_saved_misc_output = inp(0x3CC);
+            outp(0x3C2, (unsigned char)(ui_bigtext_saved_misc_output & ~0x0C));
             outp(0x3C4, 0x01);
             ui_bigtext_saved_clocking_mode = inp(0x3C5);
             outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
@@ -266,6 +269,7 @@ void ui_bigtext_disable(void)
     if (ui_bigtext_8dot_active) {
         outp(0x3C4, 0x01);
         outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        outp(0x3C2, ui_bigtext_saved_misc_output);
         ui_bigtext_8dot_active = 0;
     }
     ui_bigtext_enabled = 0;

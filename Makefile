@@ -36,14 +36,16 @@ VIDTEST_SRCS = \
 	tests/video/test_002.c \
 	tests/video/test_003.c \
 	tests/video/test_004.c \
-	tests/video/test_005.c
+	tests/video/test_005.c \
+	tests/video/test_006.c
 
 VIDTEST_EXES = \
 	test_001.exe \
 	test_002.exe \
 	test_003.exe \
 	test_004.exe \
-	test_005.exe
+	test_005.exe \
+	test_006.exe
 
 all: build amlui.exe aml.com $(VIDTEST_EXES)
 test-build: build amlui.exe aml.com fakegame.exe $(VIDTEST_EXES)
@@ -131,6 +133,12 @@ test_004.exe: build/test_004.obj
 
 test_005.exe: build/test_005.obj
 	$(WLINK) $(LDFLAGS) name test_005.exe file { build/test_005.obj }
+
+build/test_006.obj: tests/video/test_006.c tests/video/vidtest.h
+	$(WCC) $(CFLAGS) -i=tests/video -fo=build/test_006.obj tests/video/test_006.c
+
+test_006.exe: build/test_006.obj
+	$(WLINK) $(LDFLAGS) name test_006.exe file { build/test_006.obj }
 
 clean:
 	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe $(VIDTEST_EXES) AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h
