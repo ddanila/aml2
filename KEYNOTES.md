@@ -50,6 +50,22 @@ Detailed bring-up findings live in `docs/e2e-findings.md`.
 - keep release descriptions short and concrete
 - screenshot capture helper: `./tools/capture_release_help_screenshot.sh <tag>`
 
+## Video Diagnostic Tests
+
+Temporary test binaries for diagnosing video card sync issues on problematic hardware.
+Run each one on the affected machine and note which display correctly.
+
+| Binary | Custom Font | 8-dot Clock | VSYNC | What it tests |
+|--------|------------|-------------|-------|---------------|
+| `TEST_001.EXE` | No | No | No | Baseline plain mode 3 text |
+| `TEST_002.EXE` | Yes | No | No | Custom font upload only |
+| `TEST_003.EXE` | Yes | Yes | No | Font + 8-dot clock (no VSYNC) |
+| `TEST_004.EXE` | Yes | Yes | Yes | Full current approach |
+| `TEST_005.EXE` | Yes | No | Yes | Font + VSYNC, no 8-dot |
+
+Source: `tests/video/`. Built by default with `make all`. Included in dist zip.
+These are temporary and will be removed once the video card issue is diagnosed.
+
 ## Future Ideas
 
 - optional per-game statistics, especially launch count and accumulated play time

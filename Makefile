@@ -31,7 +31,21 @@ OBJS = \
 FAKEGAME_OBJS = \
 	build/fakegame.obj
 
-all: build amlui.exe aml.com
+VIDTEST_SRCS = \
+	tests/video/test_001.c \
+	tests/video/test_002.c \
+	tests/video/test_003.c \
+	tests/video/test_004.c \
+	tests/video/test_005.c
+
+VIDTEST_EXES = \
+	test_001.exe \
+	test_002.exe \
+	test_003.exe \
+	test_004.exe \
+	test_005.exe
+
+all: build amlui.exe aml.com $(VIDTEST_EXES)
 test-build: build amlui.exe aml.com fakegame.exe
 
 build:
@@ -88,5 +102,35 @@ aml.com: build/amlstub.obj tools/obj2com.py
 fakegame.exe: $(FAKEGAME_OBJS)
 	$(WLINK) $(LDFLAGS) name fakegame.exe file { $(FAKEGAME_OBJS) }
 
+build/test_001.obj: tests/video/test_001.c
+	$(WCC) $(CFLAGS) -fo=build/test_001.obj tests/video/test_001.c
+
+build/test_002.obj: tests/video/test_002.c tests/video/vidtest.h
+	$(WCC) $(CFLAGS) -i=tests/video -fo=build/test_002.obj tests/video/test_002.c
+
+build/test_003.obj: tests/video/test_003.c tests/video/vidtest.h
+	$(WCC) $(CFLAGS) -i=tests/video -fo=build/test_003.obj tests/video/test_003.c
+
+build/test_004.obj: tests/video/test_004.c tests/video/vidtest.h
+	$(WCC) $(CFLAGS) -i=tests/video -fo=build/test_004.obj tests/video/test_004.c
+
+build/test_005.obj: tests/video/test_005.c tests/video/vidtest.h
+	$(WCC) $(CFLAGS) -i=tests/video -fo=build/test_005.obj tests/video/test_005.c
+
+test_001.exe: build/test_001.obj
+	$(WLINK) $(LDFLAGS) name test_001.exe file { build/test_001.obj }
+
+test_002.exe: build/test_002.obj
+	$(WLINK) $(LDFLAGS) name test_002.exe file { build/test_002.obj }
+
+test_003.exe: build/test_003.obj
+	$(WLINK) $(LDFLAGS) name test_003.exe file { build/test_003.obj }
+
+test_004.exe: build/test_004.obj
+	$(WLINK) $(LDFLAGS) name test_004.exe file { build/test_004.obj }
+
+test_005.exe: build/test_005.obj
+	$(WLINK) $(LDFLAGS) name test_005.exe file { build/test_005.obj }
+
 clean:
-	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h
+	rm -rf build amlui.exe amlui.com aml.exe aml.com fakegame.exe $(VIDTEST_EXES) AML2.RUN AML2.AUT AML2.TRC out include/aml_build.h

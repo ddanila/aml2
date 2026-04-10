@@ -23,6 +23,13 @@ cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
 cp amlui.exe "$STAGE_DIR/AMLUI.EXE"
 cp aml.com "$STAGE_DIR/AML.COM"
 
+for t in test_001.exe test_002.exe test_003.exe test_004.exe test_005.exe; do
+    if [ -f "$t" ]; then
+        upper=$(echo "$t" | tr '[:lower:]' '[:upper:]')
+        cp "$t" "$STAGE_DIR/$upper"
+    fi
+done
+
 mkdir -p "$DIST_DIR"
 ZIP_PATH="$DIST_DIR/aml2-${BUILD_TAG}.zip"
 rm -f "$ZIP_PATH"
