@@ -1,6 +1,7 @@
 #include <conio.h>
 #include <ctype.h>
 #include <dos.h>
+#include <i86.h>
 
 #include "ui_int.h"
 #include "ui_ops.h"
@@ -57,9 +58,17 @@ static void prompt_search(AmlState *state)
     }
 }
 
-static void wait_for_input_redraw(void)
+static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
+    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
+
     while (!kbhit()) {
+        unsigned now_tick = *tick;
+
+        if ((unsigned)(now_tick - *last_tick) >= 18) {
+            ui_update_clock(state);
+            *last_tick = now_tick;
+        }
         delay(50);
     }
 }
@@ -133,49 +142,70 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
 
 AmlUiAction ui_run(AmlState *state)
 {
+    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
+    unsigned last_tick = *tick;
+    int redraw_pending = 1;
+
     ui_sync_view_top(state);
 
     for (;;) {
         AmlUiAction action;
         int key;
 
-        ui_draw(state);
+        if (redraw_pending) {
+            ui_draw(state);
+            last_tick = *tick;
+            redraw_pending = 0;
+        }
 
         action = apply_test_automation(state);
         if (action == UI_AUTO_REDRAW) {
             ui_sync_view_top(state);
+            redraw_pending = 1;
             continue;
         }
         if (action >= 0) {
             return action;
         }
 
-        wait_for_input_redraw();
+        wait_for_input_redraw(state, &last_tick);
         key = getch();
 
         if (key == UI_KEY_ENTER) {
             if (ui_has_entries(state)) {
                 return AML_UI_LAUNCH;
             }
+            redraw_pending = 1;
             continue;
         }
         if (key == UI_KEY_SLASH && ui_has_entries(state)) {
             prompt_search(state);
             ui_sync_view_top(state);
+            redraw_pending = 1;
             continue;
         }
         if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             int ext_key = getch();
+            int old_selected = state->selected;
+            int old_view_top = state->view_top;
 
             action = handle_extended_key(state, ext_key);
             if (action >= 0) {
                 return action;
             }
             ui_sync_view_top(state);
+            if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
+                state->view_top == old_view_top) {
+                ui_draw_selection_change(state, old_selected);
+                last_tick = *tick;
+            } else {
+                redraw_pending = 1;
+            }
             continue;
         }
         if (key == UI_KEY_QUESTION) {
             ui_show_help_overlay(state);
+            redraw_pending = 1;
             continue;
         }
 
@@ -183,5 +213,6 @@ AmlUiAction ui_run(AmlState *state)
         if (action >= 0) {
             return action;
         }
+        redraw_pending = 1;
     }
 }

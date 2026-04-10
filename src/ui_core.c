@@ -647,14 +647,27 @@ void ui_wait_for_ack(void)
 
 void ui_draw_header_on_frame_common(int modified)
 {
+    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
+    unsigned long ticks = *tick;
+    unsigned long total_secs = (ticks * 10) / 182;
+    unsigned hour = (unsigned)((total_secs / 3600) % 24);
+    unsigned minute = (unsigned)((total_secs / 60) % 60);
+    unsigned second = (unsigned)(total_secs % 60);
     char title[80];
+    int clock_col = 72;
 
     strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
     strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
     strncat(title, " ", sizeof(title) - strlen(title) - 1);
+    if ((int)strlen(title) > clock_col - 1) {
+        title[clock_col - 1] = '\0';
+    }
 
     ui_fill_rect(1, 0, UI_FRAME_RIGHT - 1, 0, 196, UI_ATTR_FRAME);
     ui_write_at(1, 0, title, UI_ATTR_TITLE);
+    ui_write_2digit_at(clock_col, 0, hour, UI_ATTR_HELP);
+    ui_putc(clock_col + 2, 0, (second & 1) ? ':' : ' ', UI_ATTR_HELP);
+    ui_write_2digit_at(clock_col + 3, 0, minute, UI_ATTR_HELP);
     if (modified) {
         ui_putc(78, 0, '*', UI_ATTR_HELP);
     }
