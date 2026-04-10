@@ -59,19 +59,18 @@ static void prompt_search(AmlState *state)
 
 static void wait_for_input_redraw(AmlState *state, unsigned *last_second)
 {
-    int ticks = 0;
+    unsigned poll = 0;
 
     while (!kbhit()) {
-        if (++ticks >= 10) {
+        if (++poll >= 4000) {
             unsigned now_second = ui_current_second();
 
             if (now_second != *last_second) {
                 ui_update_clock(state);
                 *last_second = now_second;
             }
-            ticks = 0;
+            poll = 0;
         }
-        delay(5);
     }
 }
 
