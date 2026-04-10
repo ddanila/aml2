@@ -23,7 +23,7 @@ cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
 cp amlui.exe "$STAGE_DIR/AMLUI.EXE"
 cp aml.com "$STAGE_DIR/AML.COM"
 
-for t in test_001.exe test_002.exe test_003.exe test_004.exe test_005.exe; do
+for t in test_[0-9][0-9][0-9].exe; do
     if [ -f "$t" ]; then
         upper=$(echo "$t" | tr '[:lower:]' '[:upper:]')
         cp "$t" "$STAGE_DIR/$upper"
