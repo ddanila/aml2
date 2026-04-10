@@ -445,10 +445,13 @@ exec_block label byte
 env_seg          dw 0
 cmd_tail_off     dw offset empty_tail
 cmd_tail_seg     dw 0
-fcb1_off         dw 5Ch
+fcb1_off         dw offset dummy_fcb1
 fcb1_seg         dw 0
-fcb2_off         dw 6Ch
+fcb2_off         dw offset dummy_fcb2
 fcb2_seg         dw 0
+
+dummy_fcb1       db 16 dup (0)
+dummy_fcb2       db 16 dup (0)
 
 stack_space      db 64 dup (0)
 stack_top label byte
