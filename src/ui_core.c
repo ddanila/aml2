@@ -967,10 +967,15 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
 
 void ui_render(const AmlState *state)
 {
+    diag_marker('a');
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
+    diag_marker('b');
     ui_draw_frame();
+    diag_marker('c');
     ui_draw_header_on_frame(state);
+    diag_marker('d');
     draw_entries(state);
+    diag_marker('e');
 }
 
 static void draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
