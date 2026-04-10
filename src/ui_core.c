@@ -117,7 +117,7 @@ static void ui_flush_rows_nosync(int top, int bottom)
 
 void ui_flush(void)
 {
-    ui_flush_rows(0, UI_ROWS - 1);
+    ui_flush_rows_nosync(0, UI_ROWS - 1);
 }
 
 void ui_fill_rect(int left, int top, int right, int bottom,
