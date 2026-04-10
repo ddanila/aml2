@@ -232,15 +232,11 @@ static void ui_bigtext_activate(int fancy)
 
 int ui_bigtext_enable(void)
 {
-    ui_bigtext_prepare();
-    ui_bigtext_activate(0);
     return 1;
 }
 
 int ui_bigtext_enable_fancy(void)
 {
-    ui_bigtext_prepare();
-    ui_bigtext_activate(1);
     return 1;
 }
 
@@ -295,13 +291,9 @@ static void ui_bigtext_put_char(int col, int row, char ch, unsigned char attr)
 
 void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr)
 {
-    if (!ui_bigtext_enabled) {
-        return;
-    }
-
-    while (*text != '\0') {
-        ui_bigtext_put_char(col, row, *text, attr);
-        col += 3;
-        ++text;
+    while (*text != '\0' && col < UI_COLS) {
+        ui_putc(col, row, (unsigned char)*text, attr);
+        col++;
+        text++;
     }
 }
