@@ -11,10 +11,6 @@ static unsigned short ui_backbuf[UI_ROWS * UI_COLS];
 extern void ui_blit_row(const unsigned short *src, unsigned short far *dst);
 #pragma aux ui_blit_row parm [si] [es di] modify [cx si di];
 
-enum {
-    UI_VSYNC_TIMEOUT = 0x8000
-};
-
 static unsigned short cell(unsigned char ch, unsigned char attr)
 {
     return (unsigned short)ch | ((unsigned short)attr << 8);
@@ -70,25 +66,7 @@ void ui_set_cursor(int col, int row)
     int86(0x10, &regs, &regs);
 }
 
-static void diag_marker(char ch)
-{
-    unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
-
-    v[78] = (unsigned short)ch | 0x4F00;
-}
-
-static void wait_vsync(void)
-{
-    diag_marker('1');
-    while (inp(0x3DA) & 0x08) {
-    }
-    diag_marker('2');
-    while ((inp(0x3DA) & 0x08) == 0) {
-    }
-    diag_marker('3');
-}
-
-static void ui_flush_rows_impl(int top, int bottom, int sync)
+static void ui_flush_rows(int top, int bottom)
 {
     unsigned short far *video = (unsigned short far *)MK_FP(0xB800, 0);
     int row;
@@ -103,23 +81,10 @@ static void ui_flush_rows_impl(int top, int bottom, int sync)
         return;
     }
 
-    if (sync) {
-        wait_vsync();
-    }
     for (row = top; row <= bottom; ++row) {
         unsigned offset = (unsigned)row * UI_COLS;
         ui_blit_row(ui_backbuf + offset, video + offset);
     }
-}
-
-static void ui_flush_rows(int top, int bottom)
-{
-    ui_flush_rows_impl(top, bottom, 1);
-}
-
-static void ui_flush_rows_nosync(int top, int bottom)
-{
-    ui_flush_rows_impl(top, bottom, 0);
 }
 
 void ui_flush(void)
@@ -962,20 +927,15 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
     if (new_thumb_row > flush_bottom) {
         flush_bottom = new_thumb_row;
     }
-    ui_flush_rows_nosync(flush_top, flush_bottom);
+    ui_flush_rows(flush_top, flush_bottom);
 }
 
 void ui_render(const AmlState *state)
 {
-    diag_marker('a');
     ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
-    diag_marker('b');
     ui_draw_frame();
-    diag_marker('c');
     ui_draw_header_on_frame(state);
-    diag_marker('d');
     draw_entries(state);
-    diag_marker('e');
 }
 
 static void draw_notice_box(const char *title, const char *line1, const char *line2, const char *line3)
@@ -1028,20 +988,6 @@ void ui_shutdown(void)
 
 void ui_draw(const AmlState *state)
 {
-    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
-    unsigned short far *vram = (unsigned short far *)MK_FP(0xB800, 0);
-    unsigned t0, t1, t2, t3;
-
-    t0 = *tick;
-    ui_hide_cursor();
-    t1 = *tick;
     ui_render(state);
-    t2 = *tick;
     ui_flush();
-    t3 = *tick;
-
-    vram[74] = (unsigned short)('0' + ((t1 - t0) & 0xF)) | 0x4E00;
-    vram[75] = (unsigned short)('0' + ((t2 - t1) & 0xF)) | 0x4E00;
-    vram[76] = (unsigned short)('0' + ((t3 - t2) & 0xF)) | 0x4E00;
-    vram[77] = (unsigned short)('0' + ((t3 - t0) & 0xF)) | 0x4E00;
 }

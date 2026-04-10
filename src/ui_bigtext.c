@@ -29,7 +29,22 @@ static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
 static int ui_bigtext_should_use_8dot_clock(void)
 {
-    return 0;
+    union REGS regs;
+
+    if (ui_bigtext_8dot_known) {
+        return ui_bigtext_8dot_supported;
+    }
+
+    regs.w.ax = 0x1A00;
+    int86(0x10, &regs, &regs);
+
+    ui_bigtext_8dot_supported = 1;
+    if (regs.h.al == 0x1A && regs.h.bl == 0x07) {
+        ui_bigtext_8dot_supported = 0;
+    }
+
+    ui_bigtext_8dot_known = 1;
+    return ui_bigtext_8dot_supported;
 }
 
 static int ui_bigtext_is_reserved_code(unsigned char code)
@@ -232,11 +247,15 @@ static void ui_bigtext_activate(int fancy)
 
 int ui_bigtext_enable(void)
 {
+    ui_bigtext_prepare();
+    ui_bigtext_activate(0);
     return 1;
 }
 
 int ui_bigtext_enable_fancy(void)
 {
+    ui_bigtext_prepare();
+    ui_bigtext_activate(1);
     return 1;
 }
 
@@ -291,9 +310,13 @@ static void ui_bigtext_put_char(int col, int row, char ch, unsigned char attr)
 
 void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr)
 {
-    while (*text != '\0' && col < UI_COLS) {
-        ui_putc(col, row, (unsigned char)*text, attr);
-        col++;
-        text++;
+    if (!ui_bigtext_enabled) {
+        return;
+    }
+
+    while (*text != '\0') {
+        ui_bigtext_put_char(col, row, *text, attr);
+        col += 3;
+        ++text;
     }
 }
