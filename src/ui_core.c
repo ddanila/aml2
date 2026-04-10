@@ -72,12 +72,9 @@ void ui_set_cursor(int col, int row)
 
 static void wait_vsync(void)
 {
-    unsigned timeout = UI_VSYNC_TIMEOUT;
-
-    while ((inp(0x3DA) & 0x08) != 0 && timeout-- != 0) {
+    while (inp(0x3DA) & 0x08) {
     }
-    timeout = UI_VSYNC_TIMEOUT;
-    while ((inp(0x3DA) & 0x08) == 0 && timeout-- != 0) {
+    while ((inp(0x3DA) & 0x08) == 0) {
     }
 }
 
@@ -117,7 +114,7 @@ static void ui_flush_rows_nosync(int top, int bottom)
 
 void ui_flush(void)
 {
-    ui_flush_rows_nosync(0, UI_ROWS - 1);
+    ui_flush_rows(0, UI_ROWS - 1);
 }
 
 void ui_fill_rect(int left, int top, int right, int bottom,
