@@ -59,14 +59,19 @@ static void prompt_search(AmlState *state)
 
 static void wait_for_input_redraw(AmlState *state, unsigned *last_second)
 {
-    while (!kbhit()) {
-        unsigned now_second = ui_current_second();
+    int ticks = 0;
 
-        if (now_second != *last_second) {
-            ui_update_clock(state);
-            *last_second = now_second;
+    while (!kbhit()) {
+        if (++ticks >= 10) {
+            unsigned now_second = ui_current_second();
+
+            if (now_second != *last_second) {
+                ui_update_clock(state);
+                *last_second = now_second;
+            }
+            ticks = 0;
         }
-        delay(50);
+        delay(5);
     }
 }
 
@@ -188,6 +193,30 @@ AmlUiAction ui_run(AmlState *state)
             if (action >= 0) {
                 return action;
             }
+
+            while ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) && kbhit()) {
+                int peek = getch();
+
+                if (peek != UI_KEY_EXTENDED && peek != UI_KEY_EXTENDED_2) {
+                    ungetch(peek);
+                    break;
+                }
+
+                ext_key = getch();
+                if (ext_key != UI_KEY_UP && ext_key != UI_KEY_DOWN) {
+                    action = handle_extended_key(state, ext_key);
+                    if (action >= 0) {
+                        return action;
+                    }
+                    break;
+                }
+
+                action = handle_extended_key(state, ext_key);
+                if (action >= 0) {
+                    return action;
+                }
+            }
+
             ui_sync_view_top(state);
             if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
                 state->view_top == old_view_top) {
