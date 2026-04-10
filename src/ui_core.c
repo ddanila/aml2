@@ -990,15 +990,21 @@ void ui_draw(const AmlState *state)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
     unsigned short far *vram = (unsigned short far *)MK_FP(0xB800, 0);
-    unsigned t0, t1, t2;
+    unsigned t0, t1, t2, t3, t4;
 
     t0 = *tick;
-    ui_render(state);
+    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', UI_ATTR_BG);
     t1 = *tick;
-    ui_flush();
+    ui_draw_frame();
+    ui_draw_header_on_frame(state);
     t2 = *tick;
+    draw_entries(state);
+    t3 = *tick;
+    ui_flush();
+    t4 = *tick;
 
-    vram[75] = (unsigned short)('0' + ((t1 - t0) & 0xF)) | 0x4E00;
-    vram[76] = (unsigned short)('0' + ((t2 - t1) & 0xF)) | 0x4E00;
-    vram[77] = (unsigned short)('0' + ((t2 - t0) & 0xF)) | 0x4E00;
+    vram[74] = (unsigned short)('0' + ((t1 - t0) & 0xF)) | 0x4E00;
+    vram[75] = (unsigned short)('0' + ((t2 - t1) & 0xF)) | 0x4E00;
+    vram[76] = (unsigned short)('0' + ((t3 - t2) & 0xF)) | 0x4E00;
+    vram[77] = (unsigned short)('0' + ((t4 - t0) & 0xF)) | 0x4E00;
 }
