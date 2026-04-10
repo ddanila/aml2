@@ -988,6 +988,17 @@ void ui_shutdown(void)
 
 void ui_draw(const AmlState *state)
 {
+    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
+    unsigned short far *vram = (unsigned short far *)MK_FP(0xB800, 0);
+    unsigned t0, t1, t2;
+
+    t0 = *tick;
     ui_render(state);
+    t1 = *tick;
     ui_flush();
+    t2 = *tick;
+
+    vram[75] = (unsigned short)('0' + ((t1 - t0) & 0xF)) | 0x4E00;
+    vram[76] = (unsigned short)('0' + ((t2 - t1) & 0xF)) | 0x4E00;
+    vram[77] = (unsigned short)('0' + ((t2 - t0) & 0xF)) | 0x4E00;
 }
