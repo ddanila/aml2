@@ -16,6 +16,9 @@ PPM_OUT="$OUT_DIR/aml2-$TAG-games-f1-help.ppm"
 PNG_OUT="$OUT_DIR/aml2-$TAG-games-f1-help.png"
 PNG_2X_OUT="$OUT_DIR/aml2-$TAG-games-f1-help-2x.png"
 GAMES_CSV="${AML_MANUAL_GAMES_CSV:-$HOME/fun/games_list/games_1987_1993.csv}"
+if [[ ! -f "$GAMES_CSV" ]]; then
+    GAMES_CSV="$REPO_ROOT/assets/games_sample.csv"
+fi
 DOS_RELEASE_TAG="${DOS_RELEASE_TAG:-0.1}"
 DOS_IMAGE_URL="${DOS_IMAGE_URL:-https://github.com/ddanila/msdos/releases/download/${DOS_RELEASE_TAG}/floppy-minimal.img}"
 QEMU_PID=""
