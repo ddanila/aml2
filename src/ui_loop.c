@@ -137,6 +137,13 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
     return (AmlUiAction)UI_AUTO_NONE;
 }
 
+static void diag(char ch)
+{
+    unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+
+    v[79] = (unsigned short)ch | 0x4F00;
+}
+
 AmlUiAction ui_run(AmlState *state)
 {
     unsigned last_second = 60;
@@ -147,7 +154,9 @@ AmlUiAction ui_run(AmlState *state)
         AmlUiAction action;
         int key;
 
+        diag('D');
         ui_draw(state);
+        diag('W');
         last_second = ui_current_second();
 
         action = apply_test_automation(state);
@@ -160,6 +169,7 @@ AmlUiAction ui_run(AmlState *state)
         }
 
         wait_for_input_redraw(state, &last_second);
+        diag('K');
         key = getch();
 
         if (key == UI_KEY_ENTER) {
@@ -176,11 +186,13 @@ AmlUiAction ui_run(AmlState *state)
         if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
             int ext_key = getch();
 
+            diag('P');
             action = handle_extended_key(state, ext_key);
             if (action >= 0) {
                 return action;
             }
             ui_sync_view_top(state);
+            diag('L');
             continue;
         }
         if (key == UI_KEY_QUESTION) {
