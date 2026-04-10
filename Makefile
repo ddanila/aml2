@@ -46,7 +46,7 @@ VIDTEST_EXES = \
 	test_005.exe
 
 all: build amlui.exe aml.com $(VIDTEST_EXES)
-test-build: build amlui.exe aml.com fakegame.exe
+test-build: build amlui.exe aml.com fakegame.exe $(VIDTEST_EXES)
 
 build:
 	mkdir -p build
