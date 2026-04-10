@@ -450,8 +450,8 @@ fcb1_seg         dw 0
 fcb2_off         dw offset dummy_fcb2
 fcb2_seg         dw 0
 
-dummy_fcb1       db 16 dup (0)
-dummy_fcb2       db 16 dup (0)
+dummy_fcb1       db 0, '           ', 0, 0, 0, 0
+dummy_fcb2       db 0, '           ', 0, 0, 0, 0
 
 stack_space      db 64 dup (0)
 stack_top label byte
