@@ -70,12 +70,22 @@ void ui_set_cursor(int col, int row)
     int86(0x10, &regs, &regs);
 }
 
+static void diag_marker(char ch)
+{
+    unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+
+    v[78] = (unsigned short)ch | 0x4F00;
+}
+
 static void wait_vsync(void)
 {
+    diag_marker('1');
     while (inp(0x3DA) & 0x08) {
     }
+    diag_marker('2');
     while ((inp(0x3DA) & 0x08) == 0) {
     }
+    diag_marker('3');
 }
 
 static void ui_flush_rows_impl(int top, int bottom, int sync)
@@ -1013,7 +1023,11 @@ void ui_shutdown(void)
 
 void ui_draw(const AmlState *state)
 {
+    diag_marker('H');
     ui_hide_cursor();
+    diag_marker('R');
     ui_render(state);
+    diag_marker('F');
     ui_flush();
+    diag_marker('X');
 }
