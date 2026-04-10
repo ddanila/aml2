@@ -57,15 +57,9 @@ static void prompt_search(AmlState *state)
     }
 }
 
-static void wait_for_input_redraw(AmlState *state, unsigned *last_second)
+static void wait_for_input_redraw(void)
 {
     while (!kbhit()) {
-        unsigned now_second = ui_current_second();
-
-        if (now_second != *last_second) {
-            ui_update_clock(state);
-            *last_second = now_second;
-        }
         delay(50);
     }
 }
@@ -139,8 +133,6 @@ static AmlUiAction handle_hotkey(AmlState *state, int key)
 
 AmlUiAction ui_run(AmlState *state)
 {
-    unsigned last_second = 60;
-
     ui_sync_view_top(state);
 
     for (;;) {
@@ -148,7 +140,6 @@ AmlUiAction ui_run(AmlState *state)
         int key;
 
         ui_draw(state);
-        last_second = ui_current_second();
 
         action = apply_test_automation(state);
         if (action == UI_AUTO_REDRAW) {
@@ -159,7 +150,7 @@ AmlUiAction ui_run(AmlState *state)
             return action;
         }
 
-        wait_for_input_redraw(state, &last_second);
+        wait_for_input_redraw();
         key = getch();
 
         if (key == UI_KEY_ENTER) {
