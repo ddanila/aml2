@@ -19,8 +19,6 @@ start:
     int 21h
     jc resize_fail
 
-    mov ax, [2Ch]
-    mov [env_seg], ax
     mov [cmd_tail_seg], cs
     mov [fcb1_seg], cs
     mov [fcb2_seg], cs
