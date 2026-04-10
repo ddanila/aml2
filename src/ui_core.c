@@ -81,7 +81,7 @@ static void wait_vsync(void)
     }
 }
 
-static void ui_flush_rows(int top, int bottom)
+static void ui_flush_rows_impl(int top, int bottom, int sync)
 {
     unsigned short far *video = (unsigned short far *)MK_FP(0xB800, 0);
     int row;
@@ -96,11 +96,23 @@ static void ui_flush_rows(int top, int bottom)
         return;
     }
 
-    wait_vsync();
+    if (sync) {
+        wait_vsync();
+    }
     for (row = top; row <= bottom; ++row) {
         unsigned offset = (unsigned)row * UI_COLS;
         ui_blit_row(ui_backbuf + offset, video + offset);
     }
+}
+
+static void ui_flush_rows(int top, int bottom)
+{
+    ui_flush_rows_impl(top, bottom, 1);
+}
+
+static void ui_flush_rows_nosync(int top, int bottom)
+{
+    ui_flush_rows_impl(top, bottom, 0);
 }
 
 void ui_flush(void)
@@ -943,7 +955,7 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
     if (new_thumb_row > flush_bottom) {
         flush_bottom = new_thumb_row;
     }
-    ui_flush_rows(flush_top, flush_bottom);
+    ui_flush_rows_nosync(flush_top, flush_bottom);
 }
 
 void ui_render(const AmlState *state)
@@ -997,10 +1009,9 @@ void ui_init(void)
 void ui_shutdown(void)
 {
     ui_bigtext_disable();
-    ui_set_cursor(0, UI_ROWS - 1);
+    ui_set_text_mode_80x25();
     ui_show_cursor();
-    ui_fill_rect(0, 0, UI_COLS - 1, UI_ROWS - 1, ' ', 0x07);
-    ui_flush();
+    ui_set_cursor(0, UI_ROWS - 1);
 }
 
 void ui_draw(const AmlState *state)
