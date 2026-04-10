@@ -898,6 +898,8 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
     int new_row;
     int old_thumb_row;
     int new_thumb_row;
+    int flush_top;
+    int flush_bottom;
 
     if (old_selected < state->view_top ||
         old_selected >= state->view_top + UI_LIST_VISIBLE ||
@@ -919,14 +921,29 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
     ui_putc(UI_SCROLL_COL, old_thumb_row, 176, UI_ATTR_SCROLL);
     ui_putc(UI_SCROLL_COL, new_thumb_row, 219, UI_ATTR_SCROLL_THUMB);
 
-    ui_flush_rows(old_row, old_row + 1);
+    flush_top = old_row;
+    flush_bottom = old_row + 1;
     if (new_row != old_row) {
-        ui_flush_rows(new_row, new_row + 1);
+        if (new_row < flush_top) {
+            flush_top = new_row;
+        }
+        if (new_row + 1 > flush_bottom) {
+            flush_bottom = new_row + 1;
+        }
     }
-    ui_flush_rows(old_thumb_row, old_thumb_row);
-    if (new_thumb_row != old_thumb_row) {
-        ui_flush_rows(new_thumb_row, new_thumb_row);
+    if (old_thumb_row < flush_top) {
+        flush_top = old_thumb_row;
     }
+    if (old_thumb_row > flush_bottom) {
+        flush_bottom = old_thumb_row;
+    }
+    if (new_thumb_row < flush_top) {
+        flush_top = new_thumb_row;
+    }
+    if (new_thumb_row > flush_bottom) {
+        flush_bottom = new_thumb_row;
+    }
+    ui_flush_rows(flush_top, flush_bottom);
 }
 
 void ui_render(const AmlState *state)
