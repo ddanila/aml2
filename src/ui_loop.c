@@ -58,11 +58,19 @@ static void prompt_search(AmlState *state)
     }
 }
 
+static int keys_pending(void)
+{
+    unsigned short far *head = (unsigned short far *)MK_FP(0x0040, 0x001A);
+    unsigned short far *tail = (unsigned short far *)MK_FP(0x0040, 0x001C);
+
+    return *head != *tail;
+}
+
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     (void)state;
     (void)last_tick;
-    while (!kbhit()) {}
+    while (!keys_pending()) {}
 }
 
 static AmlUiAction apply_test_automation(AmlState *state)
