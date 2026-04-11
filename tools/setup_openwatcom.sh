@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 TAG="Current-build"
-PIN_DATE="2026-04-03"
+PIN_DATE="2026-04-11"
 VENDOR_BASE="$REPO_ROOT/vendor/openwatcom-v2"
 TARGET_DIR="$VENDOR_BASE/current-build-$PIN_DATE"
 TMP_DIR="$(mktemp -d)"

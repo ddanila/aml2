@@ -13,3 +13,4 @@ out/
 __pycache__/
 tests/__pycache__/
 vendor/openwatcom-v2/current-build-*/
+include/aml_build.h
