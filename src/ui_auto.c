@@ -71,17 +71,6 @@ AmlUiAction ui_apply_automation(AmlState *state)
         return (AmlUiAction)UI_AUTO_REDRAW;
     }
 
-    if (strncmp(line, "hotkey ", 7) == 0) {
-        int index = ui_hotkey_index(line[7]);
-        if (index >= 0 && index < state->entry_count) {
-            ui_select_index(state, index);
-            ui_trace_event("auto_hotkey");
-        } else {
-            ui_trace_event("auto_bad_hotkey");
-        }
-        return (AmlUiAction)UI_AUTO_REDRAW;
-    }
-
     if (strcmp(line, "help") == 0) {
         ui_trace_event("auto_help");
         ui_show_help_overlay(state);

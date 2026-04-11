@@ -674,34 +674,6 @@ void ui_draw_header_on_frame(const AmlState *state)
     }
 }
 
-int ui_hotkey_index(int key)
-{
-    if (key >= '0' && key <= '9') {
-        return key - '0';
-    }
-    if (key >= 'a' && key <= 'z') {
-        return 10 + (key - 'a');
-    }
-    if (key >= 'A' && key <= 'Z') {
-        return 36 + (key - 'A');
-    }
-    return -1;
-}
-
-char ui_hotkey_char(int index)
-{
-    if (index >= 0 && index <= 9) {
-        return (char)('0' + index);
-    }
-    if (index >= 10 && index < 36) {
-        return (char)('a' + (index - 10));
-    }
-    if (index >= 36 && index < 62) {
-        return (char)('A' + (index - 36));
-    }
-    return ' ';
-}
-
 static int name_contains(const char *name, const char *needle)
 {
     const char *scan;
@@ -831,13 +803,9 @@ static int scrollbar_thumb_row_for_selected(const AmlState *state, int selected)
 static void draw_entry_row(const AmlState *state, int index, int y)
 {
     unsigned char attr = (index == state->selected) ? UI_ATTR_SELECTED : UI_ATTR_TEXT;
-    char hotkey = ui_hotkey_char(index);
 
     ui_fill_rect(UI_LIST_LEFT + 1, y, UI_SCROLL_COL - 1, y + 1, ' ', attr);
-    ui_putc(6, y, '[', attr);
-    ui_putc(7, y, (unsigned char)hotkey, attr);
-    ui_putc(8, y, ']', attr);
-    ui_bigtext_write_at(11, y, state->entry_view[index].big_name, attr);
+    ui_bigtext_write_at(5, y, state->entry_view[index].big_name, attr);
 }
 
 static void draw_entries(const AmlState *state)

@@ -87,7 +87,6 @@ Rules:
 - `Home/End`: jump to first or last entry
 - `/`: search within entry names
 - `Enter`: launch current selection
-- `0-9`, `a-z`, `A-Z`: direct launch hotkeys for the first 62 items
 - `F1` or `?`: help
 - `F3`: details
 - `F9`: debug run menu with stub, direct-child, and shell launch options

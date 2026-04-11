@@ -30,7 +30,6 @@ static int require_editor_selection(AmlState *state)
 
 void ui_show_details_overlay(const AmlState *state)
 {
-    char hotkey[2];
     const AmlEntry *entry;
 
     if (!ui_has_selection(state)) {
@@ -45,21 +44,18 @@ void ui_show_details_overlay(const AmlState *state)
     }
 
     entry = &state->entries[state->selected];
-    hotkey[0] = ui_hotkey_char(state->selected);
-    hotkey[1] = '\0';
 
     {
-        UiDetailDialogRow rows[4];
+        UiDetailDialogRow rows[3];
         UiDetailDialog dialog;
 
         rows[0] = ui_detail_dialog_row("Name", entry->name);
         rows[1] = ui_detail_dialog_row("Command", entry->command);
         rows[2] = ui_detail_dialog_row("Path", entry->path[0] != '\0' ? entry->path : ".");
-        rows[3] = ui_detail_dialog_row("Hotkey", hotkey[0] != ' ' ? hotkey : "-");
 
         dialog = ui_detail_dialog_spec(
             ui_dialog_box(10, 6, 69, 18, "Entry Details"),
-            rows, 4, 2, 2, UI_ATTR_DIALOG_DIM
+            rows, 3, 2, 2, UI_ATTR_DIALOG_DIM
         );
 
         ui_render(state);

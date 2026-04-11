@@ -25,7 +25,6 @@ The launcher keeps only the essential behavior from the original project:
 - Display entries in a single list.
 - Move selection with arrow keys.
 - Launch with `Enter`.
-- Support direct hotkeys for quick selection.
 - Write a launch request and exit.
 
 ## Explicit Non-Goals For Milestone 1

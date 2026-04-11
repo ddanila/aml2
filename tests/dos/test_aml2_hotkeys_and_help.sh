@@ -38,18 +38,9 @@ run_case() {
 
 trap cleanup EXIT
 
-echo "Building aml2 for hotkey/help tests ..."
+echo "Building aml2 for help dialog test ..."
 aml_test_build all
 aml_test_download_base_img
-
-run_case \
-    "extended hotkey range" \
-    "$REPO_ROOT/tests/data/cfg/launcher.hotkeys.cfg" \
-    "AMLUI.EXE /V" \
-    "$REPO_ROOT/tests/data/auto/AML2.HKA" \
-    'ENTRY 36' '' \
-    'A>' ''
-grep -q '\[BIG\] ENTRY 36' "$SCREEN_LOG"
 
 run_case \
     "help dialog" \
@@ -60,4 +51,4 @@ run_case \
 grep -q 'F8     Delete current entry' "$SCREEN_LOG"
 grep -q 'F10    Exit to DOS' "$SCREEN_LOG"
 
-echo "hotkey/help tests passed"
+echo "help dialog test passed"

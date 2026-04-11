@@ -127,18 +127,6 @@ static AmlUiAction handle_extended_key(AmlState *state, int key)
     return (AmlUiAction)UI_AUTO_REDRAW;
 }
 
-static AmlUiAction handle_hotkey(AmlState *state, int key)
-{
-    int hotkey_index = ui_hotkey_index(key);
-
-    if (hotkey_index >= 0 && hotkey_index < state->entry_count) {
-        ui_select_index(state, hotkey_index);
-        ui_sync_view_top(state);
-        return AML_UI_LAUNCH;
-    }
-
-    return (AmlUiAction)UI_AUTO_NONE;
-}
 
 AmlUiAction ui_run(AmlState *state)
 {
@@ -209,10 +197,6 @@ AmlUiAction ui_run(AmlState *state)
             continue;
         }
 
-        action = handle_hotkey(state, key);
-        if (action >= 0) {
-            return action;
-        }
         redraw_pending = 1;
     }
 }

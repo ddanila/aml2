@@ -7,8 +7,8 @@ enum {
     UI_ROWS = 25,
     UI_COLS = 80,
     UI_LIST_ROW = 2,
-    UI_LIST_ROWS = 20,
-    UI_LIST_VISIBLE = 10,
+    UI_LIST_ROWS = 22,
+    UI_LIST_VISIBLE = 11,
     UI_LIST_ENTRY_ROWS = 2,
     UI_SEARCH_MAX = 24,
     UI_FRAME_LEFT = 0,
@@ -202,8 +202,6 @@ int ui_bigtext_enable_fancy(void);
 void ui_bigtext_disable(void);
 int ui_bigtext_is_enabled(void);
 void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr);
-int ui_hotkey_index(int key);
-char ui_hotkey_char(int index);
 int ui_find_match(const AmlState *state, const char *needle);
 void ui_sync_view_top(AmlState *state);
 void ui_render(const AmlState *state);

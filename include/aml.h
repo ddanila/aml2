@@ -33,7 +33,7 @@ typedef struct AmlEntry {
 } AmlEntry;
 
 typedef struct AmlEntryView {
-    char big_name[23];
+    char big_name[25];
 } AmlEntryView;
 
 typedef struct AmlState {
