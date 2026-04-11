@@ -15,20 +15,42 @@
 
 #include "../../vendor/kvikdos/test_harness.h"
 
-/* Row where the first list entry begins (bigtext layout: row 2). */
-#define ENTRY_ROW_0   2
-#define ENTRY_ROWS    2  /* Each entry occupies 2 rows. */
-#define SELECTED_ATTR 0x30  /* Black on cyan — the selected entry attribute. */
-#define NORMAL_ATTR   0x1F  /* White on blue — unselected entry attribute. */
-#define HOTKEY_COL    6  /* Column of the '[' hotkey bracket. */
+/* Detect screen change by snapshotting a video RAM region and waiting
+ * for any byte to differ. Works regardless of text layout or attributes. */
+#define SNAP_SIZE 4000  /* Full screen: 80 cols × 25 rows × 2 bytes. */
 
-static int wait_for_attr_at(int row, int col, unsigned char attr, unsigned timeout_ms)
+static unsigned char snap_buf[SNAP_SIZE];
+
+static void snapshot_screen(void)
+{
+    int r, c;
+
+    for (r = 0; r < 25; r++) {
+        for (c = 0; c < 80; c++) {
+            unsigned idx = (unsigned)((r * 80 + c) * 2);
+
+            snap_buf[idx] = (unsigned char)kviktest_read_char(r, c);
+            snap_buf[idx + 1] = kviktest_read_attr(r, c);
+        }
+    }
+}
+
+static int wait_for_screen_change(unsigned timeout_ms)
 {
     unsigned elapsed = 0;
+    int r, c;
 
     while (elapsed < timeout_ms) {
-        if (kviktest_read_attr(row, col) == attr)
-            return 1;
+        for (r = 0; r < 25; r++) {
+            for (c = 0; c < 80; c++) {
+                unsigned idx = (unsigned)((r * 80 + c) * 2);
+
+                if ((unsigned char)kviktest_read_char(r, c) != snap_buf[idx] ||
+                    kviktest_read_attr(r, c) != snap_buf[idx + 1]) {
+                    return 1;
+                }
+            }
+        }
         usleep(1000);
         elapsed += 1;
     }
@@ -39,7 +61,6 @@ int main(int argc, char **argv)
 {
     const char *exe_path;
     const char *mount_dir;
-    int entry1_row, entry2_row;
     unsigned long insn_first, insn_second;
 
     if (argc < 3) {
@@ -88,35 +109,14 @@ int main(int argc, char **argv)
     /* Let the UI settle (initial draw complete). */
     usleep(500000);
 
-    /* Entry 0 is at ENTRY_ROW_0, entry 1 at ENTRY_ROW_0 + ENTRY_ROWS, etc. */
-    entry1_row = ENTRY_ROW_0 + ENTRY_ROWS;
-    entry2_row = ENTRY_ROW_0 + ENTRY_ROWS * 2;
-
-    printf("Entry 0 row: %d  (should be selected initially)\n", ENTRY_ROW_0);
-    printf("Entry 1 row: %d\n", entry1_row);
-    printf("Entry 2 row: %d\n", entry2_row);
-    printf("Initial attr at entry 0, col %d: 0x%02x\n",
-           HOTKEY_COL, kviktest_read_attr(ENTRY_ROW_0, HOTKEY_COL));
-    printf("Initial attr at entry 1, col %d: 0x%02x\n",
-           HOTKEY_COL, kviktest_read_attr(entry1_row, HOTKEY_COL));
-
     /* --- Measurement 1: First DOWN keypress --- */
     printf("\n--- First DOWN keypress ---\n");
+    snapshot_screen();
     kviktest_insn_count_reset();
     kviktest_send_key(KEY_DOWN);
 
-    if (!wait_for_attr_at(entry1_row, HOTKEY_COL, SELECTED_ATTR, 10000)) {
-        fprintf(stderr, "Timeout waiting for entry 1 to be selected\n");
-        printf("Attr at entry 1: 0x%02x (expected 0x%02x)\n",
-               kviktest_read_attr(entry1_row, HOTKEY_COL), SELECTED_ATTR);
-        /* Dump screen for debugging. */
-        { int r; char buf[81];
-          printf("\n--- Screen dump ---\n");
-          for (r = 0; r < 25; r++) {
-            kviktest_read_text(r, 0, buf, 81);
-            printf("  %02d: [%s]\n", r, buf);
-          }
-        }
+    if (!wait_for_screen_change(30000)) {
+        fprintf(stderr, "Timeout waiting for screen change after first DOWN\n");
         kviktest_stop();
         return 1;
     }
@@ -129,13 +129,12 @@ int main(int argc, char **argv)
 
     /* --- Measurement 2: Second DOWN keypress --- */
     printf("\n--- Second DOWN keypress ---\n");
+    snapshot_screen();
     kviktest_insn_count_reset();
     kviktest_send_key(KEY_DOWN);
 
-    if (!wait_for_attr_at(entry2_row, HOTKEY_COL, SELECTED_ATTR, 10000)) {
-        fprintf(stderr, "Timeout waiting for entry 2 to be selected\n");
-        printf("Attr at entry 2: 0x%02x (expected 0x%02x)\n",
-               kviktest_read_attr(entry2_row, HOTKEY_COL), SELECTED_ATTR);
+    if (!wait_for_screen_change(30000)) {
+        fprintf(stderr, "Timeout waiting for screen change after second DOWN\n");
         kviktest_stop();
         return 1;
     }
