@@ -169,7 +169,6 @@ void ui_write_clipped(int col, int row, const char *text, int width,
 void ui_write_ellipsis(int col, int row, const char *text, int width, unsigned char attr);
 void ui_write_centered(int row, const char *text, unsigned char attr);
 void ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr);
-unsigned ui_current_second(void);
 void ui_draw_frame(void);
 UiDialogBox ui_dialog_box(int left, int top, int right, int bottom, const char *title);
 UiConfirmDialog ui_confirm_dialog(UiDialogBox box, const char *question, const char *value,

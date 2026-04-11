@@ -70,7 +70,6 @@ static void ui_flush_rows(int top, int bottom)
 {
     unsigned short far *video = (unsigned short far *)MK_FP(0xB800, 0);
     int row;
-    int col;
 
     if (top < 0) {
         top = 0;
@@ -83,11 +82,8 @@ static void ui_flush_rows(int top, int bottom)
     }
 
     for (row = top; row <= bottom; ++row) {
-        unsigned base = (unsigned)row * UI_COLS;
-
-        for (col = 0; col < UI_COLS; ++col) {
-            video[base + col] = ui_backbuf[base + col];
-        }
+        unsigned offset = (unsigned)row * UI_COLS;
+        ui_blit_row(ui_backbuf + offset, video + offset);
     }
 }
 
@@ -262,13 +258,6 @@ void ui_write_2digit_at(int col, int row, unsigned value, unsigned char attr)
     ui_putc(col + 1, row, (unsigned char)('0' + (value % 10)), attr);
 }
 
-unsigned ui_current_second(void)
-{
-    struct dostime_t now;
-
-    _dos_gettime(&now);
-    return now.second;
-}
 
 void ui_draw_frame(void)
 {
