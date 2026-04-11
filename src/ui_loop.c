@@ -198,8 +198,12 @@ AmlUiAction ui_run(AmlState *state)
                 state->view_top == old_view_top) {
                 ui_draw_selection_change(state, old_selected);
                 last_tick = *tick;
+                { unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+                  v[79] = (unsigned short)'P' | 0x4E00; }
             } else {
                 redraw_pending = 1;
+                { unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+                  v[79] = (unsigned short)'F' | 0x4E00; }
             }
             continue;
         }
