@@ -2,147 +2,96 @@
 
 ## Problem
 
-Keyboard input lag on slow machines (8088/286-class): pressing an arrow key
-twice quickly shows a noticeable delay (~500ms+) before the second keypress
-is visually reflected. Single keypresses after idle are instant. Page-up/down
-(full list redraw) is instant. The lag exists on multiple slow machines.
+Keyboard input lag: pressing an arrow key twice quickly shows a ~660ms
+delay before the second keypress is visually reflected. Reproducible in
+QEMU and on real hardware. The 1st keypress is always instant (~35ms).
+
+## Root Cause
+
+**Open Watcom linker bug** in the snapshot from 2026-04-03. When the
+project is compiled as multiple object files, the linker produces a
+binary layout that delays keyboard interrupt delivery by ~660ms. The
+daily Watcom build from 2026-04-11 fixes this.
+
+### Evidence
+
+VNC framebuffer update measurement (no vCPU interference):
+
+| Watcom version | Binary size | DOWN #1 | DOWN #2 | Ratio |
+|---------------|------------|---------|---------|-------|
+| Apr 3, 2026   | 36764 bytes | 69ms   | **664ms** | **9.6x** |
+| Apr 11, 2026  | 35790 bytes | 119ms  | **35ms**  | **0.3x** |
+
+Same source code, same compiler flags, same object files.
+
+### Fix
+
+Update the pinned Watcom snapshot from `2026-04-03` to `2026-04-11`.
 
 ## Timeline
 
-- **v0.1.8**: Fast on all hardware.
-- **v0.1.9**: Fast (only added debug menu and docs).
-- **v0.2.0**: First slow version. Introduced bigtext (VGA custom font, 2 rows per entry).
-- **v0.2.0 .. v0.3.9**: All slow despite numerous fixes.
+- **v0.1.8** (Apr 4): Fast on all hardware.
+- **v0.1.9** (Apr 4): Fast. Last version before refactoring.
+- **482255e** (Apr 5): First slow version. Extracted `ui_edit.c` as a
+  separate object file. Identical code, different linker layout.
+- **v0.2.0** (Apr 5): Slow. Added bigtext (initially suspected cause).
+- **v0.2.0 .. v0.4.2**: All slow despite removing every suspected cause.
 
-## What Was Already Eliminated
+## Binary Search Results
+
+| Commit | Size | 2nd DOWN | Status |
+|--------|------|----------|--------|
+| v0.1.9 (da8fcc2) | 30KB | 34ms | FAST |
+| 599bd2b | 30KB | 56ms | FAST |
+| a9dc2cd | 30KB | 32ms | FAST |
+| **482255e** (ui_edit.c split) | **32KB** | **662ms** | **SLOW** |
+| 4c74d3d | 32KB | 1038ms | SLOW |
+| v0.2.0 | 35KB | 1043ms | SLOW |
+
+## What Was Eliminated
 
 | Hypothesis | Test | Result |
 |-----------|------|--------|
 | VSYNC wait in flush | Removed all VSYNC | Still slow |
 | `delay(50)` in input polling | Replaced with busy-wait | Still slow |
-| `ui_hide_cursor()` per draw | Removed (was 6 ticks/330ms on slow BIOS) | Helped on second machine, not on first |
+| `ui_hide_cursor()` per draw | Removed | Still slow |
 | `_dos_gettime()` in render | Removed clock entirely | Still slow |
 | 8-dot clock / pixel clock | Disabled | Still slow |
-| Custom font upload (INT 10h) | Disabled font loading | Still slow |
-| Partial redraw optimization | Restored (only ~300 cells vs 6200) | Still slow |
+| Custom font upload | Disabled font loading | Still slow |
+| Partial redraw | Restored | Still slow |
 | Key coalescing | Added | Still slow |
-| 12KB static font arrays | Moved to heap (v0.4.0) | Still slow |
-| Loop structure | Reverted to v0.1.8 always-redraw style | Still slow |
+| 12KB static font arrays | Shrunk to [1] | Still slow |
+| Loop structure | Reverted to v0.1.8 style | Still slow |
+| `kbhit()` replacement | Direct BIOS buffer check | Still slow |
+| HLT instruction | Added to wait loop | Still slow |
+| `rep movsw` blit | Replaced with for-loop | Still slow |
+| Unity build | Single compilation unit | Still slow |
+| Binary size | Padded v0.1.9 to 35KB | STILL FAST |
 
-## Key Observation
+## Measurement Infrastructure
 
-v0.1.9 (fast) → v0.2.0 (slow). The diff includes:
-1. Many refactoring commits (code split into modules)
-2. The bigfont commit (6033187) adding `ui_bigtext.c`
+### VNC Framebuffer Updates (`tests/perf/repro_vnc_fb.py`)
 
-Both the refactoring and bigfont happened between these versions.
+The most accurate measurement. Uses VNC protocol `FramebufferUpdate`
+messages to detect screen changes without pausing the vCPU. QEMU sends
+these asynchronously on its display refresh.
 
-## Diagnostic Approach: kvikdos Instrumentation
+Previous approaches (`pmemsave`, QMP `send-key`) were unreliable:
+- `pmemsave` pauses the vCPU, causing ~1s measurement artifacts
+- QMP `send-key` bypasses the keyboard controller, doesn't reproduce the issue
+- VNC key events go through the full 8042 → IRQ 1 → INT 9 path
 
-Use `vendor/kvikdos` (improvements branch, software 8086 CPU backend on macOS)
-to run the launcher under instrumented emulation.
+### kvikdos Instrumentation
 
-### Test Scenario
+`vendor/kvikdos` (improvements branch) provides instruction-level
+measurement via its software 8086 CPU backend. Custom port I/O handling
+was added for VGA registers used by the launcher.
 
-1. Build AMLUI.EXE with current code
-2. Create a LAUNCHER.CFG with 10 entries
-3. Run under kvikdos with instruction counting / cycle profiling
-4. Automate: open UI, wait for settle, send two DOWN keypresses
-5. Measure instruction count between:
-   - First keypress injected → first screen update visible in VRAM
-   - Second keypress injected → second screen update visible in VRAM
-6. Compare with v0.1.8 binary under same conditions
+## Other Fixes Made During Investigation
 
-## Breakthrough: VNC Reproduction (2026-04-11)
-
-The lag is **reliably reproducible in QEMU** using VNC key injection.
-VNC key events go through QEMU's input pipeline (same as physical keyboard),
-unlike QMP `send-key` which bypasses it and does NOT reproduce the issue.
-
-### Automated measurements (repro_vnc2.py)
-
-| Version | DOWN #1 | DOWN #2 | DOWN #3 |
-|---------|---------|---------|---------|
-| v0.1.8  | 36ms    | 36ms    | 48ms    |
-| v0.2.0  | 36ms    | 1043ms  | 1042ms  |
-| current | 33ms    | 994ms   | 1044ms  |
-
-### Critical observations
-
-1. The 1st DOWN is always fast (~35ms). The 2nd and 3rd take ~1 second.
-2. In v0.2.0, the 2nd DOWN's first visible change is the **clock colon blink**
-   (row 0 col 74, char 0x20→0x3A) — not the selection change. This means
-   the selection change doesn't happen until the clock update fires (~1s).
-3. QMP `send-key` does NOT reproduce the issue — all versions respond instantly.
-   VNC key injection DOES reproduce it — matches real hardware behavior.
-4. The ~1043ms ≈ 19 BIOS timer ticks × 55ms ≈ 1.045 seconds.
-
-### What this means
-
-The program processes the 1st DOWN quickly, updates the screen, and enters
-the wait loop. The 2nd key arrives via the keyboard interrupt (IRQ 1), but
-the program doesn't detect it for ~1 second. The key sits in the BIOS
-keyboard buffer until the next full-second clock update triggers a screen
-flush that also makes the selection change visible.
-
-### Reproduction
-
-```bash
-# Manual (visual):
-qemu-system-i386 -drive if=floppy,index=0,format=raw,file=out/aml2-test.img -boot a -m 4
-# Press DOWN arrow rapidly — visible lag on 2nd+ keypress
-
-# Automated:
-python3 tests/perf/repro_vnc2.py /path/to/AMLUI.EXE
-```
-
-## Root Cause: Commit 482255e (ui_edit.c extraction)
-
-Binary search through 26 refactoring commits using VNC key injection:
-
-| Commit | Size | 2nd DOWN | Status |
-|--------|------|----------|--------|
-| v0.1.9 (da8fcc2) | 30KB | 34ms | FAST |
-| 599bd2b (first split) | 30KB | 56ms | FAST |
-| a9dc2cd | 30KB | 32ms | FAST |
-| **482255e** (ui_edit.c split) | **32KB** | **1019ms** | **SLOW** |
-| 4c74d3d | 32KB | 1038ms | SLOW |
-| v0.2.0 | 35KB | 1043ms | SLOW |
-
-The lag was introduced by extracting `ui_edit.c` as a separate compilation
-unit. This changes the Watcom linker's memory layout of the executable.
-Padding v0.1.9 to 35KB with zeros is FAST — proving it's the layout,
-not the size.
-
-### What kvikdos Can Tell Us
-
-- Exact instruction count per phase (no 55ms tick granularity)
-- Which INT calls are made and how many CPU cycles each takes
-- Memory access patterns (which addresses are hot)
-- Whether the bottleneck is CPU instructions, INT handler overhead,
-  or something else entirely
-
-### Setup
-
-```bash
-# Build kvikdos (macOS, software CPU)
-cd vendor/kvikdos
-make kvikdos
-
-# Build aml2
-cd ../..
-# (need Linux build for the .EXE — use CI artifact or cross-compile)
-
-# Run under kvikdos
-./vendor/kvikdos/kvikdos amlui.exe /V
-```
-
-### Comparison Builds
-
-Two binaries to compare:
-1. v0.1.8 AMLUI.EXE (known fast)
-2. Current AMLUI.EXE (known slow)
-
-Run both under identical kvikdos instrumentation. The instruction count
-difference between "first keypress response" and "second keypress response"
-will pinpoint the exact code path causing the lag.
+- **env_seg=0 for child launches**: fixed Turbo Pascal error 201 on DOS 6.22
+- **Pixel clock compensation**: fixed monitor sync loss on 8-dot mode
+- **ui_hide_cursor removal**: saves ~330ms on slow VGA BIOSes
+- **Attribute-only selection swap**: reduces per-keypress work
+- **Tick counter clock**: avoids slow `_dos_gettime()` on slow machines
+- **clamp_view_top**: prevents unnecessary full redraws
