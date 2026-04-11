@@ -37,8 +37,8 @@ jobs:
       - name: Build DOS binaries
         run: ./tools/build.sh
 
-      - name: Run sequential regression suite
-        run: bash tests/run_all.sh
+      - name: Run host regression tests
+        run: bash tests/run_host.sh
 
       - name: Package artifact
         run: ./tools/package_dist.sh
