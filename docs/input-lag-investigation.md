@@ -96,6 +96,24 @@ qemu-system-i386 -drive if=floppy,index=0,format=raw,file=out/aml2-test.img -boo
 python3 tests/perf/repro_vnc2.py /path/to/AMLUI.EXE
 ```
 
+## Root Cause: Commit 482255e (ui_edit.c extraction)
+
+Binary search through 26 refactoring commits using VNC key injection:
+
+| Commit | Size | 2nd DOWN | Status |
+|--------|------|----------|--------|
+| v0.1.9 (da8fcc2) | 30KB | 34ms | FAST |
+| 599bd2b (first split) | 30KB | 56ms | FAST |
+| a9dc2cd | 30KB | 32ms | FAST |
+| **482255e** (ui_edit.c split) | **32KB** | **1019ms** | **SLOW** |
+| 4c74d3d | 32KB | 1038ms | SLOW |
+| v0.2.0 | 35KB | 1043ms | SLOW |
+
+The lag was introduced by extracting `ui_edit.c` as a separate compilation
+unit. This changes the Watcom linker's memory layout of the executable.
+Padding v0.1.9 to 35KB with zeros is FAST — proving it's the layout,
+not the size.
+
 ### What kvikdos Can Tell Us
 
 - Exact instruction count per phase (no 55ms tick granularity)
