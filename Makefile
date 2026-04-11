@@ -15,14 +15,8 @@ CORE_OBJS = \
 	build/launch.obj
 
 UI_OBJS = \
-	build/ui_auto.obj \
-	build/ui_bigtext.obj \
-	build/ui_blit.obj \
-	build/ui_edit.obj \
-	build/ui_loop.obj \
-	build/ui_core.obj \
-	build/ui_state.obj \
-	build/ui_test.obj
+	build/ui_unity.obj \
+	build/ui_blit.obj
 
 OBJS = \
 	$(CORE_OBJS) \
@@ -46,29 +40,11 @@ build/main.obj: src/main.c include/aml.h include/cfg.h include/ui.h include/laun
 build/cfg.obj: src/cfg.c include/aml.h include/cfg.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/cfg.obj src/cfg.c
 
-build/ui_auto.obj: src/ui_auto.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_auto.obj src/ui_auto.c
-
-build/ui_edit.obj: src/ui_edit.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_edit.obj src/ui_edit.c
-
-build/ui_bigtext.obj: src/ui_bigtext.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_bigtext.obj src/ui_bigtext.c
+build/ui_unity.obj: src/ui_unity.c src/ui_core.c src/ui_bigtext.c src/ui_loop.c src/ui_edit.c src/ui_auto.c src/ui_state.c src/ui_test.c src/ui_int.h src/ui_ops.h src/ui_state.h include/aml.h include/ui.h include/aml_build.h
+	$(WCC) $(CFLAGS) -i=src -fo=build/ui_unity.obj src/ui_unity.c
 
 build/ui_blit.obj: src/ui_blit.asm
 	$(WASM) -0 -bt=dos -ms -zq -zcm=tasm -fo=build/ui_blit.obj -fr=build/ui_blit.err src/ui_blit.asm
-
-build/ui_loop.obj: src/ui_loop.c src/ui_int.h src/ui_ops.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_loop.obj src/ui_loop.c
-
-build/ui_core.obj: src/ui_core.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_core.obj src/ui_core.c
-
-build/ui_state.obj: src/ui_state.c src/ui_int.h src/ui_state.h include/aml.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_state.obj src/ui_state.c
-
-build/ui_test.obj: src/ui_test.c src/ui_int.h include/aml.h include/ui.h include/aml_build.h
-	$(WCC) $(CFLAGS) -fo=build/ui_test.obj src/ui_test.c
 
 build/launch.obj: src/launch.c include/aml.h include/launch.h include/aml_build.h
 	$(WCC) $(CFLAGS) -fo=build/launch.obj src/launch.c
