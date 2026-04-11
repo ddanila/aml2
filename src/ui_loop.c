@@ -58,18 +58,25 @@ static void prompt_search(AmlState *state)
     }
 }
 
+static int keys_pending(void)
+{
+    unsigned short far *head = (unsigned short far *)MK_FP(0x0040, 0x001A);
+    unsigned short far *tail = (unsigned short far *)MK_FP(0x0040, 0x001C);
+
+    return *head != *tail;
+}
+
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
 
-    while (!kbhit()) {
+    while (!keys_pending()) {
         unsigned now_tick = *tick;
 
         if ((unsigned)(now_tick - *last_tick) >= 18) {
             ui_update_clock(state);
             *last_tick = now_tick;
         }
-        inp(0x3DA);
     }
 }
 
@@ -145,7 +152,6 @@ AmlUiAction ui_run(AmlState *state)
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
     unsigned last_tick = *tick;
     int redraw_pending = 1;
-    int dbg_counter = 0;
 
     ui_sync_view_top(state);
 
@@ -170,9 +176,6 @@ AmlUiAction ui_run(AmlState *state)
         }
 
         wait_for_input_redraw(state, &last_tick);
-        ++dbg_counter;
-        { unsigned short far *dbg = (unsigned short far *)MK_FP(0xB800, 0);
-          dbg[24 * 80 + 75] = (unsigned short)('0' + (dbg_counter & 0xF)) | 0x4E00; }
         key = getch();
 
         if (key == UI_KEY_ENTER) {
