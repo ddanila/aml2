@@ -879,6 +879,21 @@ void ui_draw_list_area(const AmlState *state)
     ui_flush_rows(UI_LIST_ROW, UI_LIST_ROW + UI_LIST_ROWS - 1);
 }
 
+static void reattr_entry_rows(int row, unsigned char attr)
+{
+    int r;
+    int col;
+
+    for (r = row; r < row + UI_LIST_ENTRY_ROWS; ++r) {
+        unsigned base = (unsigned)r * UI_COLS;
+
+        for (col = UI_LIST_LEFT + 1; col < UI_SCROLL_COL; ++col) {
+            ui_backbuf[base + col] = (ui_backbuf[base + col] & 0x00FF)
+                                   | ((unsigned short)attr << 8);
+        }
+    }
+}
+
 void ui_draw_selection_change(const AmlState *state, int old_selected)
 {
     int old_row;
@@ -898,9 +913,10 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
 
     old_row = UI_LIST_ROW + ((old_selected - state->view_top) * UI_LIST_ENTRY_ROWS);
     new_row = UI_LIST_ROW + ((state->selected - state->view_top) * UI_LIST_ENTRY_ROWS);
-    draw_entry_row(state, old_selected, old_row);
+
+    reattr_entry_rows(old_row, UI_ATTR_TEXT);
     if (new_row != old_row) {
-        draw_entry_row(state, state->selected, new_row);
+        reattr_entry_rows(new_row, UI_ATTR_SELECTED);
     }
 
     old_thumb_row = scrollbar_thumb_row_for_selected(state, old_selected);
