@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   dos-build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       GH_TOKEN: ${{ github.token }}
@@ -28,8 +28,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install build and test tools
-        run: brew install zip mtools qemu
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Install DOS test tools
+        run: sudo apt-get install -y mtools qemu-system-x86
 
       - name: Set up Open Watcom
         run: ./tools/setup_openwatcom.sh
@@ -37,8 +40,8 @@ jobs:
       - name: Build DOS binaries
         run: ./tools/build.sh
 
-      - name: Run host regression tests
-        run: bash tests/run_host.sh
+      - name: Run sequential regression suite
+        run: bash tests/run_all.sh
 
       - name: Package artifact
         run: ./tools/package_dist.sh
