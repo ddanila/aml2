@@ -60,17 +60,9 @@ static void prompt_search(AmlState *state)
 
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
-    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
-
-    while (!kbhit()) {
-        unsigned now_tick = *tick;
-
-        if ((unsigned)(now_tick - *last_tick) >= 18) {
-            ui_update_clock(state);
-            *last_tick = now_tick;
-        }
-        { volatile int i; for (i = 0; i < 1000; ++i) {} }
-    }
+    (void)state;
+    (void)last_tick;
+    while (!kbhit()) {}
 }
 
 static AmlUiAction apply_test_automation(AmlState *state)
