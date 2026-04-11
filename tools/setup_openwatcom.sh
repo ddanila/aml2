@@ -14,7 +14,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [ -x "$TARGET_DIR/binl64/wcc" ]; then
+case "$(uname -s)" in
+    Darwin) WATCOM_CHECK="bino64/wcc" ;;
+    *)      WATCOM_CHECK="binl64/wcc" ;;
+esac
+
+if [ -x "$TARGET_DIR/$WATCOM_CHECK" ]; then
     echo "Open Watcom already present at $TARGET_DIR"
     exit 0
 fi
@@ -33,8 +38,8 @@ mkdir -p "$TARGET_DIR"
 echo "Extracting toolchain to $TARGET_DIR"
 tar -xJf "$ARCHIVE" -C "$TARGET_DIR"
 
-if [ ! -x "$TARGET_DIR/binl64/wcc" ]; then
-    echo "Open Watcom extraction failed: missing $TARGET_DIR/binl64/wcc" >&2
+if [ ! -x "$TARGET_DIR/$WATCOM_CHECK" ]; then
+    echo "Open Watcom extraction failed: missing $TARGET_DIR/$WATCOM_CHECK" >&2
     exit 1
 fi
 

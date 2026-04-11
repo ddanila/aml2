@@ -12,9 +12,12 @@ case "$(uname -s):$(uname -m)" in
     Linux:i?86)
         WATCOM_BIN="$WATCOM_ROOT/binl"
         ;;
+    Darwin:x86_64|Darwin:arm64)
+        WATCOM_BIN="$WATCOM_ROOT/bino64"
+        ;;
     *)
         echo "Unsupported host: $(uname -s) $(uname -m)" >&2
-        echo "Currently supported: Linux x86_64, Linux x86" >&2
+        echo "Currently supported: Linux x86_64, Linux x86, macOS x86_64/arm64" >&2
         exit 1
         ;;
 esac

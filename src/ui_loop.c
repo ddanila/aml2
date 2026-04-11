@@ -58,31 +58,18 @@ static void prompt_search(AmlState *state)
     }
 }
 
-static int bios_kbhit(void);
-#pragma aux bios_kbhit = \
-    "sti"         \
-    "mov ah, 1"   \
-    "int 0x16"    \
-    "jnz have"    \
-    "xor ax, ax"  \
-    "jmp done"    \
-    "have:"       \
-    "mov ax, 1"   \
-    "done:"       \
-    value [ax]    \
-    modify [ax];
-
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
 
-    while (!bios_kbhit()) {
+    while (!kbhit()) {
         unsigned now_tick = *tick;
 
         if ((unsigned)(now_tick - *last_tick) >= 18) {
             ui_update_clock(state);
             *last_tick = now_tick;
         }
+        delay(50);
     }
 }
 
@@ -207,10 +194,6 @@ AmlUiAction ui_run(AmlState *state)
                 return action;
             }
             ui_sync_view_top(state);
-            /* Write directly to VRAM to show key processed — no backbuffer draw */
-            { unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
-              v[24*80] = (unsigned short)('0' + (state->selected & 0xF)) | 0x4E00;
-            }
             if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
                 state->view_top == old_view_top) {
                 ui_draw_selection_change(state, old_selected);
