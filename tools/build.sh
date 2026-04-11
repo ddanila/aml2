@@ -44,10 +44,12 @@ else
     fi
 fi
 
-exec 9>"$LOCK_FILE"
-if ! flock -w 60 9; then
-    echo "Timed out waiting for build lock: $LOCK_FILE" >&2
-    exit 1
+if command -v flock >/dev/null 2>&1; then
+    exec 9>"$LOCK_FILE"
+    if ! flock -w 60 9; then
+        echo "Timed out waiting for build lock: $LOCK_FILE" >&2
+        exit 1
+    fi
 fi
 
 echo "Building aml2 with $WATCOM_BIN"
