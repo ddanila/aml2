@@ -176,7 +176,11 @@ AmlUiAction ui_run(AmlState *state)
         }
 
         wait_for_input_redraw(state, &last_tick);
+        { unsigned short far *d = (unsigned short far *)MK_FP(0xB800, 0);
+          d[24*80+70] = (unsigned short)'A' | 0x4E00; }
         key = getch();
+        { unsigned short far *d = (unsigned short far *)MK_FP(0xB800, 0);
+          d[24*80+71] = (unsigned short)('0'+(key&0xF)) | 0x4E00; }
 
         if (key == UI_KEY_ENTER) {
             if (ui_has_entries(state)) {
@@ -192,9 +196,14 @@ AmlUiAction ui_run(AmlState *state)
             continue;
         }
         if (key == UI_KEY_EXTENDED || key == UI_KEY_EXTENDED_2) {
-            int ext_key = getch();
+            int ext_key = 0;
             int old_selected = state->selected;
             int old_view_top = state->view_top;
+            unsigned short far *d = (unsigned short far *)MK_FP(0xB800, 0);
+
+            d[24*80+72] = (unsigned short)'B' | 0x4E00;
+            ext_key = getch();
+            d[24*80+73] = (unsigned short)('0'+(ext_key&0xF)) | 0x4E00;
 
             action = handle_extended_key(state, ext_key);
             if (action >= 0) {
