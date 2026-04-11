@@ -69,7 +69,6 @@ static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
             ui_update_clock(state);
             *last_tick = now_tick;
         }
-        delay(50);
     }
 }
 
