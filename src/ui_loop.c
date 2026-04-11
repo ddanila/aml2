@@ -66,6 +66,9 @@ static int keys_pending(void)
     return *head != *tail;
 }
 
+static void idle_halt(void);
+#pragma aux idle_halt = "sti" "hlt" modify exact [];
+
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
@@ -77,6 +80,7 @@ static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
             ui_update_clock(state);
             *last_tick = now_tick;
         }
+        idle_halt();
     }
 }
 
