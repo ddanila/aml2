@@ -5,8 +5,8 @@
 Current pin:
 
 - release tag: `Current-build`
-- published: `2026-04-03`
-- vendor path: `vendor/openwatcom-v2/current-build-2026-04-03`
+- published: `2026-04-11`
+- vendor path: `vendor/openwatcom-v2/current-build-2026-04-11`
 
 ## Why vendor it
 

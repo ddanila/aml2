@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-WATCOM_ROOT="${WATCOM_ROOT:-$REPO_ROOT/vendor/openwatcom-v2/current-build-2026-04-03}"
+WATCOM_ROOT="${WATCOM_ROOT:-$REPO_ROOT/vendor/openwatcom-v2/current-build-2026-04-11}"
 LOCK_FILE="$REPO_ROOT/.build.lock"
 
 case "$(uname -s):$(uname -m)" in
