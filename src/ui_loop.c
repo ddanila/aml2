@@ -58,11 +58,24 @@ static void prompt_search(AmlState *state)
     }
 }
 
+static int bios_kbhit(void);
+#pragma aux bios_kbhit = \
+    "mov ah, 1"   \
+    "int 0x16"    \
+    "jnz have"    \
+    "xor ax, ax"  \
+    "jmp done"    \
+    "have:"       \
+    "mov ax, 1"   \
+    "done:"       \
+    value [ax]    \
+    modify [ax];
+
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
 
-    while (!kbhit()) {
+    while (!bios_kbhit()) {
         unsigned now_tick = *tick;
 
         if ((unsigned)(now_tick - *last_tick) >= 18) {
