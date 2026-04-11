@@ -52,6 +52,30 @@ static void reset_launcher_state(AmlState *state)
     memset(state, 0, sizeof(*state));
 }
 
+static void save_selection(int selected)
+{
+    FILE *fp = fopen(AML_SELECT_FILE, "w");
+
+    if (fp != NULL) {
+        fprintf(fp, "%d\n", selected);
+        fclose(fp);
+    }
+}
+
+static void restore_selection(AmlState *state)
+{
+    FILE *fp = fopen(AML_SELECT_FILE, "r");
+    int sel;
+
+    if (fp == NULL) {
+        return;
+    }
+    if (fscanf(fp, "%d", &sel) == 1 && sel >= 0 && sel < state->entry_count) {
+        state->selected = sel;
+    }
+    fclose(fp);
+}
+
 static void show_notice_and_wait(const AmlState *state,
                                  const char *title,
                                  const char *line1,
@@ -317,6 +341,7 @@ static int handle_launch_action(AmlState *state, AmlUiAction action, int *launch
         return 1;
     }
 
+    save_selection(state->selected);
     if (launch_write_run_request(&state->entries[state->selected], AML_RUN_FILE) != 0) {
         show_notice_and_wait(
             state,
@@ -371,6 +396,7 @@ int main(int argc, char **argv)
 #endif
 
     load_launcher_config(&state, &cfg_status);
+    restore_selection(&state);
 
     ui_init();
     show_initial_config_status(&state, cfg_status);
@@ -382,5 +408,8 @@ int main(int argc, char **argv)
     }
 
     ui_shutdown();
+    if (launched == AML_EXIT_OK) {
+        remove(AML_SELECT_FILE);
+    }
     return launched;
 }
