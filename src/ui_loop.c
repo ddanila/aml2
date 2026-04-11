@@ -145,6 +145,7 @@ AmlUiAction ui_run(AmlState *state)
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
     unsigned last_tick = *tick;
     int redraw_pending = 1;
+    int dbg_counter = 0;
 
     ui_sync_view_top(state);
 
@@ -169,11 +170,10 @@ AmlUiAction ui_run(AmlState *state)
         }
 
         wait_for_input_redraw(state, &last_tick);
+        ++dbg_counter;
         { unsigned short far *dbg = (unsigned short far *)MK_FP(0xB800, 0);
-          dbg[24 * 80 + 75] = (unsigned short)'K' | 0x4E00; }
+          dbg[24 * 80 + 75] = (unsigned short)('0' + (dbg_counter & 0xF)) | 0x4E00; }
         key = getch();
-        { unsigned short far *dbg = (unsigned short far *)MK_FP(0xB800, 0);
-          dbg[24 * 80 + 76] = (unsigned short)('0' + (key & 0xF)) | 0x4E00; }
 
         if (key == UI_KEY_ENTER) {
             if (ui_has_entries(state)) {
