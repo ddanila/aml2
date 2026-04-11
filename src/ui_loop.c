@@ -58,29 +58,18 @@ static void prompt_search(AmlState *state)
     }
 }
 
-static int keys_pending(void)
-{
-    unsigned short far *head = (unsigned short far *)MK_FP(0x0040, 0x001A);
-    unsigned short far *tail = (unsigned short far *)MK_FP(0x0040, 0x001C);
-
-    return *head != *tail;
-}
-
-static void idle_halt(void);
-#pragma aux idle_halt = "sti" "hlt" modify exact [];
-
 static void wait_for_input_redraw(AmlState *state, unsigned *last_tick)
 {
     unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
 
-    while (!keys_pending()) {
+    while (!kbhit()) {
         unsigned now_tick = *tick;
 
         if ((unsigned)(now_tick - *last_tick) >= 18) {
             ui_update_clock(state);
             *last_tick = now_tick;
         }
-        idle_halt();
+        { volatile int i; for (i = 0; i < 1000; ++i) {} }
     }
 }
 
