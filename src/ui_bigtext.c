@@ -4,17 +4,20 @@
 #include <i86.h>
 #include <string.h>
 
+#include <stdlib.h>
+
 #include "ui_int.h"
 
 enum {
     UI_BIGTEXT_GLYPHS = 36,
     UI_BIGTEXT_TILE_COUNT = UI_BIGTEXT_GLYPHS * 4,
-    UI_BIGTEXT_BYTES = 16
+    UI_BIGTEXT_BYTES = 16,
+    UI_BIGTEXT_FONT_SIZE = 256 * UI_BIGTEXT_BYTES
 };
 
-static unsigned char ui_bigtext_original_font[256][UI_BIGTEXT_BYTES];
-static unsigned char ui_bigtext_patched_font[256][UI_BIGTEXT_BYTES];
-static unsigned char ui_bigtext_fancy_font[256][UI_BIGTEXT_BYTES];
+static unsigned char (*ui_bigtext_original_font)[UI_BIGTEXT_BYTES];
+static unsigned char (*ui_bigtext_patched_font)[UI_BIGTEXT_BYTES];
+static unsigned char (*ui_bigtext_fancy_font)[UI_BIGTEXT_BYTES];
 static unsigned char ui_bigtext_codes[UI_BIGTEXT_TILE_COUNT];
 static int ui_bigtext_ready;
 static int ui_bigtext_enabled;
@@ -213,6 +216,10 @@ static void ui_bigtext_prepare(void)
     if (ui_bigtext_ready) {
         return;
     }
+
+    ui_bigtext_original_font = malloc(UI_BIGTEXT_FONT_SIZE);
+    ui_bigtext_patched_font = malloc(UI_BIGTEXT_FONT_SIZE);
+    ui_bigtext_fancy_font = malloc(UI_BIGTEXT_FONT_SIZE);
 
     ui_bigtext_init_code_map();
     ui_bigtext_capture_default_font();
