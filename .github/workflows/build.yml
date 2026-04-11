@@ -43,6 +43,9 @@ jobs:
       - name: Run sequential regression suite
         run: bash tests/run_all.sh
 
+      - name: Rebuild production binaries (tests rebuild with hooks)
+        run: ./tools/build.sh
+
       - name: Package artifact
         run: ./tools/package_dist.sh
 
