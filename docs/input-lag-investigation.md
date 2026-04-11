@@ -53,6 +53,49 @@ to run the launcher under instrumented emulation.
    - Second keypress injected → second screen update visible in VRAM
 6. Compare with v0.1.8 binary under same conditions
 
+## Breakthrough: VNC Reproduction (2026-04-11)
+
+The lag is **reliably reproducible in QEMU** using VNC key injection.
+VNC key events go through QEMU's input pipeline (same as physical keyboard),
+unlike QMP `send-key` which bypasses it and does NOT reproduce the issue.
+
+### Automated measurements (repro_vnc2.py)
+
+| Version | DOWN #1 | DOWN #2 | DOWN #3 |
+|---------|---------|---------|---------|
+| v0.1.8  | 36ms    | 36ms    | 48ms    |
+| v0.2.0  | 36ms    | 1043ms  | 1042ms  |
+| current | 33ms    | 994ms   | 1044ms  |
+
+### Critical observations
+
+1. The 1st DOWN is always fast (~35ms). The 2nd and 3rd take ~1 second.
+2. In v0.2.0, the 2nd DOWN's first visible change is the **clock colon blink**
+   (row 0 col 74, char 0x20→0x3A) — not the selection change. This means
+   the selection change doesn't happen until the clock update fires (~1s).
+3. QMP `send-key` does NOT reproduce the issue — all versions respond instantly.
+   VNC key injection DOES reproduce it — matches real hardware behavior.
+4. The ~1043ms ≈ 19 BIOS timer ticks × 55ms ≈ 1.045 seconds.
+
+### What this means
+
+The program processes the 1st DOWN quickly, updates the screen, and enters
+the wait loop. The 2nd key arrives via the keyboard interrupt (IRQ 1), but
+the program doesn't detect it for ~1 second. The key sits in the BIOS
+keyboard buffer until the next full-second clock update triggers a screen
+flush that also makes the selection change visible.
+
+### Reproduction
+
+```bash
+# Manual (visual):
+qemu-system-i386 -drive if=floppy,index=0,format=raw,file=out/aml2-test.img -boot a -m 4
+# Press DOWN arrow rapidly — visible lag on 2nd+ keypress
+
+# Automated:
+python3 tests/perf/repro_vnc2.py /path/to/AMLUI.EXE
+```
+
 ### What kvikdos Can Tell Us
 
 - Exact instruction count per phase (no 55ms tick granularity)
