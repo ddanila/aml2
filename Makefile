@@ -1,5 +1,5 @@
 WATCOM_ROOT ?= vendor/openwatcom-v2/current-build-2026-04-11
-WATCOM_BIN ?= $(if $(wildcard $(WATCOM_ROOT)/bino64/wcc),$(WATCOM_ROOT)/bino64,$(WATCOM_ROOT)/binl64)
+WATCOM_BIN ?= $(WATCOM_ROOT)/binl64
 WCC = $(WATCOM_BIN)/wcc
 WLINK = $(WATCOM_BIN)/wlink
 WASM = $(WATCOM_BIN)/wasm
