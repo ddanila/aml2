@@ -799,6 +799,8 @@ void ui_sync_view_top(AmlState *state)
     }
 
     clamp_view_top(state);
+
+    clamp_view_top(state);
 }
 
 static void draw_scrollbar(const AmlState *state)
