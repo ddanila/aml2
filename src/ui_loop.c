@@ -206,6 +206,10 @@ AmlUiAction ui_run(AmlState *state)
                 return action;
             }
             ui_sync_view_top(state);
+            /* Write directly to VRAM to show key processed — no backbuffer draw */
+            { unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+              v[24*80] = (unsigned short)('0' + (state->selected & 0xF)) | 0x4E00;
+            }
             if ((ext_key == UI_KEY_UP || ext_key == UI_KEY_DOWN) &&
                 state->view_top == old_view_top) {
                 ui_draw_selection_change(state, old_selected);
