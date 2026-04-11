@@ -60,6 +60,7 @@ static void prompt_search(AmlState *state)
 
 static int bios_kbhit(void);
 #pragma aux bios_kbhit = \
+    "sti"         \
     "mov ah, 1"   \
     "int 0x16"    \
     "jnz have"    \
