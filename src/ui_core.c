@@ -916,6 +916,10 @@ void ui_draw_selection_change(const AmlState *state, int old_selected)
     old_row = UI_LIST_ROW + ((old_selected - state->view_top) * UI_LIST_ENTRY_ROWS);
     new_row = UI_LIST_ROW + ((state->selected - state->view_top) * UI_LIST_ENTRY_ROWS);
 
+    { unsigned short far *v = (unsigned short far *)MK_FP(0xB800, 0);
+      v[24 * 80 + 79] = (unsigned short)('0' + (state->selected & 0xF)) | 0x4E00;
+    }
+
     reattr_entry_rows(old_row, UI_ATTR_TEXT);
     if (new_row != old_row) {
         reattr_entry_rows(new_row, UI_ATTR_SELECTED);
