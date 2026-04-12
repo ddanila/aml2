@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <conio.h>
 
 #include "aml.h"
 #include "cfg.h"
@@ -399,6 +400,7 @@ int main(int argc, char **argv)
     restore_selection(&state);
 
     ui_init();
+    while (kbhit()) getch();
     show_initial_config_status(&state, cfg_status);
 
     for (;;) {
