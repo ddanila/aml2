@@ -27,10 +27,25 @@ static void ui_set_text_mode_80x25(void)
 void ui_hide_cursor(void)
 {
     union REGS regs;
+    unsigned offset = (unsigned)UI_ROWS * (unsigned)UI_COLS;
 
-    regs.h.ah = 0x01;
-    regs.x.cx = 0x2000;
+    /* Volkov Commander trick: park the cursor at row UI_ROWS (one past
+       the last visible row) so the CRTC's cursor-position comparison
+       never matches a visible scan line. More reliable than the
+       "cursor type = disabled" bit, which some VGA chips ignore in
+       8-dot text mode (observed on real hardware running approach 2). */
+    regs.h.ah = 0x02;
+    regs.h.bh = 0x00;
+    regs.h.dh = (unsigned char)UI_ROWS;
+    regs.h.dl = 0x00;
     int86(0x10, &regs, &regs);
+
+    /* Belt-and-braces: write the cursor offset straight to CRTC in
+       case the BIOS clamped DH to the visible range. */
+    outp(0x3D4, 0x0E);
+    outp(0x3D5, (unsigned char)(offset >> 8));
+    outp(0x3D4, 0x0F);
+    outp(0x3D5, (unsigned char)(offset & 0xFF));
 }
 
 void ui_show_cursor(void)
