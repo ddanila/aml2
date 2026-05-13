@@ -51,26 +51,30 @@ Principles:
 
 Checklist after pushing a `vX.Y.Z` tag:
 
-1. Wait for the `Build` workflow on the tag to finish — it creates a *draft* release with the zip attached.
-2. Trigger the screenshot workflow against the tag and download the artifact:
+1. Wait for the `Build` workflow on the tag to finish — it creates a *draft* release with `aml2-vX.Y.Z.zip` attached.
+2. Publish (un-draft) the release first — the screenshot workflow uses `gh release download`, which does not reliably see drafts in CI:
+   ```sh
+   gh release edit vX.Y.Z --draft=false
+   ```
+3. Trigger the screenshot workflow against the tag and download the artifact:
    ```sh
    gh workflow run capture-release-screenshot.yml -f release_tag=vX.Y.Z
    # wait for it, then:
    gh run download <run-id> -D /tmp/aml2-shot
    ```
-   (The 1x png is `aml2-vX.Y.Z-games-f1-help.png` at 640×400.)
-3. Update the README screenshot from the same artifact and push to master:
+   The 1x png is `aml2-vX.Y.Z-games-f1-help.png` at 640×400.
+4. Update the README screenshot from the same artifact and push to master:
    ```sh
    cp /tmp/aml2-shot/release-screenshot-vX.Y.Z/aml2-vX.Y.Z-games-f1-help.png assets/aml2-screenshot.png
    git commit -am "Update README screenshot from vX.Y.Z release" && git push
    ```
-4. Attach the 1x png to the release as an asset:
+5. Attach the 1x png to the release as an asset:
    ```sh
    gh release upload vX.Y.Z /tmp/aml2-shot/release-screenshot-vX.Y.Z/aml2-vX.Y.Z-games-f1-help.png
    ```
-5. Write the release body and embed the asset via its public download URL, then publish (un-draft):
+6. Write the release body, embedding the asset via its public download URL:
    ```sh
-   gh release edit vX.Y.Z --draft=false --notes "$(cat <<EOF
+   gh release edit vX.Y.Z --notes "$(cat <<EOF
    <short user-facing summary>
 
    - bullet for each notable change
@@ -82,7 +86,7 @@ Checklist after pushing a `vX.Y.Z` tag:
    EOF
    )"
    ```
-   Don't publish (un-draft) before step 4 — the embedded image URL only resolves once the asset is uploaded *and* the release is no longer a draft.
+   The embedded image URL resolves once the asset (step 5) exists on the published release (step 2).
 
 Helper: `./tools/capture_release_help_screenshot.sh <tag>` (the workflow above just runs this on a fresh runner against the published zip).
 
