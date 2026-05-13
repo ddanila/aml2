@@ -44,11 +44,47 @@ Detailed bring-up findings live in `docs/e2e-findings.md`.
 
 ## Release Notes
 
-- release screenshots should come from a release zip, not a local tree
-- after tagging, attach a fresh 1x screenshot to the draft release by default
+Principles:
+- release screenshots come from a release zip, not a local tree
 - keep the release screenshot and README screenshot in sync
 - keep release descriptions short and concrete
-- screenshot capture helper: `./tools/capture_release_help_screenshot.sh <tag>`
+
+Checklist after pushing a `vX.Y.Z` tag:
+
+1. Wait for the `Build` workflow on the tag to finish — it creates a *draft* release with the zip attached.
+2. Trigger the screenshot workflow against the tag and download the artifact:
+   ```sh
+   gh workflow run capture-release-screenshot.yml -f release_tag=vX.Y.Z
+   # wait for it, then:
+   gh run download <run-id> -D /tmp/aml2-shot
+   ```
+   (The 1x png is `aml2-vX.Y.Z-games-f1-help.png` at 640×400.)
+3. Update the README screenshot from the same artifact and push to master:
+   ```sh
+   cp /tmp/aml2-shot/release-screenshot-vX.Y.Z/aml2-vX.Y.Z-games-f1-help.png assets/aml2-screenshot.png
+   git commit -am "Update README screenshot from vX.Y.Z release" && git push
+   ```
+4. Attach the 1x png to the release as an asset:
+   ```sh
+   gh release upload vX.Y.Z /tmp/aml2-shot/release-screenshot-vX.Y.Z/aml2-vX.Y.Z-games-f1-help.png
+   ```
+5. Write the release body and embed the asset via its public download URL, then publish (un-draft):
+   ```sh
+   gh release edit vX.Y.Z --draft=false --notes "$(cat <<EOF
+   <short user-facing summary>
+
+   - bullet for each notable change
+   - omit refactors / CI churn / internal cleanups
+
+   ![aml2 screenshot](https://github.com/ddanila/aml2/releases/download/vX.Y.Z/aml2-vX.Y.Z-games-f1-help.png)
+
+   **Full Changelog**: https://github.com/ddanila/aml2/compare/vPREV...vX.Y.Z
+   EOF
+   )"
+   ```
+   Don't publish (un-draft) before step 4 — the embedded image URL only resolves once the asset is uploaded *and* the release is no longer a draft.
+
+Helper: `./tools/capture_release_help_screenshot.sh <tag>` (the workflow above just runs this on a fresh runner against the published zip).
 
 ## Future Ideas
 
