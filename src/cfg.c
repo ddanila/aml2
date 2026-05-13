@@ -69,8 +69,9 @@ static int parse_setting_line(AmlState *state, char *line)
             state->bigtext_mode = AML_BIGTEXT_ON;
         } else if (strcmp(value, "svga") == 0) {
             state->bigtext_mode = AML_BIGTEXT_SVGA;
-        } else if (strcmp(value, "off") == 0) {
-            state->bigtext_mode = AML_BIGTEXT_OFF;
+        } else if (strcmp(value, "wide") == 0 || strcmp(value, "off") == 0) {
+            /* "off" stayed as an alias for files written by v0.6.0. */
+            state->bigtext_mode = AML_BIGTEXT_WIDE;
         }
         /* Unknown values are silently ignored — invalid configs fall back
            to whatever the current state holds (default on first load). */
@@ -189,8 +190,8 @@ static const char *bigtext_mode_name(int mode)
     if (mode == AML_BIGTEXT_SVGA) {
         return "svga";
     }
-    if (mode == AML_BIGTEXT_OFF) {
-        return "off";
+    if (mode == AML_BIGTEXT_WIDE) {
+        return "wide";
     }
     return "on";
 }
@@ -200,7 +201,7 @@ static void write_config_settings(const AmlState *state, FILE *fp)
     /* Only emit lines that round-trip cleanly: skip the default and any
        diagnostic/uninitialised values (e.g. memset-zeroed test state). */
     if (state->bigtext_mode == AML_BIGTEXT_SVGA ||
-        state->bigtext_mode == AML_BIGTEXT_OFF) {
+        state->bigtext_mode == AML_BIGTEXT_WIDE) {
         fprintf(fp, "bigtext = %s\n", bigtext_mode_name(state->bigtext_mode));
         fprintf(fp, "\n");
     }

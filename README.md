@@ -87,7 +87,7 @@ Rules:
 | --- | --- | --- |
 | `bigtext` | `on` (default) | Big-font list rendering with standard VGA timing (8-dot character cells at 25.175 MHz, ~31.47 kHz horizontal). Works on classic VGA monitors. |
 | `bigtext` | `svga` | Big-font list rendering using the card's native dot clock (only the SR1 8-dot bit is set; the dot clock is left untouched). Use this if your monitor shows "horizontal frequency out of range" with `bigtext = on` — some SVGA chips reset the 8-dot bit when the clock-select bits are written, so the standard mode lands at an unintended ~28 kHz. |
-| `bigtext` | `off` | Disable big-font rendering. Entries are drawn in plain 9-dot text. Use this if neither `on` nor `svga` works. |
+| `bigtext` | `wide` | Big-font glyphs in the default 9-dot wide character cells; no VGA-timing changes. The font swap still happens — entries are still big — but cells stay at their wider 9-dot default, so the look has more horizontal spacing. Use this if neither `on` nor `svga` works. (`off` is accepted as an alias for files written by v0.6.0.) |
 
 ## Controls
 
@@ -113,7 +113,7 @@ Bigtext hotkeys (for troubleshooting "out of range" monitors). Shift is required
 
 - `Shift+1` (`!`): switch to `bigtext = on` mode (default)
 - `Shift+2` (`@`): switch to `bigtext = svga` mode
-- `Shift+4` (`$`): switch to `bigtext = off` mode
+- `Shift+4` (`$`): switch to `bigtext = wide` mode
 - `Shift+0` (`)`): panic — INT 10h mode 3 reset (recovers a monitor that lost sync)
 
 Press `F2` in editor mode to persist the chosen setting to `LAUNCHER.CFG`.

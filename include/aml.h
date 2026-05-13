@@ -43,7 +43,7 @@ typedef struct AmlEntryView {
 typedef enum {
     AML_BIGTEXT_ON = 1,    /* "on" — switch dot clock to 25.175 MHz + SR1 8-dot (default) */
     AML_BIGTEXT_SVGA = 2,  /* "svga" — only SR1 8-dot; useful on cards that mishandle the clock-switch */
-    AML_BIGTEXT_OFF = 4    /* "off" — font swap only, no register changes */
+    AML_BIGTEXT_WIDE = 4   /* "wide" — font swap only, no register changes; cells stay 9-dot wide */
 } AmlBigtextMode;
 
 typedef struct AmlState {

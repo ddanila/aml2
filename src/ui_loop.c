@@ -226,7 +226,7 @@ AmlUiAction ui_run(AmlState *state)
                 ui_bigtext_debug_set_approach(approach);
                 if (approach == AML_BIGTEXT_ON ||
                     approach == AML_BIGTEXT_SVGA ||
-                    approach == AML_BIGTEXT_OFF) {
+                    approach == AML_BIGTEXT_WIDE) {
                     if (state->bigtext_mode != approach) {
                         state->bigtext_mode = approach;
                         state->modified = 1;
