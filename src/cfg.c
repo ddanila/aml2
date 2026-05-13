@@ -10,6 +10,7 @@ static void reset_config_state(AmlState *state)
     state->selected = 0;
     state->view_top = 0;
     state->modified = 0;
+    state->bigtext_mode = AML_BIGTEXT_ON;
 }
 
 static void copy_field(char *dst, unsigned dst_size, const char *src)
@@ -49,6 +50,34 @@ static char *trim_field(char *text)
     return text;
 }
 
+static int parse_setting_line(AmlState *state, char *line)
+{
+    char *eq = strchr(line, '=');
+    char *key;
+    char *value;
+
+    if (eq == NULL) {
+        return 0;
+    }
+
+    *eq = '\0';
+    key = trim_field(line);
+    value = trim_field(eq + 1);
+
+    if (strcmp(key, "bigtext") == 0) {
+        if (strcmp(value, "on") == 0) {
+            state->bigtext_mode = AML_BIGTEXT_ON;
+        } else if (strcmp(value, "svga") == 0) {
+            state->bigtext_mode = AML_BIGTEXT_SVGA;
+        } else if (strcmp(value, "off") == 0) {
+            state->bigtext_mode = AML_BIGTEXT_OFF;
+        }
+        /* Unknown values are silently ignored — invalid configs fall back
+           to whatever the current state holds (default on first load). */
+    }
+    return 0;
+}
+
 static int parse_config_line(AmlState *state, char *line)
 {
     char *name_end;
@@ -73,7 +102,7 @@ static int parse_config_line(AmlState *state, char *line)
 
     name_end = strchr(command_start, '|');
     if (name_end == NULL) {
-        return 0;
+        return parse_setting_line(state, command_start);
     }
 
     *name_end = '\0';
@@ -155,6 +184,28 @@ static void write_config_header(FILE *fp)
     fprintf(fp, "\n");
 }
 
+static const char *bigtext_mode_name(int mode)
+{
+    if (mode == AML_BIGTEXT_SVGA) {
+        return "svga";
+    }
+    if (mode == AML_BIGTEXT_OFF) {
+        return "off";
+    }
+    return "on";
+}
+
+static void write_config_settings(const AmlState *state, FILE *fp)
+{
+    /* Only emit lines that round-trip cleanly: skip the default and any
+       diagnostic/uninitialised values (e.g. memset-zeroed test state). */
+    if (state->bigtext_mode == AML_BIGTEXT_SVGA ||
+        state->bigtext_mode == AML_BIGTEXT_OFF) {
+        fprintf(fp, "bigtext = %s\n", bigtext_mode_name(state->bigtext_mode));
+        fprintf(fp, "\n");
+    }
+}
+
 static void write_config_entries(const AmlState *state, FILE *fp)
 {
     int i;
@@ -176,6 +227,7 @@ AmlCfgStatus cfg_save(const AmlState *state, const char *path)
     }
 
     write_config_header(fp);
+    write_config_settings(state, fp);
     write_config_entries(state, fp);
     fclose(fp);
     return AML_CFG_OK;

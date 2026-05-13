@@ -37,6 +37,15 @@ typedef struct AmlEntryView {
     char big_name[25];
 } AmlEntryView;
 
+/* Bigtext rendering mode (persisted in LAUNCHER.CFG as "bigtext = NAME").
+   These numeric values match the debug-hotkey approach numbers in
+   ui_bigtext.c, so they can be passed straight to ui_bigtext_debug_set_approach. */
+typedef enum {
+    AML_BIGTEXT_ON = 1,    /* "on" — switch dot clock to 25.175 MHz + SR1 8-dot (default) */
+    AML_BIGTEXT_SVGA = 2,  /* "svga" — only SR1 8-dot; useful on cards that mishandle the clock-switch */
+    AML_BIGTEXT_OFF = 4    /* "off" — font swap only, no register changes */
+} AmlBigtextMode;
+
 typedef struct AmlState {
     AmlEntry entries[AML_MAX_PROGRAMS];
     AmlEntryView entry_view[AML_MAX_PROGRAMS];
@@ -46,6 +55,7 @@ typedef struct AmlState {
     int modified;
     int editor_mode;
     int supervised;
+    int bigtext_mode;  /* AmlBigtextMode */
 } AmlState;
 
 static inline void aml_build_big_name(char *dst, size_t dst_size, const char *src_name)

@@ -13,6 +13,7 @@ typedef enum AmlUiAction {
 } AmlUiAction;
 
 void ui_init(void);
+void ui_set_bigtext_mode(int mode);  /* AmlBigtextMode value; call before ui_init */
 void ui_shutdown(void);
 void ui_draw(const AmlState *state);
 void ui_show_message(const char *title, const char *line1, const char *line2, const char *line3);

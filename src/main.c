@@ -399,6 +399,7 @@ int main(int argc, char **argv)
     load_launcher_config(&state, &cfg_status);
     restore_selection(&state);
 
+    ui_set_bigtext_mode(state.bigtext_mode);
     ui_init();
     while (kbhit()) getch();
     show_initial_config_status(&state, cfg_status);

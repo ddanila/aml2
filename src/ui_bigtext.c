@@ -475,6 +475,11 @@ void ui_bigtext_debug_set_approach(int approach)
     ui_bigtext_approach = approach;
 }
 
+void ui_set_bigtext_mode(int mode)
+{
+    ui_bigtext_debug_set_approach(mode);
+}
+
 int ui_bigtext_debug_get_approach(void)
 {
     return ui_bigtext_approach;
@@ -485,6 +490,10 @@ void ui_bigtext_debug_retry(int fancy)
     ui_bigtext_disable();
     ui_bigtext_prepare();
     ui_bigtext_activate(fancy ? 1 : 0);
+    /* Some approaches (notably svga / SR1 8-dot) leave the CRTC cursor-
+       disable bit honoured inconsistently; re-park the cursor off-screen
+       so it stays hidden across approach switches. */
+    ui_hide_cursor();
 }
 
 void ui_bigtext_debug_panic_reset(void)
