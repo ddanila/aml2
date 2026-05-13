@@ -196,25 +196,51 @@ AmlUiAction ui_run(AmlState *state)
             redraw_pending = 1;
             continue;
         }
-        if (key >= '1' && key <= '6') {
-            /* Debug: A/B test 8-dot clock-switch approaches blindly.
-               1 = baseline (MOR + SR1 + sync reset)
-               2 = SR1 only (diagnose: did SR1 8-dot bit take effect?)
-               3 = MOR only (diagnose: did MOR clock change take effect?)
-               4 = font swap only (no register changes — safe fallback)
-               5 = reversed write order
-               6 = CRTC compensation (SR1 8-dot + extended H-total at
-                   28.322 MHz, targets ~31.6 kHz for both monitors) */
-            ui_bigtext_debug_set_approach(key - '0');
-            ui_bigtext_debug_retry(1);
-            redraw_pending = 1;
-            continue;
-        }
-        if (key == '0') {
-            /* Panic recovery: BIOS mode 3 set restores monitor sync. */
-            ui_bigtext_debug_panic_reset();
-            redraw_pending = 1;
-            continue;
+        {
+            /* Shifted-digit hotkeys for 8-dot clock-switch approaches.
+               Shift+1..6 map to ! @ # $ % ^ on US layout, and Shift+0 to ).
+               Requiring Shift avoids accidental selection.
+                 Shift+1 (!)  = on   (default; MOR + SR1, switch to standard VGA clock)
+                 Shift+2 (@)  = svga (SR1 only; native dot clock — chips that
+                                     mishandle MOR clock-switch)
+                 Shift+3 (#)  = MOR only (diagnostic)
+                 Shift+4 ($)  = off  (font swap only, no register change)
+                 Shift+5 (%)  = reversed write order (diagnostic)
+                 Shift+6 (^)  = CRTC compensation (diagnostic; broken on cards
+                                                  with SVGA CRTC locks)
+                 Shift+0 ())  = panic INT 10h mode 3 reset
+               Only the canonical user-facing values (on/svga/off) update the
+               persisted state so F2 saves something meaningful; 3/5/6 are
+               transient diagnostics. */
+            int approach = -1;
+            switch (key) {
+            case '!': approach = 1; break;
+            case '@': approach = 2; break;
+            case '#': approach = 3; break;
+            case '$': approach = 4; break;
+            case '%': approach = 5; break;
+            case '^': approach = 6; break;
+            default: break;
+            }
+            if (approach >= 1) {
+                ui_bigtext_debug_set_approach(approach);
+                if (approach == AML_BIGTEXT_ON ||
+                    approach == AML_BIGTEXT_SVGA ||
+                    approach == AML_BIGTEXT_OFF) {
+                    if (state->bigtext_mode != approach) {
+                        state->bigtext_mode = approach;
+                        state->modified = 1;
+                    }
+                }
+                ui_bigtext_debug_retry(1);
+                redraw_pending = 1;
+                continue;
+            }
+            if (key == ')') {
+                ui_bigtext_debug_panic_reset();
+                redraw_pending = 1;
+                continue;
+            }
         }
 
         redraw_pending = 1;

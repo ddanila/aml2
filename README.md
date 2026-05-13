@@ -68,6 +68,7 @@ Direct `AMLUI.EXE` runs require an explicit mode. Mutation actions are only avai
 `LAUNCHER.CFG` format:
 
 ```text
+bigtext = svga
 Name|Command|Working Directory
 Name|Command|
 ```
@@ -77,8 +78,16 @@ Rules:
 - lines starting with `#` are comments
 - blank lines are ignored
 - surrounding whitespace is trimmed
-- `name` and `command` are required
-- `path` is optional, but the trailing `|` is always required
+- entry lines: `name` and `command` are required, `path` is optional but the trailing `|` is always required
+- setting lines: `key = value`, no `|`
+
+### Settings
+
+| Key | Values | Notes |
+| --- | --- | --- |
+| `bigtext` | `on` (default) | Big-font list rendering with standard VGA timing (8-dot character cells at 25.175 MHz, ~31.47 kHz horizontal). Works on classic VGA monitors. |
+| `bigtext` | `svga` | Big-font list rendering using the card's native dot clock (only the SR1 8-dot bit is set; the dot clock is left untouched). Use this if your monitor shows "horizontal frequency out of range" with `bigtext = on` — some SVGA chips reset the 8-dot bit when the clock-select bits are written, so the standard mode lands at an unintended ~28 kHz. |
+| `bigtext` | `off` | Disable big-font rendering. Entries are drawn in plain 9-dot text. Use this if neither `on` nor `svga` works. |
 
 ## Controls
 
@@ -99,6 +108,15 @@ Editor mode only:
 - `F5` / `F6`: move current entry up or down
 - `Ins`: insert a new entry
 - `F8`: delete current entry
+
+Bigtext hotkeys (for troubleshooting "out of range" monitors). Shift is required so the digits stay free for future use:
+
+- `Shift+1` (`!`): switch to `bigtext = on` mode (default)
+- `Shift+2` (`@`): switch to `bigtext = svga` mode
+- `Shift+4` (`$`): switch to `bigtext = off` mode
+- `Shift+0` (`)`): panic — INT 10h mode 3 reset (recovers a monitor that lost sync)
+
+Press `F2` in editor mode to persist the chosen setting to `LAUNCHER.CFG`.
 
 ## Packaging
 
