@@ -7,6 +7,8 @@ STAGE_DIR="$DIST_DIR/stage"
 
 if [[ -n "${AML_BUILD_TAG:-}" ]]; then
     BUILD_TAG="$AML_BUILD_TAG"
+elif tag="$(git -C "$REPO_ROOT" describe --tags --exact-match HEAD 2>/dev/null)"; then
+    BUILD_TAG="$tag"
 elif [[ -n "${CI:-}" ]]; then
     BUILD_TAG="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
 else
