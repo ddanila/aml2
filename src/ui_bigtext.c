@@ -34,10 +34,26 @@ static unsigned char ui_bigtext_saved_misc_output;
 enum {
     UI_BT_APPROACH_DEFAULT = 1,
     UI_BT_APPROACH_MIN = 1,
-    UI_BT_APPROACH_MAX = 5
+    UI_BT_APPROACH_MAX = 6
 };
 static int ui_bigtext_approach = UI_BT_APPROACH_DEFAULT;
 static int ui_bigtext_active_approach;
+
+/* Saved CRTC state for approach 6 (CRTC compensation). Indices: 0..5 hold
+   CR0..CR5; index 6 holds CR11 so we can restore the protect bit. */
+static unsigned char ui_bigtext_saved_crtc[7];
+
+static unsigned char ui_bigtext_crtc_read(unsigned char idx)
+{
+    outp(0x3D4, idx);
+    return inp(0x3D5);
+}
+
+static void ui_bigtext_crtc_write(unsigned char idx, unsigned char val)
+{
+    outp(0x3D4, idx);
+    outp(0x3D5, val);
+}
 
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
@@ -285,6 +301,52 @@ static void ui_bigtext_apply_clock_change(int approach)
         outp(0x3C4, 0x00); outp(0x3C5, 0x03);
         _enable();
         break;
+    case 6: {
+        /* CRTC compensation: leave MOR at 28.322 MHz, enable SR1 8-dot,
+           and extend the CRTC horizontal total from 100 to 112 char
+           clocks so 8-dot lines run at 28.322 / (112*8) = 31.61 kHz —
+           inside both monitors' VGA-text range. CR0..CR5 are protected
+           by CR11 bit 7 in mode 3, so unlock first.
+
+           Mode 3 baseline (saved here):
+             CR0=0x5F (100 char clocks)  CR1=0x4F  CR2=0x50
+             CR3=0x82  CR4=0x55  CR5=0x81
+
+           New layout (112 char clocks, visible 0..79 unchanged):
+             CR0=0x6B (=112-5)
+             CR4=0x5A (sync starts at char 90)
+             CR5=0x85 (sync ends at char 101 mod 32 = 5; bit 7 = 1
+                       for End-Blank bit-5 = 1)
+             CR3=0x8F (compat bit + End-Blank low 5 = 0x0F; combined
+                       with CR5[7] = 6-bit value 0x2F = 47 → blank
+                       runs from char 80 (CR2) until count mod 64 = 47,
+                       i.e. char 111). */
+        ui_bigtext_saved_crtc[0] = ui_bigtext_crtc_read(0x00);
+        ui_bigtext_saved_crtc[1] = ui_bigtext_crtc_read(0x01);
+        ui_bigtext_saved_crtc[2] = ui_bigtext_crtc_read(0x02);
+        ui_bigtext_saved_crtc[3] = ui_bigtext_crtc_read(0x03);
+        ui_bigtext_saved_crtc[4] = ui_bigtext_crtc_read(0x04);
+        ui_bigtext_saved_crtc[5] = ui_bigtext_crtc_read(0x05);
+        ui_bigtext_saved_crtc[6] = ui_bigtext_crtc_read(0x11);
+
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        /* Unlock CR0..CR7 (CR11 bit 7 = 0). */
+        ui_bigtext_crtc_write(0x11,
+            (unsigned char)(ui_bigtext_saved_crtc[6] & 0x7F));
+        ui_bigtext_crtc_write(0x00, 0x6B);
+        ui_bigtext_crtc_write(0x03, 0x8F);
+        ui_bigtext_crtc_write(0x04, 0x5A);
+        ui_bigtext_crtc_write(0x05, 0x85);
+        /* Re-lock with original protect-bit state. */
+        ui_bigtext_crtc_write(0x11, ui_bigtext_saved_crtc[6]);
+        /* Set SR1 8-dot. */
+        outp(0x3C4, 0x01); outp(0x3C5, new_sr1);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    }
     default:
         break;
     }
@@ -316,6 +378,26 @@ static void ui_bigtext_revert_clock_change(int approach)
         _disable();
         outp(0x3C4, 0x00); outp(0x3C5, 0x01);
         outp(0x3C2, ui_bigtext_saved_misc_output);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 6:
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        /* Restore SR1 first so 8-dot is cleared before timing widens
+           back; otherwise we'd transiently sit at 8-dot × 100 char =
+           35 kHz, which is the original monitor-A failure mode. */
+        outp(0x3C4, 0x01); outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        ui_bigtext_crtc_write(0x11,
+            (unsigned char)(ui_bigtext_saved_crtc[6] & 0x7F));
+        ui_bigtext_crtc_write(0x00, ui_bigtext_saved_crtc[0]);
+        ui_bigtext_crtc_write(0x01, ui_bigtext_saved_crtc[1]);
+        ui_bigtext_crtc_write(0x02, ui_bigtext_saved_crtc[2]);
+        ui_bigtext_crtc_write(0x03, ui_bigtext_saved_crtc[3]);
+        ui_bigtext_crtc_write(0x04, ui_bigtext_saved_crtc[4]);
+        ui_bigtext_crtc_write(0x05, ui_bigtext_saved_crtc[5]);
+        ui_bigtext_crtc_write(0x11, ui_bigtext_saved_crtc[6]);
         outp(0x3C4, 0x00); outp(0x3C5, 0x03);
         _enable();
         break;

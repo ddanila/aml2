@@ -196,13 +196,15 @@ AmlUiAction ui_run(AmlState *state)
             redraw_pending = 1;
             continue;
         }
-        if (key >= '1' && key <= '5') {
+        if (key >= '1' && key <= '6') {
             /* Debug: A/B test 8-dot clock-switch approaches blindly.
                1 = baseline (MOR + SR1 + sync reset)
                2 = SR1 only (diagnose: did SR1 8-dot bit take effect?)
                3 = MOR only (diagnose: did MOR clock change take effect?)
                4 = font swap only (no register changes — safe fallback)
-               5 = reversed write order */
+               5 = reversed write order
+               6 = CRTC compensation (SR1 8-dot + extended H-total at
+                   28.322 MHz, targets ~31.6 kHz for both monitors) */
             ui_bigtext_debug_set_approach(key - '0');
             ui_bigtext_debug_retry(1);
             redraw_pending = 1;
