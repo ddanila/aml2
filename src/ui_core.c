@@ -672,18 +672,9 @@ void ui_draw_header_on_frame_common(int modified)
     minute = regs.h.cl;
     second = regs.h.dh;
 
-    {
-        const char *bigtext_label;
-        switch (ui_bigtext_debug_get_approach()) {
-        case AML_BIGTEXT_ON:   bigtext_label = " [on] ";   break;
-        case AML_BIGTEXT_SVGA: bigtext_label = " [svga] "; break;
-        case AML_BIGTEXT_WIDE: bigtext_label = " [wide] "; break;
-        default:               bigtext_label = " ";        break;
-        }
-        strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
-        strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
-        strncat(title, bigtext_label, sizeof(title) - strlen(title) - 1);
-    }
+    strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
+    strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
+    strncat(title, " ", sizeof(title) - strlen(title) - 1);
     if ((int)strlen(title) > clock_col - 1) {
         title[clock_col - 1] = '\0';
     }
