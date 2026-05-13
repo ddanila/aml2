@@ -29,11 +29,11 @@ void ui_hide_cursor(void)
     union REGS regs;
     unsigned offset = (unsigned)UI_ROWS * (unsigned)UI_COLS;
 
-    /* Volkov Commander trick: park the cursor at row UI_ROWS (one past
-       the last visible row) so the CRTC's cursor-position comparison
-       never matches a visible scan line. More reliable than the
-       "cursor type = disabled" bit, which some VGA chips ignore in
-       8-dot text mode (observed on real hardware running approach 2). */
+    /* Park the cursor at row UI_ROWS (one past the last visible row) so
+       the CRTC's cursor-position comparison never matches a visible scan
+       line. More reliable than the "cursor type = disabled" bit, which
+       some VGA chips ignore in 8-dot text mode (observed on real hardware
+       running approach 2). */
     regs.h.ah = 0x02;
     regs.h.bh = 0x00;
     regs.h.dh = (unsigned char)UI_ROWS;
@@ -655,18 +655,35 @@ void ui_wait_for_ack(void)
 
 void ui_draw_header_on_frame_common(int modified)
 {
-    unsigned short far *tick = (unsigned short far *)MK_FP(0x0040, 0x006C);
-    unsigned long ticks = *tick;
-    unsigned long total_secs = (ticks * 10) / 182;
-    unsigned hour = (unsigned)((total_secs / 3600) % 24);
-    unsigned minute = (unsigned)((total_secs / 60) % 60);
-    unsigned second = (unsigned)(total_secs % 60);
+    /* INT 21h AH=2Ch — DOS Get Time. Returns wall-clock hour/minute/second
+       directly. The previous BIOS-tick-based code read only the low 16
+       bits of the 32-bit counter at 0040:006C, so the displayed time wrapped
+       (and frequently appeared stuck at 00:00). */
+    union REGS regs;
+    unsigned hour;
+    unsigned minute;
+    unsigned second;
     char title[80];
     int clock_col = 72;
 
-    strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
-    strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
-    strncat(title, " ", sizeof(title) - strlen(title) - 1);
+    regs.h.ah = 0x2C;
+    int86(0x21, &regs, &regs);
+    hour = regs.h.ch;
+    minute = regs.h.cl;
+    second = regs.h.dh;
+
+    {
+        const char *bigtext_label;
+        switch (ui_bigtext_debug_get_approach()) {
+        case AML_BIGTEXT_ON:   bigtext_label = " [on] ";   break;
+        case AML_BIGTEXT_SVGA: bigtext_label = " [svga] "; break;
+        case AML_BIGTEXT_WIDE: bigtext_label = " [wide] "; break;
+        default:               bigtext_label = " ";        break;
+        }
+        strcpy(title, " Arvutimuuseum Launcher (c) 2026 Danila Sukharev, v");
+        strncat(title, AML_BUILD_VERSION, sizeof(title) - strlen(title) - 1);
+        strncat(title, bigtext_label, sizeof(title) - strlen(title) - 1);
+    }
     if ((int)strlen(title) > clock_col - 1) {
         title[clock_col - 1] = '\0';
     }
