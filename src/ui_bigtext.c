@@ -27,6 +27,15 @@ static unsigned char ui_bigtext_saved_misc_output;
 
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
+static void ui_bigtext_wait_vretrace_start(void)
+{
+    /* Wait out any in-progress retrace, then wait for the next one to begin.
+       The ~380 us vertical-blank window that follows is long enough to update
+       MOR and SR1 with the sequencer in sync reset. */
+    while (inp(0x3DA) & 0x08) {}
+    while (!(inp(0x3DA) & 0x08)) {}
+}
+
 static int ui_bigtext_should_use_8dot_clock(void)
 {
     union REGS regs;
@@ -229,11 +238,22 @@ static void ui_bigtext_activate(int fancy)
     if (!ui_bigtext_enabled) {
         ui_bigtext_8dot_active = 0;
         if (ui_bigtext_should_use_8dot_clock()) {
+            /* MOR clock and SR1 char width must flip together. The intermediate
+               state (9-dot, 25.175 MHz) is ~28 kHz, below VGA's minimum, so
+               some monitors latch "out of range" on the transient. Hold the
+               sequencer in sync reset across both writes during vertical blank
+               so the monitor never sees a bad H-sync pulse. */
             ui_bigtext_saved_misc_output = inp(0x3CC);
-            outp(0x3C2, (unsigned char)(ui_bigtext_saved_misc_output & ~0x0C));
             outp(0x3C4, 0x01);
             ui_bigtext_saved_clocking_mode = inp(0x3C5);
-            outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
+
+            ui_bigtext_wait_vretrace_start();
+            _disable();
+            outp(0x3C4, 0x00); outp(0x3C5, 0x01);   /* engage sync reset */
+            outp(0x3C2, (unsigned char)(ui_bigtext_saved_misc_output & ~0x0C));
+            outp(0x3C4, 0x01); outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
+            outp(0x3C4, 0x00); outp(0x3C5, 0x03);   /* release sync reset */
+            _enable();
             ui_bigtext_8dot_active = 1;
         }
         ui_bigtext_load_font(font);
@@ -267,9 +287,15 @@ void ui_bigtext_disable(void)
 
     ui_bigtext_load_font(ui_bigtext_original_font);
     if (ui_bigtext_8dot_active) {
-        outp(0x3C4, 0x01);
-        outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        /* Symmetric restore: hold the sequencer in sync reset so the same
+           ~28 kHz transient cannot leak out while we flip SR1 and MOR back. */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);   /* engage sync reset */
+        outp(0x3C4, 0x01); outp(0x3C5, ui_bigtext_saved_clocking_mode);
         outp(0x3C2, ui_bigtext_saved_misc_output);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);   /* release sync reset */
+        _enable();
         ui_bigtext_8dot_active = 0;
     }
     ui_bigtext_enabled = 0;
