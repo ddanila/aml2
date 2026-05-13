@@ -25,6 +25,20 @@ static int ui_bigtext_8dot_active;
 static unsigned char ui_bigtext_saved_clocking_mode;
 static unsigned char ui_bigtext_saved_misc_output;
 
+/* Debug approach selector for the 8-dot clock dance:
+   1 = baseline: MOR + SR1, vretrace + CLI + sync reset (current default)
+   2 = SR1 only: do NOT change MOR (diagnostic: did SR1 8-dot bit take effect?)
+   3 = MOR only: do NOT change SR1 (diagnostic: did MOR clock change take effect?)
+   4 = font swap only: skip both register writes (no clock change at all)
+   5 = reversed order: SR1 first, then MOR, otherwise same safety as #1 */
+enum {
+    UI_BT_APPROACH_DEFAULT = 1,
+    UI_BT_APPROACH_MIN = 1,
+    UI_BT_APPROACH_MAX = 5
+};
+static int ui_bigtext_approach = UI_BT_APPROACH_DEFAULT;
+static int ui_bigtext_active_approach;
+
 static unsigned ui_bigtext_glyph_index(unsigned char ch);
 
 static void ui_bigtext_wait_vretrace_start(void)
@@ -229,6 +243,88 @@ static void ui_bigtext_prepare(void)
     ui_bigtext_ready = 1;
 }
 
+static void ui_bigtext_apply_clock_change(int approach)
+{
+    unsigned char new_mor = (unsigned char)(ui_bigtext_saved_misc_output & ~0x0C);
+    unsigned char new_sr1 = (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01);
+
+    switch (approach) {
+    case 1:  /* baseline: MOR + SR1, vretrace + CLI + sync reset */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C2, new_mor);
+        outp(0x3C4, 0x01); outp(0x3C5, new_sr1);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 2:  /* SR1 only — leave MOR at 28.322 MHz */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C4, 0x01); outp(0x3C5, new_sr1);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 3:  /* MOR only — leave SR1 in 9-dot mode */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C2, new_mor);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 4:  /* font swap only — no clock or char-width change */
+        break;
+    case 5:  /* reversed order: SR1 first, then MOR */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C4, 0x01); outp(0x3C5, new_sr1);
+        outp(0x3C2, new_mor);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    default:
+        break;
+    }
+}
+
+static void ui_bigtext_revert_clock_change(int approach)
+{
+    switch (approach) {
+    case 1:
+    case 5:
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C4, 0x01); outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        outp(0x3C2, ui_bigtext_saved_misc_output);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 2:  /* only SR1 was touched */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C4, 0x01); outp(0x3C5, ui_bigtext_saved_clocking_mode);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 3:  /* only MOR was touched */
+        ui_bigtext_wait_vretrace_start();
+        _disable();
+        outp(0x3C4, 0x00); outp(0x3C5, 0x01);
+        outp(0x3C2, ui_bigtext_saved_misc_output);
+        outp(0x3C4, 0x00); outp(0x3C5, 0x03);
+        _enable();
+        break;
+    case 4:
+    default:
+        break;
+    }
+}
+
 static void ui_bigtext_activate(int fancy)
 {
     unsigned char (*font)[UI_BIGTEXT_BYTES] = fancy
@@ -238,22 +334,12 @@ static void ui_bigtext_activate(int fancy)
     if (!ui_bigtext_enabled) {
         ui_bigtext_8dot_active = 0;
         if (ui_bigtext_should_use_8dot_clock()) {
-            /* MOR clock and SR1 char width must flip together. The intermediate
-               state (9-dot, 25.175 MHz) is ~28 kHz, below VGA's minimum, so
-               some monitors latch "out of range" on the transient. Hold the
-               sequencer in sync reset across both writes during vertical blank
-               so the monitor never sees a bad H-sync pulse. */
             ui_bigtext_saved_misc_output = inp(0x3CC);
             outp(0x3C4, 0x01);
             ui_bigtext_saved_clocking_mode = inp(0x3C5);
 
-            ui_bigtext_wait_vretrace_start();
-            _disable();
-            outp(0x3C4, 0x00); outp(0x3C5, 0x01);   /* engage sync reset */
-            outp(0x3C2, (unsigned char)(ui_bigtext_saved_misc_output & ~0x0C));
-            outp(0x3C4, 0x01); outp(0x3C5, (unsigned char)(ui_bigtext_saved_clocking_mode | 0x01));
-            outp(0x3C4, 0x00); outp(0x3C5, 0x03);   /* release sync reset */
-            _enable();
+            ui_bigtext_active_approach = ui_bigtext_approach;
+            ui_bigtext_apply_clock_change(ui_bigtext_active_approach);
             ui_bigtext_8dot_active = 1;
         }
         ui_bigtext_load_font(font);
@@ -287,15 +373,7 @@ void ui_bigtext_disable(void)
 
     ui_bigtext_load_font(ui_bigtext_original_font);
     if (ui_bigtext_8dot_active) {
-        /* Symmetric restore: hold the sequencer in sync reset so the same
-           ~28 kHz transient cannot leak out while we flip SR1 and MOR back. */
-        ui_bigtext_wait_vretrace_start();
-        _disable();
-        outp(0x3C4, 0x00); outp(0x3C5, 0x01);   /* engage sync reset */
-        outp(0x3C4, 0x01); outp(0x3C5, ui_bigtext_saved_clocking_mode);
-        outp(0x3C2, ui_bigtext_saved_misc_output);
-        outp(0x3C4, 0x00); outp(0x3C5, 0x03);   /* release sync reset */
-        _enable();
+        ui_bigtext_revert_clock_change(ui_bigtext_active_approach);
         ui_bigtext_8dot_active = 0;
     }
     ui_bigtext_enabled = 0;
@@ -305,6 +383,47 @@ void ui_bigtext_disable(void)
 int ui_bigtext_is_enabled(void)
 {
     return ui_bigtext_enabled;
+}
+
+void ui_bigtext_debug_set_approach(int approach)
+{
+    if (approach < UI_BT_APPROACH_MIN || approach > UI_BT_APPROACH_MAX) {
+        return;
+    }
+    ui_bigtext_approach = approach;
+}
+
+int ui_bigtext_debug_get_approach(void)
+{
+    return ui_bigtext_approach;
+}
+
+void ui_bigtext_debug_retry(int fancy)
+{
+    ui_bigtext_disable();
+    ui_bigtext_prepare();
+    ui_bigtext_activate(fancy ? 1 : 0);
+}
+
+void ui_bigtext_debug_panic_reset(void)
+{
+    union REGS regs;
+
+    /* Forget any bigtext state — the BIOS will wipe VRAM fonts and
+       reset MOR/SR1 to defaults below. */
+    ui_bigtext_enabled = 0;
+    ui_bigtext_8dot_active = 0;
+    ui_bigtext_fancy_active = 0;
+    ui_bigtext_ready = 0;
+
+    /* Drop to the safe "font swap only" approach so the post-reset redraw
+       doesn't immediately retrigger whichever approach broke the monitor. */
+    ui_bigtext_approach = 4;
+
+    /* INT 10h AX=0003: set 80x25 colour text mode, full reset of CRTC/
+       sequencer/MOR to BIOS defaults. Recovers a monitor that lost sync. */
+    regs.w.ax = 0x0003;
+    int86(0x10, &regs, &regs);
 }
 
 static void ui_bigtext_put_char(int col, int row, char ch, unsigned char attr)

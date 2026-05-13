@@ -201,6 +201,14 @@ int ui_bigtext_enable(void);
 int ui_bigtext_enable_fancy(void);
 void ui_bigtext_disable(void);
 int ui_bigtext_is_enabled(void);
+
+/* Debug: cycle/select clock-switch approach for 8-dot mode and re-apply.
+   Built for blind A/B testing on hardware where the steady-state H-freq
+   appears wrong (e.g. monitor reporting 28 kHz out of range). */
+void ui_bigtext_debug_set_approach(int approach);
+int  ui_bigtext_debug_get_approach(void);
+void ui_bigtext_debug_retry(int fancy);
+void ui_bigtext_debug_panic_reset(void);
 void ui_bigtext_write_at(int col, int row, const char *text, unsigned char attr);
 int ui_find_match(const AmlState *state, const char *needle);
 void ui_sync_view_top(AmlState *state);
