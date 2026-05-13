@@ -18,8 +18,11 @@ cd "$REPO_ROOT"
 mkdir -p "$STAGE_DIR"
 rm -rf "$STAGE_DIR"/*
 
-cp README.md "$STAGE_DIR/README.md"
-cp launcher.cfg "$STAGE_DIR/LAUNCHER.CFG"
+# README may contain Unicode glyphs (em-dash, +/-, almost-equal).
+# Transliterate to CP437 so DOS text editors render it sanely,
+# then normalise line endings to CRLF for text files.
+iconv -f UTF-8 -t CP437//TRANSLIT README.md | sed 's/$/\r/' > "$STAGE_DIR/README.md"
+sed 's/$/\r/' launcher.cfg > "$STAGE_DIR/LAUNCHER.CFG"
 cp amlui.exe "$STAGE_DIR/AMLUI.EXE"
 cp aml.com "$STAGE_DIR/AML.COM"
 
