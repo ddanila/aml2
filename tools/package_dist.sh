@@ -8,7 +8,11 @@ STAGE_DIR="$DIST_DIR/stage"
 if [[ -n "${AML_BUILD_TAG:-}" ]]; then
     BUILD_TAG="$AML_BUILD_TAG"
 elif tag="$(git -C "$REPO_ROOT" describe --tags --exact-match HEAD 2>/dev/null)"; then
-    BUILD_TAG="$tag"
+    # DOS-friendly: strip the leading "v" and the dots so the zip filename
+    # fits 8.3 (e.g. v0.6.2 -> aml2-062.zip). Keeps the name short enough
+    # for FAT12/FAT16 floppies that older targets may unzip onto.
+    BUILD_TAG="${tag#v}"
+    BUILD_TAG="${BUILD_TAG//./}"
 elif [[ -n "${CI:-}" ]]; then
     BUILD_TAG="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
 else
