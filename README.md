@@ -170,7 +170,7 @@ bash tests/run_dos_ui.sh
 bash tests/run_dos_launch.sh
 ```
 
-QEMU is the authoritative path for the launcher UI and stub loop. `kvikdos` is only used for fast non-TUI smoke checks in the DOS launch suite.
+QEMU is the authoritative path for the launcher UI and stub loop. Host tests cover configuration and launch-plan logic; the repository no longer carries an unused kvikdos dependency.
 
 See [docs/stub-design.md](docs/stub-design.md), [docs/e2e-findings.md](docs/e2e-findings.md), [docs/design.md](docs/design.md), and [docs/toolchain.md](docs/toolchain.md) for implementation details.
 

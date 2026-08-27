@@ -35,8 +35,10 @@ Resolution:
 - keep QEMU for real-DOS execution
 - move automation into a DOS-side script file instead of relying on injected keys
 
-For quick non-TUI checks, `kvikdos` is still useful, but not as a replacement for the QEMU launcher test.
-The repo now also carries a small `kvikdos` smoke test for `fakegame.exe`, but that path only checks fast process start and exit, not the full launcher loop.
+Fast non-TUI checks run directly on the host, while QEMU remains the authority
+for the complete launcher loop. The former kvikdos `fakegame.exe` smoke test was
+removed because it only checked process start and exit and duplicated stronger
+real-DOS coverage.
 
 ### 2. DOS 8.3 naming matters
 

@@ -27,7 +27,7 @@ Internal notes for ongoing work on `aml2`.
 ## Testing Notes
 
 - QEMU + real DOS is the authoritative launcher test path
-- `kvikdos` is useful only for fast non-TUI smoke checks
+- host tests cover fast non-TUI configuration and launch-plan checks
 - DOS-side automation files are more reliable than QMP key injection
 - keep 8.3 naming in mind in the floppy harness
 

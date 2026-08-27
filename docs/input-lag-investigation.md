@@ -83,9 +83,10 @@ Previous approaches (`pmemsave`, QMP `send-key`) were unreliable:
 
 ### kvikdos Instrumentation
 
-`vendor/kvikdos` (improvements branch) provides instruction-level
-measurement via its software 8086 CPU backend. Custom port I/O handling
-was added for VGA registers used by the launcher.
+During the investigation, the custom kvikdos fork provided instruction-level
+measurement through its software 8086 CPU backend. Custom port I/O handling
+was added for VGA registers used by the launcher. The later test cleanup
+removed the kvikdos consumer, so aml2 no longer vendors that historical tool.
 
 ## Other Fixes Made During Investigation
 

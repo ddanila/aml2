@@ -1,4 +1,0 @@
-[submodule "vendor/kvikdos"]
-	path = vendor/kvikdos
-	url = https://github.com/ddanila/kvikdos.git
-	branch = improvements
